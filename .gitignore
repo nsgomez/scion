@@ -1,1 +1,10 @@
+*.dll
+*.exe
+*.idb
+*.lib
+*.obj
+*.pdb
+*.ncb
 *.suo
+*.vssscc
+BuildLog.htm
