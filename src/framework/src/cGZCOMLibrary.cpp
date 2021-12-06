@@ -1,0 +1,199 @@
+#include "cGZCOMLibrary.h"
+#include "cIGZCOMDirector.h"
+
+static bool GZCOMLibrary(HINSTANCE& handle, const char* path)
+{
+	__try
+	{
+		handle = LoadLibrary(path);
+	}
+	__except (EXCEPTION_EXECUTE_HANDLER)
+	{
+		return false;
+	}
+
+	return true;
+}
+
+static bool GZCOMLibraryW(HINSTANCE& handle, const wchar_t* path)
+{
+	__try
+	{
+		handle = LoadLibraryW(path);
+	}
+	__except (EXCEPTION_EXECUTE_HANDLER)
+	{
+		return false;
+	}
+
+	return true;
+}
+
+static void GZCOMFreeLibrary(HINSTANCE handle, const char* path)
+{
+	__try
+	{
+		FreeLibrary(handle);
+	}
+	__except (EXCEPTION_EXECUTE_HANDLER)
+	{
+	}
+}
+
+static bool GZCOMGetProcAddress(cIGZCOMDirector*(*&func)(), const HINSTANCE& handle, const char* funcName)
+{
+	__try
+	{
+		func = (cIGZCOMDirector*(*)())GetProcAddress(handle, funcName);
+	}
+	__except (EXCEPTION_EXECUTE_HANDLER)
+	{
+		return false;
+	}
+
+	return true;
+}
+
+cGZCOMLibrary::cGZCOMLibrary()
+{
+}
+
+cGZCOMLibrary::cGZCOMLibrary(const cIGZString& libraryPath)
+	: libraryPath(libraryPath)
+{
+}
+
+bool cGZCOMLibrary::QueryInterface(GZREFIID iid, void** outPtr)
+{
+	if (iid == GZIID_cIGZCOMLibrary)
+	{
+		*outPtr = static_cast<cIGZCOMLibrary*>(this);
+		AddRef();
+		return true;
+	}
+	else if (iid == GZIID_cIGZUnknown)
+	{
+		*outPtr = static_cast<cIGZUnknown*>(this);
+		AddRef();
+		return true;
+	}
+
+	return false;
+}
+
+uint32_t cGZCOMLibrary::AddRef()
+{
+	return ++refCount;
+}
+
+uint32_t cGZCOMLibrary::Release()
+{
+	return --refCount;
+}
+
+bool cGZCOMLibrary::Load()
+{
+	if (!loaded)
+	{
+		// TODO
+	}
+
+	return true;
+}
+
+bool cGZCOMLibrary::Free()
+{
+	if (loaded)
+	{
+		if (director)
+		{
+			director = NULL;
+		}
+
+		GZCOMFreeLibrary(handle, libraryPath.ToChar());
+		handle = NULL;
+		loaded = false;
+	}
+
+	return true;
+}
+
+void cGZCOMLibrary::GetPath(cIGZString& path) const
+{
+	path.Copy(this->libraryPath);
+}
+
+bool cGZCOMLibrary::SetPath(const cIGZString& path)
+{
+	if (!loaded)
+	{
+		this->libraryPath.Copy(path);
+		return true;
+	}
+
+	return false;
+}
+
+HINSTANCE cGZCOMLibrary::GetHandle() const
+{
+	return handle;
+}
+
+void cGZCOMLibrary::SetHandle(HINSTANCE handle)
+{
+	this->handle = handle;
+}
+
+cIGZCOMDirector* cGZCOMLibrary::GetDirector() const
+{
+	return director;
+}
+
+void cGZCOMLibrary::SetDirector(cIGZCOMDirector* director)
+{
+	if (this->director != director)
+	{
+		if (director)
+		{
+			director->AddRef();
+		}
+
+		if (this->director)
+		{
+			this->director->Release();
+		}
+
+		this->director = director;
+	}
+}
+
+bool cGZCOMLibrary::IsLoaded() const
+{
+	return loaded;
+}
+
+void cGZCOMLibrary::SetLoaded(bool loaded)
+{
+	this->loaded = loaded;
+}
+
+bool cGZCOMLibrary::operator< (const cGZCOMLibrary& other) const
+{
+	cRZString comparand;
+	other.GetPath(comparand);
+	return libraryPath < comparand;
+}
+
+bool cGZCOMLibrary::operator> (const cGZCOMLibrary& other) const
+{
+	cRZString comparand;
+	other.GetPath(comparand);
+	return libraryPath > comparand;
+}
+
+bool cGZCOMLibrary::operator== (const cGZCOMLibrary& other) const
+{
+	cRZString comparand;
+	other.GetPath(comparand);
+	return libraryPath == comparand;
+}

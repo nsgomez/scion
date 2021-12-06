@@ -7,7 +7,7 @@ class cRZSystemService : public cIGZSystemService, public cRZUnknown
 public:
 	cRZSystemService(GZGUID serviceId, int32_t servicePriority);
 	cRZSystemService(GZGUID serviceId, int32_t servicePriority, int32_t tickPriority);
-	~cRZSystemService() { }
+	virtual ~cRZSystemService(void) { }
 
 public:
 	virtual bool QueryInterface(GZREFIID iid, void** outPtr);

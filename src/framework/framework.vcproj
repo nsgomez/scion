@@ -25,7 +25,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\include;.\include"
+				AdditionalIncludeDirectories="..\include;..\include\stlport;.\include"
 				PreprocessorDefinitions="WIN32;_DEBUG"
 				MinimalRebuild="FALSE"
 				BasicRuntimeChecks="0"
@@ -69,7 +69,7 @@
 				OmitFramePointers="TRUE"
 				OptimizeForProcessor="2"
 				OptimizeForWindowsApplication="TRUE"
-				AdditionalIncludeDirectories="..\include;.\include"
+				AdditionalIncludeDirectories="..\include;..\include\stlport;.\include"
 				PreprocessorDefinitions="WIN32;NDEBUG"
 				StringPooling="TRUE"
 				MinimalRebuild="FALSE"
@@ -111,6 +111,33 @@
 				RelativePath=".\src\cGZAllocatorService.cpp">
 			</File>
 			<File
+				RelativePath=".\src\cGZApp.cpp">
+			</File>
+			<File
+				RelativePath=".\src\cGZCOM.cpp">
+			</File>
+			<File
+				RelativePath=".\src\cGZCOMLibrary.cpp">
+			</File>
+			<File
+				RelativePath=".\src\cGZFramework.cpp">
+			</File>
+			<File
+				RelativePath=".\src\cRZAutoRefCount.cpp">
+			</File>
+			<File
+				RelativePath=".\src\cRZCmdLine.cpp">
+			</File>
+			<File
+				RelativePath=".\src\cRZCriticalSection.cpp">
+			</File>
+			<File
+				RelativePath=".\src\cRZExceptionNotification.cpp">
+			</File>
+			<File
+				RelativePath=".\src\cRZString.cpp">
+			</File>
+			<File
 				RelativePath=".\src\cRZSystemService.cpp">
 			</File>
 			<File
@@ -123,6 +150,18 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}">
 			<File
 				RelativePath=".\include\cGZAllocatorService.h">
+			</File>
+			<File
+				RelativePath=".\include\cGZApp.h">
+			</File>
+			<File
+				RelativePath=".\include\cGZCOM.h">
+			</File>
+			<File
+				RelativePath=".\include\cGZCOMLibrary.h">
+			</File>
+			<File
+				RelativePath=".\include\cGZFramework.h">
 			</File>
 			<File
 				RelativePath=".\include\cIGZAllocatorService.h">
@@ -140,10 +179,37 @@
 				RelativePath=".\include\cIGZCOMLibrary.h">
 			</File>
 			<File
+				RelativePath=".\include\cIGZFramework.h">
+			</File>
+			<File
+				RelativePath=".\include\cIGZFrameworkHooks.h">
+			</File>
+			<File
+				RelativePath=".\include\cIGZFrameworkW32.h">
+			</File>
+			<File
+				RelativePath=".\include\cIGZString.h">
+			</File>
+			<File
 				RelativePath=".\include\cIGZSystemService.h">
 			</File>
 			<File
 				RelativePath=".\include\cIGZUnknown.h">
+			</File>
+			<File
+				RelativePath=".\include\cRZAutoRefCount.h">
+			</File>
+			<File
+				RelativePath=".\include\cRZCmdLine.h">
+			</File>
+			<File
+				RelativePath=".\include\cRZCriticalSection.h">
+			</File>
+			<File
+				RelativePath=".\include\cRZExceptionNotification.h">
+			</File>
+			<File
+				RelativePath=".\include\cRZString.h">
 			</File>
 			<File
 				RelativePath=".\include\cRZSystemService.h">
@@ -153,6 +219,9 @@
 			</File>
 			<File
 				RelativePath=".\include\GZTypes.h">
+			</File>
+			<File
+				RelativePath=".\include\RZStatics.h">
 			</File>
 		</Filter>
 		<Filter

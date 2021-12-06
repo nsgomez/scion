@@ -8,7 +8,7 @@ class cGZAllocatorService : public cIGZAllocatorService, public cRZSystemService
 {
 public:
 	cGZAllocatorService(void);
-	~cGZAllocatorService() { }
+	virtual ~cGZAllocatorService(void) { }
 
 public:
 	virtual bool QueryInterface(GZREFIID iid, void** outPtr);

@@ -5,7 +5,7 @@ class cRZUnknown : public cIGZUnknown
 {
 public:
 	cRZUnknown() : refCount(0) { }
-	~cRZUnknown() { }
+	virtual ~cRZUnknown() { }
 
 public:
 	virtual bool QueryInterface(GZREFIID iid, void** outPtr);
