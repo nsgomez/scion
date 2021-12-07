@@ -16,6 +16,12 @@ class cIGZUnknownEnumerator;
 
 class cGZFramework : public cIGZFramework, public cIGZFrameworkW32
 {
+private:
+	typedef std::list<cRZAutoRefCount<cIGZFrameworkHooks> > tHooksList;
+	typedef std::list<cRZAutoRefCount<cIGZSystemService> > tServicesList;
+	typedef std::hash_map<GZGUID, cRZAutoRefCount<cIGZSystemService> > tServicesIdMap;
+	typedef std::multimap<int32_t, cRZAutoRefCount<cIGZSystemService> > tServicesPriorityMap;
+
 public:
 	cGZFramework();
 	virtual ~cGZFramework();
@@ -41,9 +47,9 @@ public:
 	virtual bool RemoveFromOnIdle(cIGZSystemService* service);
 
 	virtual int32_t GetOnIdleInterval() const;
-	virtual void SetOnIdleInterval(int32_t intervalInMs);
+	virtual void SetOnIdleInterval(int32_t idleFrameInterval);
 
-	virtual void OnTick(uint32_t unknown); // TODO
+	virtual void OnTick(int32_t totalTickFrames);
 	virtual void OnIdle();
 
 	virtual bool IsTickEnabled() const;
@@ -77,7 +83,7 @@ public:
 	virtual void SetApplication(cIGZApp* app);
 	virtual cIGZApp* Application() const;
 
-	virtual void ReportException(char* exceptionReport);
+	virtual void ReportException(char const* exceptionReport);
 	virtual cRZExceptionNotification* ExceptionNotificationObj() const;
 
 public:
@@ -95,8 +101,16 @@ public:
 	virtual HWND GetMainHWND();
 	virtual void SetMainHWND(HWND hwnd);
 
+protected:
+	bool HookPreFrameworkInit();
+	bool HookPreAppInit();
+	bool HookPostAppInit();
+
+	void MakeHookListCopy(tHooksList& dest);
+	void MakeSystemServiceListCopy(tServicesList& dest, bool reversePriority = false);
+
 public:
-	static bool sInit(cRZCmdLine* cmdLine, bool unknown1); // TODO
+	static bool sInit(cRZCmdLine const& cmdLine, bool unknown1); // TODO
 	static bool sRun();
 	static void sSetApplication(cIGZApp* app);
 	static void sSetFramework(cGZFramework* framework);
@@ -108,40 +122,41 @@ public:
 	static int mnReturnCode;
 
 private:
-	typedef std::list<cRZAutoRefCount<cIGZFrameworkHooks> > tHooksList;
-	typedef std::list<cRZAutoRefCount<cIGZSystemService> > tServicesList;
-	typedef std::hash_map<GZGUID, cRZAutoRefCount<cIGZSystemService> > tServicesIdMap;
-	typedef std::multimap<int32_t, cRZAutoRefCount<cIGZSystemService> > tServicesPriorityMap;
-
 	cGZCOM com;
-	uint32_t refCount;
-	tHooksList hooks;
-	tServicesPriorityMap servicesByPriority;
-	tServicesIdMap servicesById;
-	tServicesList activeIdleListeners;
-	tServicesList removedIdleListeners;
-	tServicesList activeTickListeners;
-	tServicesList removedTickListeners;
-	bool ticksEnabled;
-	int32_t onIdleInterval;
-	bool isInstall;
-	FrameworkState state;
-	uint8_t isServicePriorityMapLocked;
-	uint8_t isServiceIdMapLocked;
-	uint8_t isOnIdleListLocked;
-	uint8_t isOnTickListLocked;
-	uint8_t isHookListLocked;
-	uint32_t pendingIdleFrames;
-	uint32_t pendingTickFrames;
-	cRZCriticalSection frameworkMutex;
-	// cRZCmdLine cmdLine;
-	cIGZDebugStream* debugStream;
-	cIGZOStream* stdOut;
-	cIGZOStream* stdErr;
-	cIGZIStream* stdIn;
-	int debugLevel;
-	cRZExceptionNotification* exceptionNotificationObj;
-	bool hasQuit;
-	int exitCode;
-	void* unknownWindowsInstance;
+	uint32_t refCount;                       // 0x88
+	tHooksList hooks;                        // 0x90
+	tServicesPriorityMap servicesByPriority; // 0x98
+	int __unknown_0xA8;
+	int __unknown_0xAC;
+	tServicesIdMap servicesById;             // 0xB0
+	int __unknown_0xC0;
+	tServicesList activeIdleListeners;       // 0xC4
+	tServicesList removedIdleListeners;      // 0xCC
+	tServicesList activeTickListeners;       // 0xD4
+	tServicesList removedTickListeners;      // 0xDC
+	bool ticksEnabled;                       // 0xE4
+	int32_t onIdleInterval;                  // 0xE8
+	int32_t totalTickFrames;                 // 0xEC
+	int32_t totalIdleFrames;                 // 0xF0
+	bool isInstall;                          // 0xF4
+	FrameworkState state;                    // 0xF8
+	uint8_t isServicePriorityMapLocked;      // 0xFC
+	uint8_t isServiceIdMapLocked;            // 0xFD
+	uint8_t isOnIdleListLocked;              // 0xFE
+	uint8_t isOnTickListLocked;              // 0xFF
+	uint8_t isHookListLocked;                // 0x100
+	int32_t pendingIdleFrames;               // 0x104
+	int32_t pendingTickFrames;               // 0x108
+	cRZCriticalSection frameworkMutex;       // 0x10C
+	// cRZCmdLine cmdLine;                   // 0x114
+	cIGZDebugStream* debugStream;            // 0x144
+	cIGZOStream* stdOut;                     // 0x148
+	cIGZOStream* stdErr;                     // 0x14C
+	cIGZIStream* stdIn;                      // 0x150
+	int debugLevel;                          // 0x154
+	cRZExceptionNotification* exceptionNotificationObj; // 0x158
+	bool hasQuit;                            // 0x15C
+	int exitCode;                            // 0x160
+	void* unknownWindowsInstance;            // 0x164
+	HWND mainHwnd;
 };

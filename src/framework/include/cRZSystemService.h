@@ -7,28 +7,28 @@ class cRZSystemService : public cIGZSystemService, public cRZUnknown
 public:
 	cRZSystemService(GZGUID serviceId, int32_t servicePriority);
 	cRZSystemService(GZGUID serviceId, int32_t servicePriority, int32_t tickPriority);
-	virtual ~cRZSystemService(void) { }
+	virtual ~cRZSystemService() { }
 
 public:
 	virtual bool QueryInterface(GZREFIID iid, void** outPtr);
-	virtual uint32_t AddRef(void);
-	virtual uint32_t Release(void);
+	virtual uint32_t AddRef();
+	virtual uint32_t Release();
 
 public:
-	virtual GZGUID GetServiceID(void);
+	virtual GZGUID GetServiceID();
 	virtual void SetServiceID(GZGUID id);
 
-	virtual int32_t GetServicePriority(void);
+	virtual int32_t GetServicePriority();
 
-	virtual bool IsServiceRunning(void);
+	virtual bool IsServiceRunning();
 	virtual void SetServiceRunning(bool running);
 
-	virtual bool Init(void);
-	virtual bool Shutdown(void);
-	virtual bool OnTick(void);
-	virtual bool OnIdle(void);
+	virtual bool Init();
+	virtual bool Shutdown();
+	virtual bool OnTick(int32_t totalTickFrames);
+	virtual bool OnIdle(int32_t totalIdleFrames);
 
-	virtual int32_t GetServiceTickPriority(void);
+	virtual int32_t GetServiceTickPriority();
 
 protected:
 	GZGUID serviceId;

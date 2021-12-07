@@ -16,7 +16,14 @@ class cRZExceptionNotification;
 
 enum FrameworkState
 {
-	GZFrameworkState_Uninitialized,
+	GZFrameworkState_InitializingCOM,
+	GZFrameworkState_PreFrameworkInit,
+	GZFrameworkState_UnknownState2,
+	GZFrameworkState_PreAppInit,
+	GZFrameworkState_InitializingApp,
+	GZFrameworkState_PostAppInit,
+	GZFrameworkState_PostFrameworkInit,
+	GZFrameworkState_Running,
 };
 
 class cIGZFramework : public cIGZUnknown
@@ -37,9 +44,9 @@ public:
 	virtual bool RemoveFromOnIdle(cIGZSystemService* service) = 0;
 
 	virtual int32_t GetOnIdleInterval(void) const = 0;
-	virtual void SetOnIdleInterval(int32_t intervalInMs) = 0;
+	virtual void SetOnIdleInterval(int32_t idleFrameInterval) = 0;
 
-	virtual void OnTick(uint32_t unknown) = 0; // TODO
+	virtual void OnTick(int32_t totalTickFrames) = 0; // TODO
 	virtual void OnIdle(void) = 0;
 
 	virtual bool IsTickEnabled(void) const = 0;
@@ -73,6 +80,6 @@ public:
 	virtual void SetApplication(cIGZApp* app) = 0;
 	virtual cIGZApp* Application(void) const = 0;
 
-	virtual void ReportException(char* exceptionReport) = 0;
+	virtual void ReportException(char const* exceptionReport) = 0;
 	virtual cRZExceptionNotification* ExceptionNotificationObj(void) const = 0;
 };

@@ -30,17 +30,17 @@ bool cRZSystemService::QueryInterface(GZREFIID iid, void** outPtr)
 	}
 }
 
-uint32_t cRZSystemService::AddRef(void)
+uint32_t cRZSystemService::AddRef()
 {
 	return cRZUnknown::AddRef();
 }
 
-uint32_t cRZSystemService::Release(void)
+uint32_t cRZSystemService::Release()
 {
 	return cRZUnknown::Release();
 }
 
-GZGUID cRZSystemService::GetServiceID(void)
+GZGUID cRZSystemService::GetServiceID()
 {
 	return serviceId;
 }
@@ -50,12 +50,12 @@ void cRZSystemService::SetServiceID(GZGUID id)
 	this->serviceId = id;
 }
 
-int32_t cRZSystemService::GetServicePriority(void)
+int32_t cRZSystemService::GetServicePriority()
 {
 	return servicePriority;
 }
 
-bool cRZSystemService::IsServiceRunning(void)
+bool cRZSystemService::IsServiceRunning()
 {
 	return running;
 }
@@ -65,27 +65,27 @@ void cRZSystemService::SetServiceRunning(bool running)
 	this->running = running;
 }
 
-bool cRZSystemService::Init(void)
+bool cRZSystemService::Init()
 {
 	return true;
 }
 
-bool cRZSystemService::Shutdown(void)
+bool cRZSystemService::Shutdown()
 {
 	return true;
 }
 
-bool cRZSystemService::OnTick(void)
+bool cRZSystemService::OnTick(int32_t totalTickFrames)
 {
 	return true;
 }
 
-bool cRZSystemService::OnIdle(void)
+bool cRZSystemService::OnIdle(int32_t totalIdleFrames)
 {
 	return true;
 }
 
-int32_t cRZSystemService::GetServiceTickPriority(void)
+int32_t cRZSystemService::GetServiceTickPriority()
 {
 	return tickPriority;
 }

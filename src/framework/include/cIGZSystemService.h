@@ -16,10 +16,10 @@ public:
 
 	virtual bool Init() = 0;
 	virtual bool Shutdown() = 0;
-	virtual bool OnTick() = 0;
-	virtual bool OnIdle() = 0;
+	virtual bool OnTick(int32_t totalTickFrames) = 0;
+	virtual bool OnIdle(int32_t totalIdleFrames) = 0;
 
-	virtual int32_t GetServiceTickPriority(int)
+	virtual int32_t GetServiceTickPriority()
 	{
 		return 0;
 	}

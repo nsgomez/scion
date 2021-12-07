@@ -1,11 +1,34 @@
 #include "cGZFramework.h"
+#include "cIGZApp.h"
 
 cGZFramework::cGZFramework()
 {
+	// TODO
+	// exceptionNotificationObj = new cRZExceptionNotification();
 }
 
 cGZFramework::~cGZFramework()
 {
+	// TODO
+	/*if (exceptionNotificationObj)
+	{
+		exceptionNotificationObj->Release();
+	}
+
+	if (stdIn)
+	{
+		stdIn->Release();
+	}
+
+	if (stdErr)
+	{
+		stdErr->Release();
+	}
+
+	if (stdOut)
+	{
+		stdOut->Release();
+	}*/
 }
 
 bool cGZFramework::QueryInterface(GZREFIID iid, void** outPtr)
@@ -163,36 +186,34 @@ bool cGZFramework::RemoveSystemService(cIGZSystemService* service)
 		/////////////////////////////////////
 		// Remove from servicesByPriority
 		/////////////////////////////////////
-		isServicePriorityMapLocked = 1;
+		isServicePriorityMapLocked = true;
 
-		tServicesPriorityMap::iterator prioMapIterator;
-		for (prioMapIterator = servicesByPriority.begin(); prioMapIterator != servicesByPriority.end(); ++prioMapIterator)
+		for (tServicesPriorityMap::iterator it = servicesByPriority.begin(); it != servicesByPriority.end(); ++it)
 		{
-			if ((*prioMapIterator).second == service)
+			if (it->second == service)
 			{
-				servicesByPriority.erase(prioMapIterator);
+				servicesByPriority.erase(it);
 				break;
 			}
 		}
 
-		isServicePriorityMapLocked = 0;
+		isServicePriorityMapLocked = false;
 
 		/////////////////////////////////////
 		// Remove from servicesById
 		/////////////////////////////////////
-		isServiceIdMapLocked = 1;
+		isServiceIdMapLocked = true;
 
-		tServicesIdMap::iterator idMapIterator;
-		for (idMapIterator = servicesById.begin(); idMapIterator != servicesById.end(); ++idMapIterator)
+		for (tServicesIdMap::iterator it = servicesById.begin(); it != servicesById.end(); ++it)
 		{
-			if ((*idMapIterator).second == service)
+			if (it->second == service)
 			{
-				servicesById.erase(idMapIterator);
+				servicesById.erase(it);
 				break;
 			}
 		}
 
-		isServiceIdMapLocked = 0;
+		isServiceIdMapLocked = false;
 		result = true;
 	}
 	else
@@ -206,6 +227,25 @@ bool cGZFramework::RemoveSystemService(cIGZSystemService* service)
 
 bool cGZFramework::GetSystemService(GZGUID serviceId, GZREFIID iid, void** outPtr)
 {
+	bool result;
+
+	frameworkMutex.Lock();
+	tServicesIdMap::iterator it = servicesById.find(serviceId);
+	isServiceIdMapLocked = true;
+
+	if (it == servicesById.end())
+	{
+		result = false;
+	}
+	else
+	{
+		result = it->second->QueryInterface(iid, outPtr);
+	}
+
+	isServiceIdMapLocked = false;
+	frameworkMutex.Unlock();
+
+	return result;
 }
 
 bool cGZFramework::EnumSystemServices(cIGZUnknownEnumerator* enumerator, cIGZUnknown* unknown1, uint32_t unknown2)
@@ -214,26 +254,192 @@ bool cGZFramework::EnumSystemServices(cIGZUnknownEnumerator* enumerator, cIGZUnk
 
 bool cGZFramework::AddHook(cIGZFrameworkHooks* hook)
 {
+	frameworkMutex.Lock();
+	bool result = false;
+
+	if (!isHookListLocked)
+	{
+		tHooksList::iterator it = hooks.begin();
+		tHooksList::iterator itEnd = hooks.end();
+
+		while (it != itEnd)
+		{
+			if ((*it) == hook)
+			{
+				frameworkMutex.Unlock();
+				return false;
+			}
+
+			++it;
+		}
+
+		hooks.push_back(cRZAutoRefCount<cIGZFrameworkHooks>(hook));
+		result = true;
+	}
+
+	frameworkMutex.Unlock();
+	return result;
 }
 
 bool cGZFramework::RemoveHook(cIGZFrameworkHooks* hook)
 {
+	frameworkMutex.Lock();
+	bool result = false;
+
+	if (!isHookListLocked)
+	{
+		tHooksList::iterator it = hooks.begin();
+		tHooksList::iterator itEnd = hooks.end();
+
+		while (it != itEnd)
+		{
+			if ((*it) == hook)
+			{
+				hooks.erase(it);
+				result = true;
+				break;
+			}
+
+			++it;
+		}
+	}
+
+	frameworkMutex.Unlock();
+	return result;
 }
 
 bool cGZFramework::AddToTick(cIGZSystemService* service)
 {
+	frameworkMutex.Lock();
+	bool result = false;
+
+	if (!isOnTickListLocked)
+	{
+		int tickPriority = service->GetServiceTickPriority();
+		int serviceId = service->GetServiceID();
+
+		tServicesList::iterator it = activeTickListeners.begin();
+		tServicesList::iterator itEnd = activeTickListeners.end();
+		int itTickPriority;
+
+		do
+		{
+			if (it == itEnd)
+			{
+				break;
+			}
+
+			cIGZSystemService* itSvc = (*it);
+			if (itSvc->GetServiceID() == service->GetServiceID())
+			{
+				frameworkMutex.Unlock();
+				return false;
+			}
+
+			itTickPriority = itSvc->GetServiceTickPriority();
+			++it;
+		}
+		while (tickPriority <= itTickPriority);
+
+		activeTickListeners.insert(it, cRZAutoRefCount<cIGZSystemService>(service));
+		result = true;
+	}
+
+	frameworkMutex.Unlock();
+	return result;
 }
 
 bool cGZFramework::RemoveFromTick(cIGZSystemService* service)
 {
+	frameworkMutex.Lock();
+	bool result = false;
+
+	if (!isOnTickListLocked)
+	{
+		if (pendingTickFrames > 0)
+		{
+			removedTickListeners.push_back(cRZAutoRefCount<cIGZSystemService>(service));
+		}
+
+		tServicesList::iterator it = activeTickListeners.begin();
+		tServicesList::iterator itEnd = activeTickListeners.end();
+
+		while (it != itEnd)
+		{
+			if ((*it) == service)
+			{
+				activeTickListeners.erase(it);
+				result = true;
+				break;
+			}
+
+			++it;
+		}
+	}
+
+	frameworkMutex.Unlock();
+	return result;
 }
 
 bool cGZFramework::AddToOnIdle(cIGZSystemService* service)
 {
+	frameworkMutex.Lock();
+	bool result = false;
+
+	if (!isOnIdleListLocked)
+	{
+		tServicesList::iterator it = activeIdleListeners.begin();
+		tServicesList::iterator itEnd = activeIdleListeners.end();
+
+		while (it != itEnd)
+		{
+			if ((*it) == service)
+			{
+				frameworkMutex.Unlock();
+				return false;
+			}
+
+			++it;
+		}
+
+		activeIdleListeners.push_back(cRZAutoRefCount<cIGZSystemService>(service));
+		result = true;
+	}
+
+	frameworkMutex.Unlock();
+	return result;
 }
 
 bool cGZFramework::RemoveFromOnIdle(cIGZSystemService* service)
 {
+	frameworkMutex.Lock();
+	bool result = false;
+
+	if (!isOnIdleListLocked)
+	{
+		if (pendingIdleFrames > 0)
+		{
+			removedIdleListeners.push_back(cRZAutoRefCount<cIGZSystemService>(service));
+		}
+
+		tServicesList::iterator it = activeIdleListeners.begin();
+		tServicesList::iterator itEnd = activeIdleListeners.end();
+
+		while (it != itEnd)
+		{
+			if ((*it) == service)
+			{
+				activeIdleListeners.erase(it);
+				result = true;
+				break;
+			}
+
+			++it;
+		}
+	}
+
+	frameworkMutex.Unlock();
+	return result;
 }
 
 int32_t cGZFramework::GetOnIdleInterval(void) const
@@ -241,23 +447,93 @@ int32_t cGZFramework::GetOnIdleInterval(void) const
 	return this->onIdleInterval;
 }
 
-void cGZFramework::SetOnIdleInterval(int32_t intervalInMs)
+void cGZFramework::SetOnIdleInterval(int32_t idleFrameInterval)
 {
 	int32_t actualInterval = 1;
-	if (intervalInMs > 0)
+	if (idleFrameInterval > 0)
 	{
-		actualInterval = intervalInMs;
+		actualInterval = idleFrameInterval;
 	}
 
-	this->onIdleInterval = actualInterval;
+	this->onIdleInterval = idleFrameInterval;
 }
 
-void cGZFramework::OnTick(uint32_t unknown)
+void cGZFramework::OnTick(int32_t totalTickFrames)
 {
+	frameworkMutex.Lock();
+
+	++pendingTickFrames;
+	std::vector<cIGZSystemService*> tickServiceVec;
+	isOnTickListLocked = true;
+
+	tServicesList::iterator copyIt = activeTickListeners.begin();
+	tServicesList::iterator copyItEnd = activeTickListeners.end();
+
+	while (copyIt != copyItEnd)
+	{
+		tickServiceVec.push_back(*copyIt);
+		++copyIt;
+	}
+
+	isOnTickListLocked = false;
+	frameworkMutex.Unlock();
+
+	for (std::vector<cIGZSystemService*>::iterator it = tickServiceVec.begin(); it != tickServiceVec.end(); ++it)
+	{
+		(*it)->OnTick(totalTickFrames);
+	}
+
+	if (pendingTickFrames == 1)
+	{
+		removedTickListeners.clear();
+	}
+
+	--pendingTickFrames;
 }
 
-void cGZFramework::OnIdle(void)
+void cGZFramework::OnIdle()
 {
+	this->OnTick(totalTickFrames++);
+
+	frameworkMutex.Lock();
+	++pendingIdleFrames;
+
+	if (totalTickFrames % onIdleInterval == 0)
+	{
+		int savedIdleFrames = totalIdleFrames;
+		++totalIdleFrames;
+
+		std::vector<cIGZSystemService*> idleServiceVec;
+		isOnIdleListLocked = true;
+
+		tServicesList::iterator copyIt = activeIdleListeners.begin();
+		tServicesList::iterator copyItEnd = activeIdleListeners.end();
+
+		while (copyIt != copyItEnd)
+		{
+			idleServiceVec.push_back(*copyIt);
+			++copyIt;
+		}
+
+		isOnIdleListLocked = false;
+		frameworkMutex.Unlock();
+
+		for (std::vector<cIGZSystemService*>::iterator it = idleServiceVec.begin(); it != idleServiceVec.end(); ++it)
+		{
+			(*it)->OnIdle(savedIdleFrames);
+		}
+	}
+	else
+	{
+		frameworkMutex.Unlock();
+	}
+
+	if (pendingIdleFrames == 1)
+	{
+		removedTickListeners.clear();
+	}
+
+	--pendingIdleFrames;
 }
 
 bool cGZFramework::IsTickEnabled(void) const
@@ -362,7 +638,7 @@ cIGZApp* cGZFramework::Application(void) const
 	return cGZFramework::mpApp;
 }
 
-void cGZFramework::ReportException(char* exceptionReport)
+void cGZFramework::ReportException(char const* exceptionReport)
 {
 }
 
@@ -372,26 +648,184 @@ cRZExceptionNotification* cGZFramework::ExceptionNotificationObj(void) const
 
 bool cGZFramework::PreAppInit(void)
 {
+	cIGZSystemService* appAsSvc;
+	cIGZApp* app = Application();
+
+	app->QueryInterface(GZIID_cIGZSystemService, reinterpret_cast<void**>(&appAsSvc));
+	AddSystemService(appAsSvc);
+
+	tServicesList copiedServices;
+	MakeSystemServiceListCopy(copiedServices);
+
+	for (tServicesList::iterator it = copiedServices.begin(); it != copiedServices.end(); ++it)
+	{
+		cIGZSystemService* service = *it;
+		if (service->GetServicePriority() <= -2000000)
+		{
+			break;
+		}
+
+		if (service->Init())
+		{
+			service->SetServiceRunning(true);
+		}
+	}
+
+	copiedServices.clear();
+	if (appAsSvc)
+	{
+		appAsSvc->Release();
+	}
+
+	return true;
 }
 
 bool cGZFramework::AppInit(void)
 {
+	tServicesList copiedServices;
+	MakeSystemServiceListCopy(copiedServices);
+
+	bool result = true;
+
+	for (tServicesList::iterator it = copiedServices.begin(); it != copiedServices.end(); ++it)
+	{
+		cIGZSystemService* service = *it;
+		int32_t servicePriority = service->GetServicePriority();
+
+		if (servicePriority <= -2000000)
+		{
+			if (servicePriority <= -3000000)
+			{
+				break;
+			}
+
+			if (!service->Init())
+			{
+				cIGZApp* serviceAsApp;
+				if (service->QueryInterface(GZIID_cIGZApp, reinterpret_cast<void**>(&serviceAsApp)))
+				{
+					serviceAsApp->Release();
+					result = false;
+					break;
+				}
+			}
+			else
+			{
+				service->SetServiceRunning(true);
+			}
+		}
+	}
+
+	copiedServices.clear();
+	return result;
 }
 
 bool cGZFramework::PostAppInit(void)
 {
+	tServicesList copiedServices;
+	MakeSystemServiceListCopy(copiedServices);
+
+	for (tServicesList::iterator it = copiedServices.begin(); it != copiedServices.end(); ++it)
+	{
+		cIGZSystemService* service = *it;
+		if (service->GetServicePriority() <= -3000000 && service->Init())
+		{
+			service->SetServiceRunning(true);
+		}
+	}
+
+	copiedServices.clear();
+	return true;
 }
 
 bool cGZFramework::PreAppShutdown(void)
 {
+	tServicesList copiedServices;
+	MakeSystemServiceListCopy(copiedServices, true);
+
+	bool result = true;
+
+	for (tServicesList::iterator it = copiedServices.begin(); it != copiedServices.end(); ++it)
+	{
+		cIGZSystemService* service = *it;
+		if (service->GetServicePriority() > -3000000)
+		{
+			break;
+		}
+
+		if (!service->Shutdown())
+		{
+			result = false;
+		}
+		else
+		{
+			service->SetServiceRunning(false);
+		}
+	}
+
+	copiedServices.clear();
+	return result;
 }
 
 bool cGZFramework::AppShutdown(void)
 {
+	tServicesList copiedServices;
+	MakeSystemServiceListCopy(copiedServices, true);
+
+	bool result = true;
+
+	for (tServicesList::iterator it = copiedServices.begin(); it != copiedServices.end(); ++it)
+	{
+		cIGZSystemService* service = *it;
+		int servicePriority = service->GetServicePriority();
+
+		if (servicePriority > -3000000)
+		{
+			if (servicePriority > -2000000)
+			{
+				break;
+			}
+
+			if (!service->Shutdown())
+			{
+				result = false;
+			}
+			else
+			{
+				service->SetServiceRunning(false);
+			}
+		}
+	}
+
+	copiedServices.clear();
+	return result;
 }
 
 bool cGZFramework::PostAppShutdown(void)
 {
+	tServicesList copiedServices;
+	MakeSystemServiceListCopy(copiedServices, true);
+
+	bool result = true;
+
+	for (tServicesList::iterator it = copiedServices.begin(); it != copiedServices.end(); ++it)
+	{
+		cIGZSystemService* service = *it;
+		if (service->GetServicePriority() > -2000000)
+		{
+			if (!service->Shutdown())
+			{
+				result = false;
+			}
+			else
+			{
+				service->SetServiceRunning(false);
+			}
+		}
+	}
+
+	copiedServices.clear();
+	return result;
 }
 
 cIGZFramework* cGZFramework::AsIGZFramework(void)
@@ -409,24 +843,201 @@ void* cGZFramework::GetWindowsInstance(void)
 
 HWND cGZFramework::GetMainHWND(void)
 {
+	return mainHwnd;
 }
 
 void cGZFramework::SetMainHWND(HWND hwnd)
 {
+	mainHwnd = hwnd;
 }
 
-bool cGZFramework::sInit(cRZCmdLine* cmdLine, bool unknown1)
+bool cGZFramework::HookPreFrameworkInit()
 {
+	if (!isHookListLocked)
+	{
+		tHooksList copiedHooks;
+		MakeHookListCopy(copiedHooks);
+
+		for (tHooksList::iterator it = copiedHooks.begin(); it != copiedHooks.end(); ++it)
+		{
+			cIGZFrameworkHooks* hook = *it;
+			hook->PreFrameworkInit();
+		}
+
+		copiedHooks.clear();
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+}
+
+bool cGZFramework::HookPreAppInit()
+{
+	if (!isHookListLocked)
+	{
+		tHooksList copiedHooks;
+		MakeHookListCopy(copiedHooks);
+
+		for (tHooksList::iterator it = copiedHooks.begin(); it != copiedHooks.end(); ++it)
+		{
+			cIGZFrameworkHooks* hook = *it;
+			hook->PreAppInit();
+		}
+
+		copiedHooks.clear();
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+}
+
+bool cGZFramework::HookPostAppInit()
+{
+	if (!isHookListLocked)
+	{
+		tHooksList copiedHooks;
+		MakeHookListCopy(copiedHooks);
+
+		for (tHooksList::iterator it = copiedHooks.begin(); it != copiedHooks.end(); ++it)
+		{
+			cIGZFrameworkHooks* hook = *it;
+			hook->PostAppInit();
+		}
+
+		copiedHooks.clear();
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+}
+
+void cGZFramework::MakeHookListCopy(tHooksList& dest)
+{
+	frameworkMutex.Lock();
+	isHookListLocked = true;
+
+	for (tHooksList::iterator it = hooks.begin(); it != hooks.end(); ++it)
+	{
+		dest.push_back(*it);
+	}
+
+	isHookListLocked = false;
+	frameworkMutex.Unlock();
+}
+
+void cGZFramework::MakeSystemServiceListCopy(tServicesList& dest, bool reversePriority)
+{
+	frameworkMutex.Lock();
+	isServicePriorityMapLocked = true;
+
+	if (!reversePriority)
+	{
+		for (tServicesPriorityMap::reverse_iterator it = servicesByPriority.rbegin(); it != servicesByPriority.rend(); ++it)
+		{
+			dest.push_back(it->second);
+		}
+	}
+	else
+	{
+		for (tServicesPriorityMap::iterator it = servicesByPriority.begin(); it != servicesByPriority.end(); ++it)
+		{
+			dest.push_back(it->second);
+		}
+	}
+
+	isServicePriorityMapLocked = false;
+	frameworkMutex.Unlock();
+}
+
+bool cGZFramework::sInit(cRZCmdLine const& cmdLine, bool unknown1)
+{
+	// TODO: SetCommandLine
+	// TODO: FixCommandLine
+
+	cIGZCOM* com = mpFramework->GetCOMObject();
+	if (com->RealInit())
+	{
+		com->SetServiceRunning(true);
+	}
+
+	cIGZSystemService* comAsService;
+	if (com->QueryInterface(GZIID_cIGZSystemService, reinterpret_cast<void**>(&comAsService)))
+	{
+		mpFramework->AddSystemService(comAsService);
+		comAsService->Release();
+		comAsService = NULL;
+	}
+
+	mpApp->AddCOMDirectorsHere();
+	mpApp->AddDynamicLibrariesHere();
+	mpApp->LoadRegistry();
+
+	mpFramework->state = GZFrameworkState_PreFrameworkInit;
+
+	if (!mpApp->PreFrameworkInit())
+	{
+		com->RealShutdown();
+	}
+	else
+	{
+		mpFramework->HookPreFrameworkInit();
+
+		mpFramework->state = GZFrameworkState_UnknownState2;
+		mpFramework->state = GZFrameworkState_PreAppInit;
+
+		mpFramework->PreAppInit();
+		mpFramework->HookPreAppInit();
+
+		mpFramework->state = GZFrameworkState_InitializingApp;
+		if (mpFramework->AppInit())
+		{
+			mpFramework->ToggleTick(true);
+			mpFramework->state = GZFrameworkState_PostAppInit;
+
+			mpFramework->PostAppInit();
+			mpFramework->state = GZFrameworkState_PostFrameworkInit;
+
+			mpApp->PostFrameworkInit();
+			mpFramework->HookPostAppInit();
+
+			return mnReturnCode == 0;
+		}
+	}
+
+	cGZFramework::mnReturnCode = -1;
+	return false;
 }
 
 bool cGZFramework::sRun(void)
 {
+	cIGZApp* app = mpFramework->Application();
+	mpFramework->state = GZFrameworkState_Running;
+
+	if (!app->GZRun())
+	{
+		mpFramework->Run();
+	}
+
+	return mnReturnCode == 0;
 }
 
 void cGZFramework::sSetApplication(cIGZApp* app)
 {
+	cGZFramework::mpApp = app;
+	app->AddRef();
 }
 
 void cGZFramework::sSetFramework(cGZFramework* framework)
 {
+	cGZFramework::mpSavedFramework = framework;
+	cGZFramework::mpFramework = framework;
+
+	framework->AddRef();
+	mpSavedFramework->AddRef();
 }

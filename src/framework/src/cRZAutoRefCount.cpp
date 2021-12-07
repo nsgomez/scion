@@ -11,6 +11,10 @@ template<class T>
 cRZAutoRefCount<T>::cRZAutoRefCount(T* obj)
 {
 	this->obj = obj;
+	if (obj != NULL)
+	{
+		obj->AddRef();
+	}
 }
 
 template<class T>
