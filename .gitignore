@@ -1,6 +1,7 @@
 *.dll
 *.exe
 *.idb
+*.ilk
 *.lib
 *.obj
 *.pdb
@@ -8,3 +9,6 @@
 *.suo
 *.vssscc
 BuildLog.htm
+src/stlport/doc
+src/stlport/etc
+src/stlport/test
