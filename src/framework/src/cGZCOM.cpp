@@ -114,11 +114,13 @@ void cGZCOM::FreeUnusedLibraries(void)
 bool cGZCOM::CreateGuid(GZGUID* outGuid)
 {
 	// TODO
+	return false;
 }
 
 bool cGZCOM::CreateGuids(uint32_t guids[], uint32_t count)
 {
 	// TODO
+	return false;
 }
 
 bool cGZCOM::RealInit()
@@ -129,7 +131,7 @@ bool cGZCOM::RealInit()
 		comDirector = RZGetCOMDllDirector();
 
 		cRZString appPath;
-		RZGetCurrentAppPath(appPath);
+		// RZGetCurrentAppPath(appPath); // TODO
 
 		if (comDirector->InitializeCOM(this, appPath))
 		{

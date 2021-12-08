@@ -1,6 +1,11 @@
 #include "cGZFramework.h"
 #include "cIGZApp.h"
 
+cIGZApp* cGZFramework::mpApp = NULL;
+cGZFramework* cGZFramework::mpFramework = NULL;
+cGZFramework* cGZFramework::mpSavedFramework = NULL;
+int cGZFramework::mnReturnCode = 0;
+
 cGZFramework::cGZFramework()
 {
 	// TODO
@@ -250,6 +255,8 @@ bool cGZFramework::GetSystemService(GZGUID serviceId, GZREFIID iid, void** outPt
 
 bool cGZFramework::EnumSystemServices(cIGZUnknownEnumerator* enumerator, cIGZUnknown* unknown1, uint32_t unknown2)
 {
+	// TODO
+	return false;
 }
 
 bool cGZFramework::AddHook(cIGZFrameworkHooks* hook)
@@ -548,8 +555,15 @@ void cGZFramework::ToggleTick(bool toggle)
 
 void cGZFramework::Quit(int exitCode)
 {
-	this->hasQuit = true;
-	this->exitCode = exitCode;
+	if (false)
+	{
+		PostQuitMessage(exitCode);
+	}
+	else
+	{
+		this->hasQuit = true;
+		this->exitCode = exitCode;
+	}
 }
 
 void cGZFramework::AbortiveQuit(int exitCode)
@@ -560,6 +574,8 @@ void cGZFramework::AbortiveQuit(int exitCode)
 
 cRZCmdLine* cGZFramework::CommandLine(void)
 {
+	// TODO
+	return NULL;
 }
 
 bool cGZFramework::IsInstall(void) const
@@ -608,22 +624,32 @@ int cGZFramework::GetDebugLevel(void) const
 
 cIGZOStream* cGZFramework::StdOut(void)
 {
+	// TODO
+	return NULL;
 }
 
 cIGZOStream* cGZFramework::StdErr(void)
 {
+	// TODO
+	return NULL;
 }
 
 cIGZIStream* cGZFramework::StdIn(void)
 {
+	// TODO
+	return NULL;
 }
 
 bool cGZFramework::GetStream(int32_t streamNum, GZREFIID iid, void** outPtr)
 {
+	// TODO
+	return false;
 }
 
 bool cGZFramework::SetStream(int32_t streamNum, cIGZUnknown* stream)
 {
+	// TODO
+	return false;
 }
 
 void cGZFramework::SetApplication(cIGZApp* app)
@@ -640,10 +666,13 @@ cIGZApp* cGZFramework::Application(void) const
 
 void cGZFramework::ReportException(char const* exceptionReport)
 {
+	// TODO
 }
 
 cRZExceptionNotification* cGZFramework::ExceptionNotificationObj(void) const
 {
+	// TODO
+	return NULL;
 }
 
 bool cGZFramework::PreAppInit(void)
@@ -835,10 +864,41 @@ cIGZFramework* cGZFramework::AsIGZFramework(void)
 
 void cGZFramework::Run(void)
 {
+	MSG msg;
+
+	do
+	{
+		if (!this->ticksEnabled)
+		{
+			WaitMessage();
+		}
+
+		while (PeekMessage(&msg, NULL, 0, 0, 1))
+		{
+			if (msg.message == WM_QUIT)
+			{
+				cGZFramework::mnReturnCode = msg.wParam;
+				return;
+			}
+
+			TranslateMessage(&msg);
+			DispatchMessage(&msg);
+		}
+
+		if (this->ticksEnabled)
+		{
+			this->OnIdle();
+		}
+	}
+	while (!hasQuit); // TODO: wrong condition
+
+	cGZFramework::mnReturnCode = this->exitCode;
 }
 
 void* cGZFramework::GetWindowsInstance(void)
 {
+	// TODO
+	return NULL;
 }
 
 HWND cGZFramework::GetMainHWND(void)
@@ -955,7 +1015,18 @@ void cGZFramework::MakeSystemServiceListCopy(tServicesList& dest, bool reversePr
 	frameworkMutex.Unlock();
 }
 
-bool cGZFramework::sInit(cRZCmdLine const& cmdLine, bool unknown1)
+int cGZFramework::Main(cRZCmdLine const& cmdLine, bool unknown)
+{
+	if (sInit(cmdLine, unknown))
+	{
+		sRun();
+	}
+
+	cGZFramework::mnReturnCode = 0;
+	return 0;
+}
+
+bool cGZFramework::sInit(cRZCmdLine const& cmdLine, bool unknown)
 {
 	// TODO: SetCommandLine
 	// TODO: FixCommandLine

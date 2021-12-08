@@ -13,6 +13,7 @@
 static const GZGUID GZCLSID_cGZFramework = 0x000003E8;
 
 class cIGZUnknownEnumerator;
+class cRZCmdLine;
 
 class cGZFramework : public cIGZFramework, public cIGZFrameworkW32
 {
@@ -110,7 +111,9 @@ protected:
 	void MakeSystemServiceListCopy(tServicesList& dest, bool reversePriority = false);
 
 public:
-	static bool sInit(cRZCmdLine const& cmdLine, bool unknown1); // TODO
+	static int Main(cRZCmdLine const& cmdLine, bool unknown); // TODO
+
+	static bool sInit(cRZCmdLine const& cmdLine, bool unknown); // TODO
 	static bool sRun();
 	static void sSetApplication(cIGZApp* app);
 	static void sSetFramework(cGZFramework* framework);

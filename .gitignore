@@ -1,11 +1,13 @@
 *.dll
 *.exe
+*.exp
 *.idb
 *.ilk
 *.lib
 *.obj
 *.pdb
 *.ncb
+*.res
 *.suo
 *.vssscc
 BuildLog.htm

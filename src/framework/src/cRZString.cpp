@@ -158,11 +158,13 @@ bool cRZString::IsEqual(char const* other, uint32_t otherLen, bool caseSensitive
 int cRZString::CompareTo(cIGZString const& other, bool caseSensitive) const
 {
 	// TODO
+	return 0;
 }
 
 int cRZString::CompareTo(char const* other, uint32_t otherLen, bool caseSensitive) const
 {
 	// TODO
+	return 0;
 }
 
 cIGZString& cRZString::operator=(cIGZString const& other)
@@ -302,10 +304,14 @@ void cRZString::Sprintf(char const* format, ...)
 
 bool cRZString::BeginsWith(char const* needle, uint32_t needleLen) const
 {
+	// TODO
+	return false;
 }
 
 bool cRZString::EndsWith(char const* needle, uint32_t needleLen) const
 {
+	// TODO
+	return false;
 }
 
 void cRZString::Left(uint32_t) const
@@ -362,16 +368,19 @@ void cRZString::SplitToken(char const* token)
 bool cRZString::SplitTokenDelimited(char)
 {
 	// TODO
+	return false;
 }
 
 bool cRZString::SplitTokenDelimited(char, cRZString&)
 {
 	// TODO
+	return false;
 }
 
 bool cRZString::SplitTokenSeparated(cRZString&)
 {
 	// TODO
+	return false;
 }
 
 void cRZString::Strcat(char const* str)

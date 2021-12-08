@@ -3,6 +3,10 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "framework", "framework\fram
 	ProjectSection(ProjectDependencies) = postProject
 	EndProjectSection
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "app", "app\app.vcproj", "{CB960DBD-BD16-4F92-B886-7621289C3432}"
+	ProjectSection(ProjectDependencies) = postProject
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SourceCodeControl) = preSolution
 		SccNumberOfProjects = 2
@@ -26,6 +30,10 @@ Global
 		{07DE7AE6-6EBF-4768-B5B0-79FFDFDF2E52}.Debug.Build.0 = Debug|Win32
 		{07DE7AE6-6EBF-4768-B5B0-79FFDFDF2E52}.Release.ActiveCfg = Release|Win32
 		{07DE7AE6-6EBF-4768-B5B0-79FFDFDF2E52}.Release.Build.0 = Release|Win32
+		{CB960DBD-BD16-4F92-B886-7621289C3432}.Debug.ActiveCfg = Debug|Win32
+		{CB960DBD-BD16-4F92-B886-7621289C3432}.Debug.Build.0 = Debug|Win32
+		{CB960DBD-BD16-4F92-B886-7621289C3432}.Release.ActiveCfg = Release|Win32
+		{CB960DBD-BD16-4F92-B886-7621289C3432}.Release.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 	EndGlobalSection

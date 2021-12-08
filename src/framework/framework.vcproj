@@ -25,7 +25,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\include;..\include\stlport;.\include"
+				AdditionalIncludeDirectories="..\include;..\stlport\stlport;.\include"
 				PreprocessorDefinitions="WIN32;_DEBUG"
 				MinimalRebuild="FALSE"
 				BasicRuntimeChecks="0"
@@ -69,7 +69,7 @@
 				OmitFramePointers="TRUE"
 				OptimizeForProcessor="2"
 				OptimizeForWindowsApplication="TRUE"
-				AdditionalIncludeDirectories="..\include;..\include\stlport;.\include"
+				AdditionalIncludeDirectories="..\include;..\stlport\stlport;.\include"
 				PreprocessorDefinitions="WIN32;NDEBUG"
 				StringPooling="TRUE"
 				MinimalRebuild="FALSE"
@@ -123,9 +123,6 @@
 				RelativePath=".\src\cGZFramework.cpp">
 			</File>
 			<File
-				RelativePath=".\src\cRZAutoRefCount.cpp">
-			</File>
-			<File
 				RelativePath=".\src\cRZCmdLine.cpp">
 			</File>
 			<File
@@ -142,6 +139,9 @@
 			</File>
 			<File
 				RelativePath=".\src\cRZUnknown.cpp">
+			</File>
+			<File
+				RelativePath=".\src\RZStatics.cpp">
 			</File>
 		</Filter>
 		<Filter
