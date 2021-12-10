@@ -8,17 +8,6 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "app", "app\app.vcproj", "{C
 	EndProjectSection
 EndProject
 Global
-	GlobalSection(SourceCodeControl) = preSolution
-		SccNumberOfProjects = 2
-		SccProjectName0 = SC4000
-		SccLocalPath0 = .
-		SccProvider0 = MSSCCI:Visual\u0020Git
-		CanCheckoutShared = false
-		SolutionUniqueID = {46972C39-F12D-4AFC-8278-3EB715E452A6}
-		SccProjectUniqueName1 = framework\\framework.vcproj
-		SccLocalPath1 = framework
-		CanCheckoutShared = false
-	EndGlobalSection
 	GlobalSection(SolutionConfiguration) = preSolution
 		Debug = Debug
 		Release = Release

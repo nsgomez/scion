@@ -29,6 +29,7 @@ cRZCriticalSection::cRZCriticalSection()
 cRZCriticalSection::~cRZCriticalSection()
 {
 	DeleteCriticalSection(criticalSection);
+	delete criticalSection;
 }
 
 void cRZCriticalSection::Release()

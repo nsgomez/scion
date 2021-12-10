@@ -17,15 +17,49 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#pragma once
-#include <stdint.h>
+#include "cIGZString.h"
+#include "cRZMutex.h"
 
-class cIGZFramework;
-class cIGZCOMDirector;
-class cIGZString;
+cRZMutex::cRZMutex(cIGZString const& mutexName)
+{
+	mutex = CreateMutex(NULL, false, mutexName.ToChar());
+}
 
-extern cIGZFramework* RZGetFramework();
-extern cIGZCOMDirector* RZGetCOMDllDirector();
-//extern void RZGetCurrentAppPath(cIGZString& output);
+cRZMutex::~cRZMutex()
+{
+	CloseHandle(mutex);
+}
 
-extern bool RZIsKeyDownNow(uint32_t key);
+void cRZMutex::Release()
+{
+	if (this)
+	{
+		delete this;
+	}
+}
+
+bool cRZMutex::Lock()
+{
+	return WaitForSingleObject(mutex, -1) != WAIT_FAILED;
+}
+
+bool cRZMutex::Unlock()
+{
+	return ReleaseMutex(mutex) != 0;
+}
+
+bool cRZMutex::TryLock()
+{
+	DWORD result = WaitForSingleObject(mutex, 0);
+	return result != WAIT_FAILED && result != WAIT_TIMEOUT;
+}
+
+bool cRZMutex::IsValid()
+{
+	return mutex != NULL;
+}
+
+HANDLE cRZMutex::GetMutexHandle()
+{
+	return mutex;
+}

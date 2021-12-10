@@ -20,12 +20,17 @@
 #pragma once
 #include <stdint.h>
 
-class cIGZFramework;
-class cIGZCOMDirector;
-class cIGZString;
+class cRZRefCount
+{
+public:
+	cRZRefCount() { }
+	virtual ~cRZRefCount() { }
 
-extern cIGZFramework* RZGetFramework();
-extern cIGZCOMDirector* RZGetCOMDllDirector();
-//extern void RZGetCurrentAppPath(cIGZString& output);
+	virtual uint32_t Release();
+	virtual uint32_t AddRef();
+	virtual uint32_t RemoveRef();
+	virtual uint32_t RefCount();
 
-extern bool RZIsKeyDownNow(uint32_t key);
+protected:
+	uint32_t refCount;
+};

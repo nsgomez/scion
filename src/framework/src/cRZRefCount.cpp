@@ -17,15 +17,37 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#pragma once
-#include <stdint.h>
+#include "cRZRefCount.h"
 
-class cIGZFramework;
-class cIGZCOMDirector;
-class cIGZString;
+uint32_t cRZRefCount::Release()
+{
+	if (refCount < 2)
+	{
+		delete this;
+		return 0;
+	}
+	else
+	{
+		return --refCount;
+	}
+}
 
-extern cIGZFramework* RZGetFramework();
-extern cIGZCOMDirector* RZGetCOMDllDirector();
-//extern void RZGetCurrentAppPath(cIGZString& output);
+uint32_t cRZRefCount::AddRef()
+{
+	return ++refCount;
+}
 
-extern bool RZIsKeyDownNow(uint32_t key);
+uint32_t cRZRefCount::RemoveRef()
+{
+	if (refCount != 0)
+	{
+		return --refCount;
+	}
+
+	return 0;
+}
+
+uint32_t cRZRefCount::RefCount()
+{
+	return refCount;
+}

@@ -18,14 +18,24 @@
  */
 
 #pragma once
-#include <stdint.h>
+#include <Windows.h>
 
-class cIGZFramework;
-class cIGZCOMDirector;
 class cIGZString;
 
-extern cIGZFramework* RZGetFramework();
-extern cIGZCOMDirector* RZGetCOMDllDirector();
-//extern void RZGetCurrentAppPath(cIGZString& output);
+class cRZMutex
+{
+public:
+	cRZMutex(cIGZString const& mutexName);
 
-extern bool RZIsKeyDownNow(uint32_t key);
+	virtual void Release();
+	virtual bool Lock();
+	virtual bool Unlock();
+	virtual bool TryLock();
+	virtual bool IsValid();
+	virtual ~cRZMutex();
+
+	virtual HANDLE GetMutexHandle();
+
+protected:
+	HANDLE mutex;
+};

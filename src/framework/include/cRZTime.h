@@ -20,12 +20,15 @@
 #pragma once
 #include <stdint.h>
 
-class cIGZFramework;
-class cIGZCOMDirector;
-class cIGZString;
+class cRZTime
+{
+public:
+	cRZTime();
+	cRZTime(uint32_t unixTime);
 
-extern cIGZFramework* RZGetFramework();
-extern cIGZCOMDirector* RZGetCOMDllDirector();
-//extern void RZGetCurrentAppPath(cIGZString& output);
+public:
+	uint32_t Timestamp() const;
 
-extern bool RZIsKeyDownNow(uint32_t key);
+protected:
+	uint32_t timestamp;
+};

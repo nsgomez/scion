@@ -17,15 +17,20 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#pragma once
-#include <stdint.h>
+#include <ctime>
+#include "cRZTime.h"
 
-class cIGZFramework;
-class cIGZCOMDirector;
-class cIGZString;
+cRZTime::cRZTime() :
+	timestamp(time(NULL))
+{
+}
 
-extern cIGZFramework* RZGetFramework();
-extern cIGZCOMDirector* RZGetCOMDllDirector();
-//extern void RZGetCurrentAppPath(cIGZString& output);
+cRZTime::cRZTime(uint32_t unixTime) :
+	timestamp(unixTime)
+{
+}
 
-extern bool RZIsKeyDownNow(uint32_t key);
+uint32_t cRZTime::Timestamp() const
+{
+	return timestamp;
+}

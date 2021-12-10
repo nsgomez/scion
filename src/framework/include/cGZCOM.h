@@ -24,6 +24,7 @@
 #include "cIGZCOM.h"
 #include "cIGZString.h"
 #include "cRZCriticalSection.h"
+#include "cRZRandom.h"
 #include "cRZSystemService.h"
 
 class cGZCOM : public cIGZCOM, public cRZSystemService
@@ -81,6 +82,6 @@ protected:
 	cGZCOMLibrary* currentLibrary;
 	cIGZFramework* framework;
 	cIGZCOMDirector* comDirector;
-	// RZRandom random; // TODO
+	cRZRandom random;
 	int nextGuidGenTime;
 };

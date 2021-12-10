@@ -18,14 +18,30 @@
  */
 
 #pragma once
-#include <stdint.h>
+#include "cIGZFramework.h"
+#include "RZStatics.h"
 
-class cIGZFramework;
-class cIGZCOMDirector;
-class cIGZString;
+template <class T, GZREFIID iid, GZGUID srvid>
+class cRZSysServPtr
+{
+public:
+	cRZSysServPtr()
+	{
+		cIGZFramework* framework = RZGetFramework();
+		if (framework != NULL)
+		{
+			framework->GetSystemService(srvid, iid, reinterpret_cast<void**>(&srv));
+		}
+	}
 
-extern cIGZFramework* RZGetFramework();
-extern cIGZCOMDirector* RZGetCOMDllDirector();
-//extern void RZGetCurrentAppPath(cIGZString& output);
+	~cRZSysServPtr()
+	{
+		if (srv != NULL)
+		{
+			srv->Release();
+		}
+	}
 
-extern bool RZIsKeyDownNow(uint32_t key);
+protected:
+	T* srv;
+};

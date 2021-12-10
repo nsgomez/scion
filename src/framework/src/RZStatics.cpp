@@ -30,3 +30,13 @@ cIGZCOMDirector* RZGetCOMDllDirector()
 	// TODO
 	return NULL;
 }
+
+bool RZIsKeyDownNow(uint32_t key)
+{
+	if (key == VK_LBUTTON && GetSystemMetrics(SM_SWAPBUTTON) != 0)
+	{
+		key = VK_RBUTTON;
+	}
+
+	return (GetAsyncKeyState(key) >> 15) != 0;
+}

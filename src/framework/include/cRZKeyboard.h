@@ -18,14 +18,32 @@
  */
 
 #pragma once
+#include <list>
 #include <stdint.h>
 
-class cIGZFramework;
-class cIGZCOMDirector;
-class cIGZString;
+static const uint32_t kShiftModifier    = (1 << 0);
+static const uint32_t kControlModifier  = (1 << 1);
+static const uint32_t kMenuModifier     = (1 << 2);
 
-extern cIGZFramework* RZGetFramework();
-extern cIGZCOMDirector* RZGetCOMDllDirector();
-//extern void RZGetCurrentAppPath(cIGZString& output);
+class cRZKeyboard
+{
+public:
+	cRZKeyboard();
 
-extern bool RZIsKeyDownNow(uint32_t key);
+	virtual void ClearKeyboard();
+	virtual bool IsKeyDown(uint32_t key);
+	virtual bool IsKeyDown(uint32_t key, uint32_t modifiers);
+	virtual bool IsKeyDownNow(uint32_t key);
+	virtual bool CharIsModifier(uint32_t key);
+	virtual uint32_t GetCurrentModifierState();
+	virtual bool IsToggleKeySet(uint32_t key);
+	virtual void ProcessKeyDown(uint32_t key);
+	virtual void ProcessKeyUp(uint32_t key);
+
+	static bool IsKeyDownNowStatic(uint32_t key);
+	static bool IsToggleKeySetStatic(uint32_t key);
+
+protected:
+	std::list<uint32_t> keysPressed;
+	bool keyStates[256];
+};

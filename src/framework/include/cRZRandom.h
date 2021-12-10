@@ -20,12 +20,29 @@
 #pragma once
 #include <stdint.h>
 
-class cIGZFramework;
-class cIGZCOMDirector;
-class cIGZString;
+class cRZRandom
+{
+public:
+	cRZRandom();
+	cRZRandom(uint32_t startSeed);
 
-extern cIGZFramework* RZGetFramework();
-extern cIGZCOMDirector* RZGetCOMDllDirector();
-//extern void RZGetCurrentAppPath(cIGZString& output);
+	void Seed(uint32_t newSeed);
 
-extern bool RZIsKeyDownNow(uint32_t key);
+	double RandomDoubleGaussian();
+	double RandomDoubleRangeGaussian(double lower, double upper);
+	double RandomDoubleRangeGaussianFast(double lower, double upper);
+	double RandomDoubleRangeUniform(double lower, double upper);
+	double RandomDoubleUniform();
+
+	int32_t RandomSint32RangeGaussianFast(int32_t lower, int32_t upper);
+	int32_t RandomSint32RangeUniform(int32_t lower, int32_t upper);
+
+	uint32_t RandomUint32Uniform(uint32_t upper);
+	uint32_t RandomUint32Uniform();
+
+protected:
+	uint32_t integerSeed;
+	uint32_t doubleSeed;
+	bool hasSavedGaussianNoise;
+	double savedGaussianNoise;
+};
