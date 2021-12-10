@@ -81,17 +81,17 @@ bool cGZFramework::QueryInterface(GZREFIID iid, void** outPtr)
 
 uint32_t cGZFramework::AddRef()
 {
-	frameworkMutex.Lock();
+	criticalSection.Lock();
 	int oldRefCount = this->refCount;
 	this->refCount = oldRefCount + 1;
-	frameworkMutex.Unlock();
+	criticalSection.Unlock();
 
 	return oldRefCount + 1;
 }
 
 uint32_t cGZFramework::Release()
 {
-	frameworkMutex.Lock();
+	criticalSection.Lock();
 
 	int newRefCount = 0;
 	if (this->refCount > 1)
@@ -100,7 +100,7 @@ uint32_t cGZFramework::Release()
 		this->refCount = newRefCount;
 	}
 
-	frameworkMutex.Unlock();
+	criticalSection.Unlock();
 	return newRefCount;
 }
 
@@ -113,7 +113,7 @@ bool cGZFramework::AddSystemService(cIGZSystemService* service)
 			return false;
 		}
 
-		frameworkMutex.Lock();
+		criticalSection.Lock();
 		
 		int32_t priority = service->GetServicePriority();
 		GZGUID serviceId = service->GetServiceID();
@@ -126,11 +126,11 @@ bool cGZFramework::AddSystemService(cIGZSystemService* service)
 			servicesById.resize(servicesById.size() + 1);
 			servicesById.insert(tServicesIdMap::value_type(serviceId, cRZAutoRefCount<cIGZSystemService>(service)));
 
-			frameworkMutex.Unlock();
+			criticalSection.Unlock();
 			return true;
 		}
 		
-		frameworkMutex.Unlock();
+		criticalSection.Unlock();
 	}
 
 	return false;
@@ -139,7 +139,7 @@ bool cGZFramework::AddSystemService(cIGZSystemService* service)
 bool cGZFramework::RemoveSystemService(cIGZSystemService* service)
 {
 	bool result;
-	frameworkMutex.Lock();
+	criticalSection.Lock();
 
 	if (!isServiceIdMapLocked && !isServicePriorityMapLocked)
 	{
@@ -245,7 +245,7 @@ bool cGZFramework::RemoveSystemService(cIGZSystemService* service)
 		result = false;
 	}
 
-	frameworkMutex.Unlock();
+	criticalSection.Unlock();
 	return result;
 }
 
@@ -253,7 +253,7 @@ bool cGZFramework::GetSystemService(GZGUID serviceId, GZREFIID iid, void** outPt
 {
 	bool result;
 
-	frameworkMutex.Lock();
+	criticalSection.Lock();
 	tServicesIdMap::iterator it = servicesById.find(serviceId);
 	isServiceIdMapLocked = true;
 
@@ -267,7 +267,7 @@ bool cGZFramework::GetSystemService(GZGUID serviceId, GZREFIID iid, void** outPt
 	}
 
 	isServiceIdMapLocked = false;
-	frameworkMutex.Unlock();
+	criticalSection.Unlock();
 
 	return result;
 }
@@ -280,7 +280,7 @@ bool cGZFramework::EnumSystemServices(cIGZUnknownEnumerator* enumerator, cIGZUnk
 
 bool cGZFramework::AddHook(cIGZFrameworkHooks* hook)
 {
-	frameworkMutex.Lock();
+	criticalSection.Lock();
 	bool result = false;
 
 	if (!isHookListLocked)
@@ -292,7 +292,7 @@ bool cGZFramework::AddHook(cIGZFrameworkHooks* hook)
 		{
 			if ((*it) == hook)
 			{
-				frameworkMutex.Unlock();
+				criticalSection.Unlock();
 				return false;
 			}
 
@@ -303,13 +303,13 @@ bool cGZFramework::AddHook(cIGZFrameworkHooks* hook)
 		result = true;
 	}
 
-	frameworkMutex.Unlock();
+	criticalSection.Unlock();
 	return result;
 }
 
 bool cGZFramework::RemoveHook(cIGZFrameworkHooks* hook)
 {
-	frameworkMutex.Lock();
+	criticalSection.Lock();
 	bool result = false;
 
 	if (!isHookListLocked)
@@ -330,13 +330,13 @@ bool cGZFramework::RemoveHook(cIGZFrameworkHooks* hook)
 		}
 	}
 
-	frameworkMutex.Unlock();
+	criticalSection.Unlock();
 	return result;
 }
 
 bool cGZFramework::AddToTick(cIGZSystemService* service)
 {
-	frameworkMutex.Lock();
+	criticalSection.Lock();
 	bool result = false;
 
 	if (!isOnTickListLocked)
@@ -358,7 +358,7 @@ bool cGZFramework::AddToTick(cIGZSystemService* service)
 			cIGZSystemService* itSvc = (*it);
 			if (itSvc->GetServiceID() == service->GetServiceID())
 			{
-				frameworkMutex.Unlock();
+				criticalSection.Unlock();
 				return false;
 			}
 
@@ -371,13 +371,13 @@ bool cGZFramework::AddToTick(cIGZSystemService* service)
 		result = true;
 	}
 
-	frameworkMutex.Unlock();
+	criticalSection.Unlock();
 	return result;
 }
 
 bool cGZFramework::RemoveFromTick(cIGZSystemService* service)
 {
-	frameworkMutex.Lock();
+	criticalSection.Lock();
 	bool result = false;
 
 	if (!isOnTickListLocked)
@@ -403,13 +403,13 @@ bool cGZFramework::RemoveFromTick(cIGZSystemService* service)
 		}
 	}
 
-	frameworkMutex.Unlock();
+	criticalSection.Unlock();
 	return result;
 }
 
 bool cGZFramework::AddToOnIdle(cIGZSystemService* service)
 {
-	frameworkMutex.Lock();
+	criticalSection.Lock();
 	bool result = false;
 
 	if (!isOnIdleListLocked)
@@ -421,7 +421,7 @@ bool cGZFramework::AddToOnIdle(cIGZSystemService* service)
 		{
 			if ((*it) == service)
 			{
-				frameworkMutex.Unlock();
+				criticalSection.Unlock();
 				return false;
 			}
 
@@ -432,13 +432,13 @@ bool cGZFramework::AddToOnIdle(cIGZSystemService* service)
 		result = true;
 	}
 
-	frameworkMutex.Unlock();
+	criticalSection.Unlock();
 	return result;
 }
 
 bool cGZFramework::RemoveFromOnIdle(cIGZSystemService* service)
 {
-	frameworkMutex.Lock();
+	criticalSection.Lock();
 	bool result = false;
 
 	if (!isOnIdleListLocked)
@@ -464,7 +464,7 @@ bool cGZFramework::RemoveFromOnIdle(cIGZSystemService* service)
 		}
 	}
 
-	frameworkMutex.Unlock();
+	criticalSection.Unlock();
 	return result;
 }
 
@@ -486,7 +486,7 @@ void cGZFramework::SetOnIdleInterval(int32_t idleFrameInterval)
 
 void cGZFramework::OnTick(int32_t totalTickFrames)
 {
-	frameworkMutex.Lock();
+	criticalSection.Lock();
 
 	++pendingTickFrames;
 	std::vector<cIGZSystemService*> tickServiceVec;
@@ -502,7 +502,7 @@ void cGZFramework::OnTick(int32_t totalTickFrames)
 	}
 
 	isOnTickListLocked = false;
-	frameworkMutex.Unlock();
+	criticalSection.Unlock();
 
 	for (std::vector<cIGZSystemService*>::iterator it = tickServiceVec.begin(); it != tickServiceVec.end(); ++it)
 	{
@@ -521,7 +521,7 @@ void cGZFramework::OnIdle()
 {
 	this->OnTick(totalTickFrames++);
 
-	frameworkMutex.Lock();
+	criticalSection.Lock();
 	++pendingIdleFrames;
 
 	if (totalTickFrames % onIdleInterval == 0)
@@ -542,7 +542,7 @@ void cGZFramework::OnIdle()
 		}
 
 		isOnIdleListLocked = false;
-		frameworkMutex.Unlock();
+		criticalSection.Unlock();
 
 		for (std::vector<cIGZSystemService*>::iterator it = idleServiceVec.begin(); it != idleServiceVec.end(); ++it)
 		{
@@ -551,7 +551,7 @@ void cGZFramework::OnIdle()
 	}
 	else
 	{
-		frameworkMutex.Unlock();
+		criticalSection.Unlock();
 	}
 
 	if (pendingIdleFrames == 1)
@@ -673,9 +673,9 @@ bool cGZFramework::SetStream(int32_t streamNum, cIGZUnknown* stream)
 
 void cGZFramework::SetApplication(cIGZApp* app)
 {
-	frameworkMutex.Lock();
+	criticalSection.Lock();
 	cGZFramework::mpApp = app;
-	frameworkMutex.Unlock();
+	criticalSection.Unlock();
 }
 
 cIGZApp* cGZFramework::Application(void) const
@@ -998,7 +998,7 @@ bool cGZFramework::HookPostAppInit()
 
 void cGZFramework::MakeHookListCopy(tHooksList& dest)
 {
-	frameworkMutex.Lock();
+	criticalSection.Lock();
 	isHookListLocked = true;
 
 	for (tHooksList::iterator it = hooks.begin(); it != hooks.end(); ++it)
@@ -1007,12 +1007,12 @@ void cGZFramework::MakeHookListCopy(tHooksList& dest)
 	}
 
 	isHookListLocked = false;
-	frameworkMutex.Unlock();
+	criticalSection.Unlock();
 }
 
 void cGZFramework::MakeSystemServiceListCopy(tServicesList& dest, bool reversePriority)
 {
-	frameworkMutex.Lock();
+	criticalSection.Lock();
 	isServicePriorityMapLocked = true;
 
 	if (!reversePriority)
@@ -1031,7 +1031,7 @@ void cGZFramework::MakeSystemServiceListCopy(tServicesList& dest, bool reversePr
 	}
 
 	isServicePriorityMapLocked = false;
-	frameworkMutex.Unlock();
+	criticalSection.Unlock();
 }
 
 int cGZFramework::Main(cRZCmdLine const& cmdLine, bool unknown)

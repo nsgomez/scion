@@ -169,7 +169,7 @@ private:
 	uint8_t isHookListLocked;                // 0x100
 	int32_t pendingIdleFrames;               // 0x104
 	int32_t pendingTickFrames;               // 0x108
-	cRZCriticalSection frameworkMutex;       // 0x10C
+	cRZCriticalSection criticalSection;      // 0x10C
 	// cRZCmdLine cmdLine;                   // 0x114
 	cIGZDebugStream* debugStream;            // 0x144
 	cIGZOStream* stdOut;                     // 0x148
