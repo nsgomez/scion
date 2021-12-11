@@ -18,4 +18,12 @@
  */
 
 #pragma once
-// TODO
+#include "cIGZUnknown.h"
+
+class cIGZSerializable : public cIGZUnknown
+{
+public:
+	virtual bool Write(cIGZOStream& out) const = 0;
+	virtual bool Read(cIGZIStream& in) = 0;
+	virtual GZCLSID GetCLSID() const = 0;
+};

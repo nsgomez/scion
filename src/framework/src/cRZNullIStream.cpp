@@ -18,4 +18,23 @@
  */
 
 #include "cRZNullIStream.h"
-// TODO
+
+cRZNullIStream::cRZNullIStream()
+{
+}
+
+cRZNullIStream::~cRZNullIStream()
+{
+}
+
+void cRZNullIStream::Skip(uint32_t bytes)
+{
+}
+
+bool cRZNullIStream::GetVoid(void* buffer, uint32_t size)
+{
+}
+
+uint32_t cRZNullIStream::GetError() const
+{
+}

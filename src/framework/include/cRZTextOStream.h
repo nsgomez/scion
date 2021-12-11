@@ -18,4 +18,6 @@
  */
 
 #pragma once
+#include "cRZOStream.h"
+
 // TODO

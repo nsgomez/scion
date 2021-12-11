@@ -18,4 +18,15 @@
  */
 
 #pragma once
-// TODO
+#include "cRZIStream.h"
+
+class cRZNullIStream : public cRZIStream
+{
+public:
+	cRZNullIStream();
+	virtual ~cRZNullIStream();
+
+	virtual void Skip(uint32_t bytes);
+	virtual bool GetVoid(void* buffer, uint32_t size);
+	virtual uint32_t GetError() const;
+};

@@ -18,4 +18,83 @@
  */
 
 #include "cRZIStream.h"
-// TODO
+
+cRZIStream::cRZIStream(bool useLittleEndian)
+{
+}
+
+cRZIStream::~cRZIStream()
+{
+}
+
+bool cRZIStream::GetSint8(int8_t& out)
+{
+}
+
+bool cRZIStream::GetUint8(uint8_t& out)
+{
+}
+
+bool cRZIStream::GetSint16(int16_t& out)
+{
+}
+
+bool cRZIStream::GetUint16(uint16_t& out)
+{
+}
+
+bool cRZIStream::GetSint32(int32_t& out)
+{
+}
+
+bool cRZIStream::GetUint32(uint32_t& out)
+{
+}
+
+bool cRZIStream::GetSint64(int64_t& out)
+{
+}
+
+bool cRZIStream::GetUint64(uint64_t& out)
+{
+}
+
+bool cRZIStream::GetFloat32(float& out)
+{
+}
+
+bool cRZIStream::GetFloat64(double& out)
+{
+}
+
+bool cRZIStream::GetRZCharStr(char const* buffer, uint32_t size)
+{
+}
+
+bool cRZIStream::GetGZStr(cIGZString& out)
+{
+}
+
+bool cRZIStream::GetGZSerializable(cIGZSerializable& out)
+{
+}
+
+void cRZIStream::SetUserData(cIGZVariant* data)
+{
+}
+
+cIGZVariant* cRZIStream::GetUserData()
+{
+}
+
+bool cRZIStream::Init(bool useLittleEndian)
+{
+}
+
+bool cRZIStream::Shutdown()
+{
+}
+
+void cRZIStream::DecodeStringLength(uint32_t& length)
+{
+}

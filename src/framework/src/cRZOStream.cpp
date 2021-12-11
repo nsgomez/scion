@@ -18,4 +18,83 @@
  */
 
 #include "cRZOStream.h"
-// TODO
+
+cRZOStream::cRZOStream(bool useLittleEndian)
+{
+}
+
+cRZOStream::~cRZOStream()
+{
+}
+
+bool cRZOStream::SetSint8(int8_t value)
+{
+}
+
+bool cRZOStream::SetUint8(uint8_t value)
+{
+}
+
+bool cRZOStream::SetSint16(int16_t value)
+{
+}
+
+bool cRZOStream::SetUint16(uint16_t value)
+{
+}
+
+bool cRZOStream::SetSint32(int32_t value)
+{
+}
+
+bool cRZOStream::SetUint32(uint32_t value)
+{
+}
+
+bool cRZOStream::SetSint64(int64_t value)
+{
+}
+
+bool cRZOStream::SetUint64(uint64_t value)
+{
+}
+
+bool cRZOStream::SetFloat32(float value)
+{
+}
+
+bool cRZOStream::SetFloat64(double value)
+{
+}
+
+bool cRZOStream::SetRZCharStr(char const* str)
+{
+}
+
+bool cRZOStream::SetGZStr(cIGZString const& str)
+{
+}
+
+bool cRZOStream::SetGZSerializable(cIGZSerializable const& data)
+{
+}
+
+void cRZOStream::SetUserData(cIGZVariant* data)
+{
+}
+
+cIGZVariant* cRZOStream::GetUserData()
+{
+}
+
+bool cRZOStream::Init(bool useLittleEndian)
+{
+}
+
+bool cRZOStream::Shutdown()
+{
+}
+
+void cRZOStream::EncodeStringLength(uint32_t length)
+{
+}

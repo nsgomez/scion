@@ -18,4 +18,39 @@
  */
 
 #pragma once
-// TODO
+#include "cIGZUnknown.h"
+
+static const GZIID GZIID_cIGZOStream = 0xC51B11CB;
+
+class cIGZSerializable;
+class cIGZString;
+class cIGZVariant;
+
+class cIGZOStream : public cIGZUnknown
+{
+public:
+	virtual void Flush() = 0;
+
+	virtual bool SetSint8(int8_t value) = 0;
+	virtual bool SetUint8(uint8_t value) = 0;
+	virtual bool SetSint16(int16_t value) = 0;
+	virtual bool SetUint16(uint16_t value) = 0;
+	virtual bool SetSint32(int32_t value) = 0;
+	virtual bool SetUint32(uint32_t value) = 0;
+	virtual bool SetSint64(int64_t value) = 0;
+	virtual bool SetUint64(uint64_t value) = 0;
+	virtual bool SetFloat32(float value) = 0;
+	virtual bool SetFloat64(double value) = 0;
+
+	virtual bool SetRZCharStr(char const* str) = 0;
+	virtual bool SetGZStr(cIGZString const& str) = 0;
+	virtual bool SetGZSerializable(cIGZSerializable const& data) = 0;
+	virtual bool SetVoid(void* buffer, uint32_t size) = 0;
+
+	virtual uint32_t GetError() const = 0;
+
+	virtual void SetUserData(cIGZVariant* data) = 0;
+	virtual cIGZVariant* GetUserData() = 0;
+
+	virtual ~cIGZOStream() = 0;
+};
