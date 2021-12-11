@@ -65,7 +65,7 @@ public:
 	virtual int32_t GetOnIdleInterval(void) const = 0;
 	virtual void SetOnIdleInterval(int32_t idleFrameInterval) = 0;
 
-	virtual void OnTick(int32_t totalTickFrames) = 0; // TODO
+	virtual void OnTick(int32_t totalTickFrames) = 0;
 	virtual void OnIdle(void) = 0;
 
 	virtual bool IsTickEnabled(void) const = 0;

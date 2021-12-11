@@ -5,10 +5,10 @@
 	Name="framework"
 	ProjectGUID="{07DE7AE6-6EBF-4768-B5B0-79FFDFDF2E52}"
 	RootNamespace="framework"
-	SccProjectName="SC4000"
+	SccProjectName=""
 	SccAuxPath=""
-	SccLocalPath="."
-	SccProvider="MSSCCI:Visual Git"
+	SccLocalPath=""
+	SccProvider=""
 	Keyword="ManagedCProj">
 	<Platforms>
 		<Platform
@@ -64,10 +64,7 @@
 			ManagedExtensions="FALSE">
 			<Tool
 				Name="VCCLCompilerTool"
-				EnableIntrinsicFunctions="TRUE"
 				FavorSizeOrSpeed="1"
-				OmitFramePointers="TRUE"
-				OptimizeForProcessor="2"
 				OptimizeForWindowsApplication="TRUE"
 				AdditionalIncludeDirectories="..\include;..\stlport\stlport;.\include"
 				PreprocessorDefinitions="WIN32;NDEBUG"
@@ -120,6 +117,9 @@
 				RelativePath=".\src\cGZCOMLibrary.cpp">
 			</File>
 			<File
+				RelativePath=".\src\cGZDate.cpp">
+			</File>
+			<File
 				RelativePath=".\src\cGZFramework.cpp">
 			</File>
 			<File
@@ -129,7 +129,37 @@
 				RelativePath=".\src\cRZCriticalSection.cpp">
 			</File>
 			<File
+				RelativePath=".\src\cRZDate.cpp">
+			</File>
+			<File
 				RelativePath=".\src\cRZExceptionNotification.cpp">
+			</File>
+			<File
+				RelativePath=".\src\cRZIStream.cpp">
+			</File>
+			<File
+				RelativePath=".\src\cRZKeyboard.cpp">
+			</File>
+			<File
+				RelativePath=".\src\cRZMutex.cpp">
+			</File>
+			<File
+				RelativePath=".\src\cRZNullIStream.cpp">
+			</File>
+			<File
+				RelativePath=".\src\cRZNullOStream.cpp">
+			</File>
+			<File
+				RelativePath=".\src\cRZOFStream.cpp">
+			</File>
+			<File
+				RelativePath=".\src\cRZOStream.cpp">
+			</File>
+			<File
+				RelativePath=".\src\cRZRandom.cpp">
+			</File>
+			<File
+				RelativePath=".\src\cRZRefCount.cpp">
 			</File>
 			<File
 				RelativePath=".\src\cRZString.cpp">
@@ -138,7 +168,16 @@
 				RelativePath=".\src\cRZSystemService.cpp">
 			</File>
 			<File
+				RelativePath=".\src\cRZTextOStream.cpp">
+			</File>
+			<File
+				RelativePath=".\src\cRZTime.cpp">
+			</File>
+			<File
 				RelativePath=".\src\cRZUnknown.cpp">
+			</File>
+			<File
+				RelativePath=".\src\cRZVariant.cpp">
 			</File>
 			<File
 				RelativePath=".\src\RZStatics.cpp">
@@ -161,6 +200,9 @@
 				RelativePath=".\include\cGZCOMLibrary.h">
 			</File>
 			<File
+				RelativePath=".\include\cGZDate.h">
+			</File>
+			<File
 				RelativePath=".\include\cGZFramework.h">
 			</File>
 			<File
@@ -179,6 +221,9 @@
 				RelativePath=".\include\cIGZCOMLibrary.h">
 			</File>
 			<File
+				RelativePath=".\include\cIGZDate.h">
+			</File>
+			<File
 				RelativePath=".\include\cIGZFramework.h">
 			</File>
 			<File
@@ -186,6 +231,15 @@
 			</File>
 			<File
 				RelativePath=".\include\cIGZFrameworkW32.h">
+			</File>
+			<File
+				RelativePath=".\include\cIGZIStream.h">
+			</File>
+			<File
+				RelativePath=".\include\cIGZOStream.h">
+			</File>
+			<File
+				RelativePath=".\include\cIGZSerializable.h">
 			</File>
 			<File
 				RelativePath=".\include\cIGZString.h">
@@ -197,6 +251,9 @@
 				RelativePath=".\include\cIGZUnknown.h">
 			</File>
 			<File
+				RelativePath=".\include\cIGZVariant.h">
+			</File>
+			<File
 				RelativePath=".\include\cRZAutoRefCount.h">
 			</File>
 			<File
@@ -206,16 +263,58 @@
 				RelativePath=".\include\cRZCriticalSection.h">
 			</File>
 			<File
+				RelativePath=".\include\cRZDate.h">
+			</File>
+			<File
 				RelativePath=".\include\cRZExceptionNotification.h">
+			</File>
+			<File
+				RelativePath=".\include\cRZIStream.h">
+			</File>
+			<File
+				RelativePath=".\include\cRZKeyboard.h">
+			</File>
+			<File
+				RelativePath=".\include\cRZMutex.h">
+			</File>
+			<File
+				RelativePath=".\include\cRZNullIStream.h">
+			</File>
+			<File
+				RelativePath=".\include\cRZNullOStream.h">
+			</File>
+			<File
+				RelativePath=".\include\cRZOFStream.h">
+			</File>
+			<File
+				RelativePath=".\include\cRZOStream.h">
+			</File>
+			<File
+				RelativePath=".\include\cRZRandom.h">
+			</File>
+			<File
+				RelativePath=".\include\cRZRefCount.h">
 			</File>
 			<File
 				RelativePath=".\include\cRZString.h">
 			</File>
 			<File
+				RelativePath=".\include\cRZSysServPtr.h">
+			</File>
+			<File
 				RelativePath=".\include\cRZSystemService.h">
 			</File>
 			<File
+				RelativePath=".\include\cRZTextOStream.h">
+			</File>
+			<File
+				RelativePath=".\include\cRZTime.h">
+			</File>
+			<File
 				RelativePath=".\include\cRZUnknown.h">
+			</File>
+			<File
+				RelativePath=".\include\cRZVariant.h">
 			</File>
 			<File
 				RelativePath=".\include\GZTypes.h">
