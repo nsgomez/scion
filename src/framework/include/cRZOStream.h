@@ -26,6 +26,12 @@ public:
 	cRZOStream(bool useLittleEndian);
 	virtual ~cRZOStream();
 
+public:
+	virtual bool QueryInterface(GZREFIID iid, void** outPtr);
+	virtual uint32_t AddRef();
+	virtual uint32_t Release();
+
+public:
 	virtual bool SetSint8(int8_t value);
 	virtual bool SetUint8(uint8_t value);
 	virtual bool SetSint16(int16_t value);
@@ -50,4 +56,8 @@ public:
 
 protected:
 	void EncodeStringLength(uint32_t length);
+
+	uint32_t refCount;
+	bool useLittleEndian;
+	cIGZVariant* userData;
 };

@@ -45,9 +45,9 @@ public:
 	virtual bool SetRZCharStr(char const* str) = 0;
 	virtual bool SetGZStr(cIGZString const& str) = 0;
 	virtual bool SetGZSerializable(cIGZSerializable const& data) = 0;
-	virtual bool SetVoid(void* buffer, uint32_t size) = 0;
+	virtual bool SetVoid(void const* buffer, uint32_t size) = 0;
 
-	virtual uint32_t GetError() const = 0;
+	virtual bool GetError() const = 0;
 
 	virtual void SetUserData(cIGZVariant* data) = 0;
 	virtual cIGZVariant* GetUserData() = 0;

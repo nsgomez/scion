@@ -27,6 +27,6 @@ public:
 	virtual ~cRZNullOStream();
 
 	virtual void Flush();
-	virtual bool SetVoid(void* buffer, uint32_t size);
-	virtual uint32_t GetError() const;
+	virtual bool SetVoid(void const* buffer, uint32_t size);
+	virtual bool GetError() const;
 };

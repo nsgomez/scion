@@ -26,6 +26,12 @@ public:
 	cRZIStream(bool useLittleEndian);
 	virtual ~cRZIStream();
 
+public:
+	virtual bool QueryInterface(GZREFIID iid, void** outPtr);
+	virtual uint32_t AddRef();
+	virtual uint32_t Release();
+
+public:
 	virtual bool GetSint8(int8_t& out);
 	virtual bool GetUint8(uint8_t& out);
 	virtual bool GetSint16(int16_t& out);
@@ -37,7 +43,7 @@ public:
 	virtual bool GetFloat32(float& out);
 	virtual bool GetFloat64(double& out);
 
-	virtual bool GetRZCharStr(char const* buffer, uint32_t size);
+	virtual bool GetRZCharStr(char* buffer, uint32_t size);
 	virtual bool GetGZStr(cIGZString& out);
 	virtual bool GetGZSerializable(cIGZSerializable& out);
 
@@ -50,4 +56,8 @@ public:
 
 protected:
 	void DecodeStringLength(uint32_t& length);
+
+	uint32_t refCount;
+	bool useLittleEndian;
+	cIGZVariant* userData;
 };

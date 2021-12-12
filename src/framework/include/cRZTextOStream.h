@@ -20,4 +20,18 @@
 #pragma once
 #include "cRZOStream.h"
 
-// TODO
+class cRZTextOStream : public cRZOStream
+{
+public:
+	virtual bool SetSint8(int8_t value);
+	virtual bool SetUint8(uint8_t value);
+	virtual bool SetSint16(int16_t value);
+	virtual bool SetUint16(uint16_t value);
+	virtual bool SetSint32(int32_t value);
+	virtual bool SetUint32(uint32_t value);
+	virtual bool SetSint64(int64_t value);
+	virtual bool SetUint64(uint64_t value);
+	virtual bool SetFloat32(float value);
+	virtual bool SetFloat64(double value);
+	virtual bool SetGZStr(cIGZString const& str);
+};

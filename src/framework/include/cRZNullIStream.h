@@ -26,7 +26,10 @@ public:
 	cRZNullIStream();
 	virtual ~cRZNullIStream();
 
-	virtual void Skip(uint32_t bytes);
+	virtual bool Skip(uint32_t bytes);
 	virtual bool GetVoid(void* buffer, uint32_t size);
-	virtual uint32_t GetError() const;
+	virtual bool GetError() const;
+
+protected:
+	bool hasError;
 };

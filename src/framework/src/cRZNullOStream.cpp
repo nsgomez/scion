@@ -19,7 +19,8 @@
 
 #include "cRZNullOStream.h"
 
-cRZNullOStream::cRZNullOStream()
+cRZNullOStream::cRZNullOStream() :
+	cRZOStream(false)
 {
 }
 
@@ -31,10 +32,12 @@ void cRZNullOStream::Flush()
 {
 }
 
-bool cRZNullOStream::SetVoid(void* buffer, uint32_t size)
+bool cRZNullOStream::SetVoid(void const* buffer, uint32_t size)
 {
+	return true;
 }
 
-uint32_t cRZNullOStream::GetError() const
+bool cRZNullOStream::GetError() const
 {
+	return false;
 }

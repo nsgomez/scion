@@ -29,7 +29,7 @@ class cIGZVariant;
 class cIGZIStream : public cIGZUnknown
 {
 public:
-	virtual void Skip(uint32_t bytes) = 0;
+	virtual bool Skip(uint32_t bytes) = 0;
 
 	virtual bool GetSint8(int8_t& out) = 0;
 	virtual bool GetUint8(uint8_t& out) = 0;
@@ -42,12 +42,12 @@ public:
 	virtual bool GetFloat32(float& out) = 0;
 	virtual bool GetFloat64(double& out) = 0;
 
-	virtual bool GetRZCharStr(char const* buffer, uint32_t size) = 0;
+	virtual bool GetRZCharStr(char* buffer, uint32_t size) = 0;
 	virtual bool GetGZStr(cIGZString& out) = 0;
 	virtual bool GetGZSerializable(cIGZSerializable& out) = 0;
 	virtual bool GetVoid(void* buffer, uint32_t size) = 0;
 
-	virtual uint32_t GetError() const = 0;
+	virtual bool GetError() const = 0;
 
 	virtual void SetUserData(cIGZVariant* data) = 0;
 	virtual cIGZVariant* GetUserData() = 0;

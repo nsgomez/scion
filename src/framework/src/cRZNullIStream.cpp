@@ -19,7 +19,8 @@
 
 #include "cRZNullIStream.h"
 
-cRZNullIStream::cRZNullIStream()
+cRZNullIStream::cRZNullIStream() :
+	cRZIStream(false)
 {
 }
 
@@ -27,14 +28,19 @@ cRZNullIStream::~cRZNullIStream()
 {
 }
 
-void cRZNullIStream::Skip(uint32_t bytes)
+bool cRZNullIStream::Skip(uint32_t bytes)
 {
+	hasError = true;
+	return false;
 }
 
 bool cRZNullIStream::GetVoid(void* buffer, uint32_t size)
 {
+	hasError = true;
+	return false;
 }
 
-uint32_t cRZNullIStream::GetError() const
+bool cRZNullIStream::GetError() const
 {
+	return hasError;
 }

@@ -20,6 +20,9 @@
 #pragma once
 #include "cIGZUnknown.h"
 
+class cIGZIStream;
+class cIGZOStream;
+
 class cIGZSerializable : public cIGZUnknown
 {
 public:
