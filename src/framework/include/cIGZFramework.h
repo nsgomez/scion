@@ -51,7 +51,7 @@ public:
 	virtual bool AddSystemService(cIGZSystemService* service) = 0;
 	virtual bool RemoveSystemService(cIGZSystemService* service) = 0;
 	virtual bool GetSystemService(GZGUID serviceId, GZREFIID iid, void** outPtr) = 0;
-	virtual bool EnumSystemServices(cIGZUnknownEnumerator* enumerator, cIGZUnknown* unknown1, uint32_t unknown2) = 0; // TODO
+	virtual bool EnumSystemServices(cIGZUnknownEnumerator* enumerator, cIGZUnknown* context, GZREFIID iid) = 0;
 
 	virtual bool AddHook(cIGZFrameworkHooks* hook) = 0;
 	virtual bool RemoveHook(cIGZFrameworkHooks* hook) = 0;

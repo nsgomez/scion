@@ -19,6 +19,10 @@
 
 #include "cGZFramework.h"
 #include "cIGZApp.h"
+#include "cIGZUnknownEnumerator.h"
+#include "cRZExceptionNotification.h"
+#include "cRZNullIStream.h"
+#include "cRZNullOStream.h"
 
 cIGZApp* cGZFramework::mpApp = NULL;
 cGZFramework* cGZFramework::mpFramework = NULL;
@@ -27,32 +31,15 @@ int cGZFramework::mnReturnCode = 0;
 
 cGZFramework::cGZFramework()
 {
-	// TODO
-	// exceptionNotificationObj = new cRZExceptionNotification();
+	exceptionNotification = new cRZExceptionNotification();
 }
 
 cGZFramework::~cGZFramework()
 {
-	// TODO
-	/*if (exceptionNotificationObj)
+	if (exceptionNotification != NULL)
 	{
-		exceptionNotificationObj->Release();
+		exceptionNotification->Release();
 	}
-
-	if (stdIn)
-	{
-		stdIn->Release();
-	}
-
-	if (stdErr)
-	{
-		stdErr->Release();
-	}
-
-	if (stdOut)
-	{
-		stdOut->Release();
-	}*/
 }
 
 bool cGZFramework::QueryInterface(GZREFIID iid, void** outPtr)
@@ -81,27 +68,20 @@ bool cGZFramework::QueryInterface(GZREFIID iid, void** outPtr)
 
 uint32_t cGZFramework::AddRef()
 {
-	criticalSection.Lock();
-	int oldRefCount = this->refCount;
-	this->refCount = oldRefCount + 1;
-	criticalSection.Unlock();
-
-	return oldRefCount + 1;
+	cRZCriticalSectionHolder lock(criticalSection);
+	return ++refCount;
 }
 
 uint32_t cGZFramework::Release()
 {
-	criticalSection.Lock();
+	cRZCriticalSectionHolder lock(criticalSection);
 
-	int newRefCount = 0;
-	if (this->refCount > 1)
+	if (refCount > 1)
 	{
-		newRefCount = this->refCount - 1;
-		this->refCount = newRefCount;
+		--refCount;
 	}
 
-	criticalSection.Unlock();
-	return newRefCount;
+	return refCount;
 }
 
 bool cGZFramework::AddSystemService(cIGZSystemService* service)
@@ -113,7 +93,7 @@ bool cGZFramework::AddSystemService(cIGZSystemService* service)
 			return false;
 		}
 
-		criticalSection.Lock();
+		cRZCriticalSectionHolder lock(criticalSection);
 		
 		int32_t priority = service->GetServicePriority();
 		GZGUID serviceId = service->GetServiceID();
@@ -126,11 +106,8 @@ bool cGZFramework::AddSystemService(cIGZSystemService* service)
 			servicesById.resize(servicesById.size() + 1);
 			servicesById.insert(tServicesIdMap::value_type(serviceId, cRZAutoRefCount<cIGZSystemService>(service)));
 
-			criticalSection.Unlock();
 			return true;
 		}
-		
-		criticalSection.Unlock();
 	}
 
 	return false;
@@ -138,8 +115,7 @@ bool cGZFramework::AddSystemService(cIGZSystemService* service)
 
 bool cGZFramework::RemoveSystemService(cIGZSystemService* service)
 {
-	bool result;
-	criticalSection.Lock();
+	cRZCriticalSectionHolder lock(criticalSection);
 
 	if (!isServiceIdMapLocked && !isServicePriorityMapLocked)
 	{
@@ -238,22 +214,19 @@ bool cGZFramework::RemoveSystemService(cIGZSystemService* service)
 		}
 
 		isServiceIdMapLocked = false;
-		result = true;
+		return true;
 	}
 	else
 	{
-		result = false;
+		return false;
 	}
-
-	criticalSection.Unlock();
-	return result;
 }
 
 bool cGZFramework::GetSystemService(GZGUID serviceId, GZREFIID iid, void** outPtr)
 {
+	cRZCriticalSectionHolder lock(criticalSection);
 	bool result;
 
-	criticalSection.Lock();
 	tServicesIdMap::iterator it = servicesById.find(serviceId);
 	isServiceIdMapLocked = true;
 
@@ -267,20 +240,30 @@ bool cGZFramework::GetSystemService(GZGUID serviceId, GZREFIID iid, void** outPt
 	}
 
 	isServiceIdMapLocked = false;
-	criticalSection.Unlock();
-
 	return result;
 }
 
-bool cGZFramework::EnumSystemServices(cIGZUnknownEnumerator* enumerator, cIGZUnknown* unknown1, uint32_t unknown2)
+bool cGZFramework::EnumSystemServices(cIGZUnknownEnumerator* enumerator, cIGZUnknown* context, GZREFIID iid)
 {
-	// TODO
+	tServicesList copiedServices;
+	MakeSystemServiceListCopy(copiedServices);
+
+	for (tServicesList::iterator it = copiedServices.begin(); it != copiedServices.end(); ++it)
+	{
+		cIGZUnknown* service = NULL;
+		if ((*it)->QueryInterface(GZIID_cIGZUnknown, reinterpret_cast<void**>(&service)))
+		{
+			enumerator->Next(service, context, iid);
+			service->Release();
+		}
+	}
+
 	return false;
 }
 
 bool cGZFramework::AddHook(cIGZFrameworkHooks* hook)
 {
-	criticalSection.Lock();
+	cRZCriticalSectionHolder lock(criticalSection);
 	bool result = false;
 
 	if (!isHookListLocked)
@@ -292,7 +275,6 @@ bool cGZFramework::AddHook(cIGZFrameworkHooks* hook)
 		{
 			if ((*it) == hook)
 			{
-				criticalSection.Unlock();
 				return false;
 			}
 
@@ -303,13 +285,12 @@ bool cGZFramework::AddHook(cIGZFrameworkHooks* hook)
 		result = true;
 	}
 
-	criticalSection.Unlock();
 	return result;
 }
 
 bool cGZFramework::RemoveHook(cIGZFrameworkHooks* hook)
 {
-	criticalSection.Lock();
+	cRZCriticalSectionHolder lock(criticalSection);
 	bool result = false;
 
 	if (!isHookListLocked)
@@ -330,13 +311,12 @@ bool cGZFramework::RemoveHook(cIGZFrameworkHooks* hook)
 		}
 	}
 
-	criticalSection.Unlock();
 	return result;
 }
 
 bool cGZFramework::AddToTick(cIGZSystemService* service)
 {
-	criticalSection.Lock();
+	cRZCriticalSectionHolder lock(criticalSection);
 	bool result = false;
 
 	if (!isOnTickListLocked)
@@ -358,7 +338,6 @@ bool cGZFramework::AddToTick(cIGZSystemService* service)
 			cIGZSystemService* itSvc = (*it);
 			if (itSvc->GetServiceID() == service->GetServiceID())
 			{
-				criticalSection.Unlock();
 				return false;
 			}
 
@@ -371,13 +350,12 @@ bool cGZFramework::AddToTick(cIGZSystemService* service)
 		result = true;
 	}
 
-	criticalSection.Unlock();
 	return result;
 }
 
 bool cGZFramework::RemoveFromTick(cIGZSystemService* service)
 {
-	criticalSection.Lock();
+	cRZCriticalSectionHolder lock(criticalSection);
 	bool result = false;
 
 	if (!isOnTickListLocked)
@@ -403,13 +381,12 @@ bool cGZFramework::RemoveFromTick(cIGZSystemService* service)
 		}
 	}
 
-	criticalSection.Unlock();
 	return result;
 }
 
 bool cGZFramework::AddToOnIdle(cIGZSystemService* service)
 {
-	criticalSection.Lock();
+	cRZCriticalSectionHolder lock(criticalSection);
 	bool result = false;
 
 	if (!isOnIdleListLocked)
@@ -421,7 +398,6 @@ bool cGZFramework::AddToOnIdle(cIGZSystemService* service)
 		{
 			if ((*it) == service)
 			{
-				criticalSection.Unlock();
 				return false;
 			}
 
@@ -432,13 +408,12 @@ bool cGZFramework::AddToOnIdle(cIGZSystemService* service)
 		result = true;
 	}
 
-	criticalSection.Unlock();
 	return result;
 }
 
 bool cGZFramework::RemoveFromOnIdle(cIGZSystemService* service)
 {
-	criticalSection.Lock();
+	cRZCriticalSectionHolder lock(criticalSection);
 	bool result = false;
 
 	if (!isOnIdleListLocked)
@@ -464,7 +439,6 @@ bool cGZFramework::RemoveFromOnIdle(cIGZSystemService* service)
 		}
 	}
 
-	criticalSection.Unlock();
 	return result;
 }
 
@@ -593,8 +567,7 @@ void cGZFramework::AbortiveQuit(int exitCode)
 
 cRZCmdLine* cGZFramework::CommandLine(void)
 {
-	// TODO
-	return NULL;
+	return &this->cmdLine;
 }
 
 bool cGZFramework::IsInstall(void) const
@@ -643,39 +616,73 @@ int cGZFramework::GetDebugLevel(void) const
 
 cIGZOStream* cGZFramework::StdOut(void)
 {
-	// TODO
-	return NULL;
+	cRZCriticalSectionHolder lock(criticalSection);
+
+	if (stdOut == NULL)
+	{
+		stdOut = new cRZNullOStream();
+	}
+
+	return stdOut;
 }
 
 cIGZOStream* cGZFramework::StdErr(void)
 {
-	// TODO
-	return NULL;
+	cRZCriticalSectionHolder lock(criticalSection);
+
+	if (stdErr == NULL)
+	{
+		stdErr = new cRZNullOStream();
+	}
+
+	return stdErr;
 }
 
 cIGZIStream* cGZFramework::StdIn(void)
 {
-	// TODO
-	return NULL;
+	cRZCriticalSectionHolder lock(criticalSection);
+
+	if (stdIn == NULL)
+	{
+		stdIn = new cRZNullIStream();
+	}
+
+	return stdIn;
 }
 
 bool cGZFramework::GetStream(int32_t streamNum, GZREFIID iid, void** outPtr)
 {
-	// TODO
+	cRZCriticalSectionHolder lock(criticalSection);
+
+	if (outPtr != NULL)
+	{
+		switch (streamNum)
+		{
+		case 0:
+			return stdOut->QueryInterface(iid, outPtr);
+		case 1:
+			return stdErr->QueryInterface(iid, outPtr);
+		case 2:
+			return stdIn->QueryInterface(iid, outPtr);
+		}
+	}
+
 	return false;
 }
 
 bool cGZFramework::SetStream(int32_t streamNum, cIGZUnknown* stream)
 {
+	cRZCriticalSectionHolder lock(criticalSection);
+
 	// TODO
+
 	return false;
 }
 
 void cGZFramework::SetApplication(cIGZApp* app)
 {
-	criticalSection.Lock();
+	cRZCriticalSectionHolder lock(criticalSection);
 	cGZFramework::mpApp = app;
-	criticalSection.Unlock();
 }
 
 cIGZApp* cGZFramework::Application(void) const
@@ -685,13 +692,13 @@ cIGZApp* cGZFramework::Application(void) const
 
 void cGZFramework::ReportException(char const* exceptionReport)
 {
-	// TODO
+	// TODO: This probably does something on W32
+	return;
 }
 
 cRZExceptionNotification* cGZFramework::ExceptionNotificationObj(void) const
 {
-	// TODO
-	return NULL;
+	return exceptionNotification;
 }
 
 bool cGZFramework::PreAppInit(void)
@@ -764,7 +771,6 @@ bool cGZFramework::AppInit(void)
 		}
 	}
 
-	copiedServices.clear();
 	return result;
 }
 
@@ -782,7 +788,6 @@ bool cGZFramework::PostAppInit(void)
 		}
 	}
 
-	copiedServices.clear();
 	return true;
 }
 
@@ -811,7 +816,6 @@ bool cGZFramework::PreAppShutdown(void)
 		}
 	}
 
-	copiedServices.clear();
 	return result;
 }
 
@@ -845,7 +849,6 @@ bool cGZFramework::AppShutdown(void)
 		}
 	}
 
-	copiedServices.clear();
 	return result;
 }
 
@@ -872,7 +875,6 @@ bool cGZFramework::PostAppShutdown(void)
 		}
 	}
 
-	copiedServices.clear();
 	return result;
 }
 
@@ -914,10 +916,9 @@ void cGZFramework::Run(void)
 	cGZFramework::mnReturnCode = this->exitCode;
 }
 
-void* cGZFramework::GetWindowsInstance(void)
+HINSTANCE cGZFramework::GetWindowsInstance(void)
 {
-	// TODO
-	return NULL;
+	return windowsInstance;
 }
 
 HWND cGZFramework::GetMainHWND(void)
@@ -943,7 +944,6 @@ bool cGZFramework::HookPreFrameworkInit()
 			hook->PreFrameworkInit();
 		}
 
-		copiedHooks.clear();
 		return true;
 	}
 	else
@@ -965,7 +965,6 @@ bool cGZFramework::HookPreAppInit()
 			hook->PreAppInit();
 		}
 
-		copiedHooks.clear();
 		return true;
 	}
 	else
@@ -987,7 +986,6 @@ bool cGZFramework::HookPostAppInit()
 			hook->PostAppInit();
 		}
 
-		copiedHooks.clear();
 		return true;
 	}
 	else
@@ -998,7 +996,7 @@ bool cGZFramework::HookPostAppInit()
 
 void cGZFramework::MakeHookListCopy(tHooksList& dest)
 {
-	criticalSection.Lock();
+	cRZCriticalSectionHolder lock(criticalSection);
 	isHookListLocked = true;
 
 	for (tHooksList::iterator it = hooks.begin(); it != hooks.end(); ++it)
@@ -1007,12 +1005,11 @@ void cGZFramework::MakeHookListCopy(tHooksList& dest)
 	}
 
 	isHookListLocked = false;
-	criticalSection.Unlock();
 }
 
 void cGZFramework::MakeSystemServiceListCopy(tServicesList& dest, bool reversePriority)
 {
-	criticalSection.Lock();
+	cRZCriticalSectionHolder lock(criticalSection);
 	isServicePriorityMapLocked = true;
 
 	if (!reversePriority)
@@ -1031,7 +1028,6 @@ void cGZFramework::MakeSystemServiceListCopy(tServicesList& dest, bool reversePr
 	}
 
 	isServicePriorityMapLocked = false;
-	criticalSection.Unlock();
 }
 
 int cGZFramework::Main(cRZCmdLine const& cmdLine, bool unknown)

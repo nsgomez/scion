@@ -50,8 +50,10 @@ public:
 
 	virtual int CompareTo(cIGZString const& other, bool caseSensitive = true) const;
 	virtual int CompareTo(char const* other, uint32_t otherLen = -1, bool caseSensitive = true) const;
+	int CompareTo(cRZString const& other) const;
 
 	virtual cIGZString& operator=(cIGZString const& other);
+	virtual cRZString& operator=(cRZString const& other);
 	virtual void Copy(cIGZString const& src);
 
 	virtual void Resize(uint32_t newLength);
@@ -69,8 +71,11 @@ public:
 
 	virtual uint32_t Find(char const* needle, uint32_t position = 0, bool caseSensitive = true) const;
 	virtual uint32_t Find(cIGZString const& needle, uint32_t position = 0, bool caseSensitive = true) const;
+	uint32_t Find(cRZString const& needle, uint32_t position = 0);
+
 	virtual uint32_t RFind(char const* needle, uint32_t position = 0, bool caseSensitive = true) const;
 	virtual uint32_t RFind(cIGZString const& needle, uint32_t position = 0, bool caseSensitive = true) const;
+	uint32_t RFind(cRZString const& needle, uint32_t position = 0);
 
 	virtual void Sprintf(char const* format, ...);
 

@@ -30,7 +30,8 @@ class cIGZFrameworkW32 : public cIGZUnknown
 public:
 	virtual cIGZFramework* AsIGZFramework(void) = 0;
 	virtual void Run(void) = 0;
-	virtual void* GetWindowsInstance(void) = 0; // TODO: unknown return type
+
+	virtual HINSTANCE GetWindowsInstance(void) = 0;
 	virtual HWND GetMainHWND(void) = 0;
 	virtual void SetMainHWND(HWND hwnd) = 0;
 };

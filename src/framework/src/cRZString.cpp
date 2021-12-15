@@ -186,9 +186,20 @@ int cRZString::CompareTo(char const* other, uint32_t otherLen, bool caseSensitiv
 	return 0;
 }
 
+int cRZString::CompareTo(cRZString const& other) const
+{
+	return str.compare(other.str);
+}
+
 cIGZString& cRZString::operator=(cIGZString const& other)
 {
 	Copy(other);
+	return *this;
+}
+
+cRZString& cRZString::operator=(cRZString const& other)
+{
+	str.assign(other.str);
 	return *this;
 }
 
@@ -280,6 +291,11 @@ uint32_t cRZString::Find(cIGZString const& needle, uint32_t position, bool caseS
 	}
 }
 
+uint32_t cRZString::Find(cRZString const& needle, uint32_t position)
+{
+	return str.find(needle.str, position);
+}
+
 uint32_t cRZString::RFind(char const* needle, uint32_t position, bool caseSensitive) const
 {
 	if (!caseSensitive)
@@ -315,7 +331,12 @@ uint32_t cRZString::RFind(cIGZString const& needle, uint32_t position, bool case
 		return str.rfind(needle.ToChar(), position);
 	}
 }
-	
+
+uint32_t cRZString::RFind(cRZString const& needle, uint32_t position)
+{
+	return str.rfind(needle.str, position);
+}
+
 void cRZString::Sprintf(char const* format, ...)
 {
 	// TODO

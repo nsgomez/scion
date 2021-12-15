@@ -18,46 +18,10 @@
  */
 
 #pragma once
-#include <stdint.h>
-#include <Windows.h>
+#include "cIGZUnknown.h"
 
-class cRZCriticalSection
+class cIGZUnknownEnumerator : public cIGZUnknown
 {
 public:
-	cRZCriticalSection();
-	virtual ~cRZCriticalSection();
-
-public:
-	virtual void Release();
-	virtual uint32_t Lock();
-	virtual uint32_t Unlock();
-	virtual uint32_t TryLock();
-	virtual bool IsValid();
-	virtual bool IsLocked();
-
-protected:
-	virtual void GetCriticalSectionHandle(CRITICAL_SECTION** handleOut);
-
-private:
-	CRITICAL_SECTION* criticalSection;
-	uint32_t lockCount;
-};
-
-class cRZCriticalSectionHolder
-{
-public:
-	cRZCriticalSectionHolder(cRZCriticalSection& ref) : criticalSection(ref)
-	{
-		criticalSection.Lock();
-	}
-
-	~cRZCriticalSectionHolder()
-	{
-		criticalSection.Unlock();
-	}
-
-private:
-	cRZCriticalSectionHolder(cRZCriticalSectionHolder const& other);
-
-	cRZCriticalSection& criticalSection;
+	virtual void Next(cIGZUnknown* it, cIGZUnknown* context, GZREFIID iid) = 0;
 };

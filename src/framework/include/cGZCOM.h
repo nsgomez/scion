@@ -82,6 +82,6 @@ protected:
 	cGZCOMLibrary* currentLibrary;
 	cIGZFramework* framework;
 	cIGZCOMDirector* comDirector;
-	cRZRandom random;
+	cRZRandom rng;
 	int nextGuidGenTime;
 };
