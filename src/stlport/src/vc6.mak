@@ -14,7 +14,7 @@ EXTRA_COMMON_FLAGS=/Zm800 /FI "vc_warning_disable.h" /D "_MBCS"
 EXTRA_DEBUG_FLAGS=
 EXTRA_NDEBUG_FLAGS=
 
-all: platform all_static all_dynamic 
+all: platform all_static 
 
 !INCLUDE vc_common.mak
 

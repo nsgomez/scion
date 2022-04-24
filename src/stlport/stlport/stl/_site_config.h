@@ -50,7 +50,7 @@
  * On UNIX, this has no effect. 
  *
  */
-// # define _STLP_USE_STATIC_LIB
+# define _STLP_USE_STATIC_LIB
 
 
 /* 

@@ -1,3 +1,4 @@
+*.asm
 *.dll
 *.exe
 *.exp

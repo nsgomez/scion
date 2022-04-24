@@ -32,14 +32,6 @@ cRZCriticalSection::~cRZCriticalSection()
 	delete criticalSection;
 }
 
-void cRZCriticalSection::Release()
-{
-	if (this != NULL)
-	{
-		delete this;
-	}
-}
-
 uint32_t cRZCriticalSection::Lock()
 {
 	EnterCriticalSection(criticalSection);

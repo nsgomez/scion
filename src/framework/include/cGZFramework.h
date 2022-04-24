@@ -72,7 +72,7 @@ public:
 	virtual int32_t GetOnIdleInterval() const;
 	virtual void SetOnIdleInterval(int32_t idleFrameInterval);
 
-	virtual void OnTick(int32_t totalTickFrames);
+	virtual void OnTick(uint32_t totalTickFrames);
 	virtual void OnIdle();
 
 	virtual bool IsTickEnabled() const;
@@ -161,9 +161,9 @@ private:
 	tServicesList removedTickListeners;
 
 	bool ticksEnabled;
-	int32_t onIdleInterval;
-	int32_t totalTickFrames;
-	int32_t totalIdleFrames;
+	uint32_t onIdleInterval;
+	uint32_t totalTickFrames;
+	uint32_t totalIdleFrames;
 
 	bool isInstall;
 	FrameworkState state;
@@ -173,8 +173,8 @@ private:
 	uint8_t isOnTickListLocked;
 	uint8_t isHookListLocked;
 
-	int32_t pendingIdleFrames;
-	int32_t pendingTickFrames;
+	uint32_t pendingIdleFrames;
+	uint32_t pendingTickFrames;
 
 	cRZCriticalSection criticalSection;
 	cRZCmdLine cmdLine;

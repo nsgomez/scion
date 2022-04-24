@@ -61,16 +61,19 @@
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="4"
 			CharacterSet="2"
-			ManagedExtensions="FALSE">
+			ManagedExtensions="FALSE"
+			WholeProgramOptimization="FALSE">
 			<Tool
 				Name="VCCLCompilerTool"
-				FavorSizeOrSpeed="1"
-				OptimizeForWindowsApplication="TRUE"
+				AdditionalOptions="/Oy-"
+				OmitFramePointers="FALSE"
+				OptimizeForProcessor="2"
 				AdditionalIncludeDirectories="..\include;..\stlport\stlport;.\include"
 				PreprocessorDefinitions="WIN32;NDEBUG"
 				StringPooling="TRUE"
 				MinimalRebuild="FALSE"
 				RuntimeLibrary="0"
+				EnableEnhancedInstructionSet="1"
 				WarningLevel="3"
 				DebugInformationFormat="3"/>
 			<Tool

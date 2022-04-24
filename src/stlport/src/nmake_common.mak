@@ -19,15 +19,15 @@ check_env_vc:
 	@if not exist "%MSVCDir%\lib\*.*" echo "Please set up MSVCDir environment variable. Did you run vcvars32.bat ?"
 	@if not exist "%MSVCDir%\lib\*.*" dir "%MSVCDir%\lib"
 
-install_vc : all check_env_vc install_libs_vc install_dlls install_headers_vc report_dirs_vc
+install_vc : all check_env_vc install_libs_vc install_headers_vc report_dirs_vc
 
-install_bc : all install_dlls
+install_bc : all
 
 report_dirs_vc :
 	@echo STLport installation complete.
 	@echo Please find STLport headers in %MSVCDir%\include\stlport.
 	@echo Please find STLport .lib files in %MSVCDir%\lib.
-	@echo Please find STLport DLLs in Windows system directory.
+#	@echo Please find STLport DLLs in Windows system directory.
 
 {$(SRCDIR)}.cpp{$(RELEASE_OBJDIR_static)}.obj:
    $(CXX) $(CXXFLAGS_RELEASE_static) $< 

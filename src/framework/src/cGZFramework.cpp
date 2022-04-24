@@ -458,7 +458,7 @@ void cGZFramework::SetOnIdleInterval(int32_t idleFrameInterval)
 	this->onIdleInterval = idleFrameInterval;
 }
 
-void cGZFramework::OnTick(int32_t totalTickFrames)
+void cGZFramework::OnTick(uint32_t totalTickFrames)
 {
 	criticalSection.Lock();
 
@@ -466,13 +466,9 @@ void cGZFramework::OnTick(int32_t totalTickFrames)
 	std::vector<cIGZSystemService*> tickServiceVec;
 	isOnTickListLocked = true;
 
-	tServicesList::iterator copyIt = activeTickListeners.begin();
-	tServicesList::iterator copyItEnd = activeTickListeners.end();
-
-	while (copyIt != copyItEnd)
+	for (tServicesList::iterator copyIt = activeTickListeners.begin(); copyIt != activeTickListeners.end(); ++copyIt)
 	{
 		tickServiceVec.push_back(*copyIt);
-		++copyIt;
 	}
 
 	isOnTickListLocked = false;
@@ -506,13 +502,9 @@ void cGZFramework::OnIdle()
 		std::vector<cIGZSystemService*> idleServiceVec;
 		isOnIdleListLocked = true;
 
-		tServicesList::iterator copyIt = activeIdleListeners.begin();
-		tServicesList::iterator copyItEnd = activeIdleListeners.end();
-
-		while (copyIt != copyItEnd)
+		for (tServicesList::iterator copyIt = activeIdleListeners.begin(); copyIt != activeIdleListeners.end(); ++copyIt)
 		{
 			idleServiceVec.push_back(*copyIt);
-			++copyIt;
 		}
 
 		isOnIdleListLocked = false;

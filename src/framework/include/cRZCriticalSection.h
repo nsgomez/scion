@@ -28,7 +28,6 @@ public:
 	virtual ~cRZCriticalSection();
 
 public:
-	virtual void Release();
 	virtual uint32_t Lock();
 	virtual uint32_t Unlock();
 	virtual uint32_t TryLock();
