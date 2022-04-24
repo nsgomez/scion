@@ -51,6 +51,4 @@ public:
 
 	virtual void SetUserData(cIGZVariant* data) = 0;
 	virtual cIGZVariant* GetUserData() = 0;
-
-	virtual ~cIGZIStream() = 0;
 };

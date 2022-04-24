@@ -17,6 +17,7 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
+#pragma once
 #include <vector>
 #include "cIGZCmdLine.h"
 #include "cRZString.h"
@@ -30,7 +31,6 @@ public:
 	cRZCmdLine();
 	cRZCmdLine(cIGZCmdLine const& cmdLine);
 	cRZCmdLine(char const* cmdLine);
-	virtual ~cRZCmdLine();
 
 public:
 	virtual bool QueryInterface(GZREFIID iid, void** outPtr);

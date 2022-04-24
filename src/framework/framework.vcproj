@@ -215,6 +215,9 @@
 				RelativePath=".\include\cIGZApp.h">
 			</File>
 			<File
+				RelativePath=".\include\cIGZCmdLine.h">
+			</File>
+			<File
 				RelativePath=".\include\cIGZCOM.h">
 			</File>
 			<File

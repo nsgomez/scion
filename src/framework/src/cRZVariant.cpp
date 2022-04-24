@@ -209,11 +209,13 @@ bool cRZVariant::CanGetVal(tagRZVariant::Type valueType) const
 bool cRZVariant::CreateValString(cIGZString** dest) const
 {
 	// TODO
+	return false;
 }
 
 bool cRZVariant::GetValString(cIGZString& dest) const
 {
 	// TODO
+	return false;
 }
 
 void cRZVariant::SetValString(cIGZString const& src)
