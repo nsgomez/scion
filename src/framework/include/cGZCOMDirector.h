@@ -1,6 +1,6 @@
 /*
  *  Scion - an open-source implementation of the Maxis GZCOM/RZCOM framework
- *  Copyright (C) 2021  Nelson Gomez (nsgomez) <nelson@ngomez.me>
+ *  Copyright (C) 2022  Nelson Gomez (nsgomez) <nelson@ngomez.me>
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public
@@ -18,19 +18,16 @@
  */
 
 #pragma once
-#include "cIGZUnknown.h"
+#include "cRZCOMDllDirector.h"
 
-static const GZREFIID GZIID_cIGZFrameworkHooks = 0x03FA40BF;
+static const GZGUID GZCLSID_cGZCOMDirector = 0xA3CAD79A;
 
-class cIGZFrameworkHooks : public cIGZUnknown
+class cGZCOMDirector : public cRZCOMDllDirector
 {
 public:
-	virtual bool PreFrameworkInit(void) = 0;
-	virtual bool PreAppInit(void) = 0;
-	virtual bool PostAppInit(void) = 0;
-	virtual bool PreAppShutdown(void) = 0;
-	virtual bool PostAppShutdown(void) = 0;
-	virtual bool PostSystemServiceShutdown(void) = 0;
-	virtual bool AbortiveQuit(void) = 0;
-	virtual bool OnInstall(void) = 0;
+	cGZCOMDirector();
+
+public:
+	virtual GZGUID GetDirectorID() const;
+	virtual bool InitializeFramework();
 };

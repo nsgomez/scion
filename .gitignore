@@ -10,6 +10,7 @@
 *.ncb
 *.res
 *.suo
+*.user
 *.vssscc
 BuildLog.htm
 src/stlport/doc

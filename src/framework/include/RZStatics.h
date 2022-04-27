@@ -21,11 +21,11 @@
 #include <stdint.h>
 
 class cIGZFramework;
-class cIGZCOMDirector;
 class cIGZString;
+class cRZCOMDllDirector;
 
 extern cIGZFramework* RZGetFramework();
-extern cIGZCOMDirector* RZGetCOMDllDirector();
+extern cRZCOMDllDirector* RZGetCOMDllDirector();
 //extern void RZGetCurrentAppPath(cIGZString& output);
 
 extern bool RZIsKeyDownNow(uint32_t key);

@@ -19,7 +19,7 @@
 
 #include "cGZCOM.h"
 #include "cGZFramework.h"
-#include "cIGZCOMDirector.h"
+#include "cRZCOMDllDirector.h"
 #include "RZStatics.h"
 
 static const GZGUID RZSRVID_cGZCOM = 0xA3CD8DB3;

@@ -74,6 +74,7 @@
 				MinimalRebuild="FALSE"
 				RuntimeLibrary="0"
 				EnableEnhancedInstructionSet="1"
+				AssemblerOutput="4"
 				WarningLevel="3"
 				DebugInformationFormat="3"/>
 			<Tool
@@ -117,6 +118,9 @@
 				RelativePath=".\src\cGZCOM.cpp">
 			</File>
 			<File
+				RelativePath=".\src\cGZCOMDirector.cpp">
+			</File>
+			<File
 				RelativePath=".\src\cGZCOMLibrary.cpp">
 			</File>
 			<File
@@ -127,6 +131,9 @@
 			</File>
 			<File
 				RelativePath=".\src\cRZCmdLine.cpp">
+			</File>
+			<File
+				RelativePath=".\src\cRZCOMDllDirector.cpp">
 			</File>
 			<File
 				RelativePath=".\src\cRZCriticalSection.cpp">
@@ -200,6 +207,9 @@
 				RelativePath=".\include\cGZCOM.h">
 			</File>
 			<File
+				RelativePath=".\include\cGZCOMDirector.h">
+			</File>
+			<File
 				RelativePath=".\include\cGZCOMLibrary.h">
 			</File>
 			<File
@@ -270,6 +280,9 @@
 			</File>
 			<File
 				RelativePath=".\include\cRZCmdLine.h">
+			</File>
+			<File
+				RelativePath=".\include\cRZCOMDllDirector.h">
 			</File>
 			<File
 				RelativePath=".\include\cRZCriticalSection.h">

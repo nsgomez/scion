@@ -1,6 +1,6 @@
 /*
  *  Scion - an open-source implementation of the Maxis GZCOM/RZCOM framework
- *  Copyright (C) 2021  Nelson Gomez (nsgomez) <nelson@ngomez.me>
+ *  Copyright (C) 2022  Nelson Gomez (nsgomez) <nelson@ngomez.me>
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public
@@ -17,20 +17,27 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#pragma once
-#include "cIGZUnknown.h"
+#include "cGZCOMDirector.h"
+#include "cIGZFramework.h"
+#include "RZStatics.h"
 
-static const GZREFIID GZIID_cIGZFrameworkHooks = 0x03FA40BF;
-
-class cIGZFrameworkHooks : public cIGZUnknown
+cGZCOMDirector::cGZCOMDirector()
 {
-public:
-	virtual bool PreFrameworkInit(void) = 0;
-	virtual bool PreAppInit(void) = 0;
-	virtual bool PostAppInit(void) = 0;
-	virtual bool PreAppShutdown(void) = 0;
-	virtual bool PostAppShutdown(void) = 0;
-	virtual bool PostSystemServiceShutdown(void) = 0;
-	virtual bool AbortiveQuit(void) = 0;
-	virtual bool OnInstall(void) = 0;
-};
+	if (GZCOM() == NULL)
+	{
+		this->com = RZGetFramework()->GetCOMObject();
+	}
+}
+
+GZGUID cGZCOMDirector::GetDirectorID() const
+{
+	return GZCLSID_cGZCOMDirector;
+}
+
+bool cGZCOMDirector::InitializeFramework()
+{
+	cIGZFramework* framework = RZGetFramework();
+	this->framework = framework;
+
+	return framework != NULL;
+}

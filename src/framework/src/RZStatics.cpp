@@ -17,7 +17,8 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include <cGZFramework.h>
+#include "cGZCOMDirector.h"
+#include "cGZFramework.h"
 #include "RZStatics.h"
 
 cIGZFramework* RZGetFramework()
@@ -25,10 +26,10 @@ cIGZFramework* RZGetFramework()
 	return cGZFramework::mpFramework;
 }
 
-cIGZCOMDirector* RZGetCOMDllDirector()
+cRZCOMDllDirector* RZGetCOMDllDirector()
 {
-	// TODO
-	return NULL;
+	static cGZCOMDirector gDirector;
+	return &gDirector;
 }
 
 bool RZIsKeyDownNow(uint32_t key)

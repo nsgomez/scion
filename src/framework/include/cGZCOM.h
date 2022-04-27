@@ -27,6 +27,8 @@
 #include "cRZRandom.h"
 #include "cRZSystemService.h"
 
+class cRZCOMDllDirector;
+
 class cGZCOM : public cIGZCOM, public cRZSystemService
 {
 public:
@@ -81,7 +83,7 @@ protected:
 	tLibraries libraries;
 	cGZCOMLibrary* currentLibrary;
 	cIGZFramework* framework;
-	cIGZCOMDirector* comDirector;
+	cRZCOMDllDirector* comDirector;
 	cRZRandom rng;
 	int nextGuidGenTime;
 };

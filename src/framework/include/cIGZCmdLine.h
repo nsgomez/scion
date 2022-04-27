@@ -20,6 +20,11 @@
 #pragma once
 #include "cIGZUnknown.h"
 
+static const GZREFIID GZIID_cIGZCmdLine = 0xA31E539C;
+
+class cIGZString;
+class cRZString;
+
 class cIGZCmdLine : public cIGZUnknown
 {
 public:

@@ -20,15 +20,17 @@
 #pragma once
 #include "cIGZUnknown.h"
 
+static const GZREFIID GZIID_cIGZCOMDirector = 0xA21EE941;
+
 class cIGZCOM;
-class cIGZFrameWork;
+class cIGZFramework;
 class cIGZString;
 class cRZCOMDllDirector;
 
 class cIGZCOMDirector : public cIGZUnknown
 {
 public:
-	typedef void(*ClassObjectEnumerationCallback)(GZGUID, uint32_t, void*);
+	typedef void (*ClassObjectEnumerationCallback)(GZGUID, uint32_t, void*);
 
 	virtual bool InitializeCOM(cIGZCOM* pCOM, const cIGZString& libraryPath) = 0;
 	virtual bool OnStart(cIGZCOM* pCOM) = 0;
@@ -42,10 +44,10 @@ public:
 	virtual uint32_t RefCount(void) = 0;
 	virtual uint32_t RemoveRef(void) = 0;
 
-	virtual cIGZFrameWork* FrameWork(void) = 0;
+	virtual cIGZFramework* FrameWork(void) = 0;
 	virtual cIGZCOM* GZCOM(void) = 0;
 
-	virtual void AddDirector(cIGZCOMDirector* director) = 0;
+	virtual GZGUID GetDirectorID() const = 0;
 	virtual bool GetLibraryPath(cIGZString& path) = 0;
 	virtual uint32_t GetHeapAllocatedSize(void) = 0;
 };
