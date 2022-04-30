@@ -130,6 +130,30 @@
 				RelativePath=".\src\cGZFramework.cpp">
 			</File>
 			<File
+				RelativePath=".\src\cGZKeyMessage.cpp">
+			</File>
+			<File
+				RelativePath=".\src\cGZMessageQueue.cpp">
+			</File>
+			<File
+				RelativePath=".\src\cGZMessageQueue2.cpp">
+			</File>
+			<File
+				RelativePath=".\src\cGZMessageQueueManager2.cpp">
+			</File>
+			<File
+				RelativePath=".\src\cGZMessageServer.cpp">
+			</File>
+			<File
+				RelativePath=".\src\cGZMessageServer2.cpp">
+			</File>
+			<File
+				RelativePath=".\src\cGZMouseMessage.cpp">
+			</File>
+			<File
+				RelativePath=".\src\cRZAutoMsg2Notification.cpp">
+			</File>
+			<File
 				RelativePath=".\src\cRZCmdLine.cpp">
 			</File>
 			<File
@@ -149,6 +173,9 @@
 			</File>
 			<File
 				RelativePath=".\src\cRZKeyboard.cpp">
+			</File>
+			<File
+				RelativePath=".\src\cRZMessage2Standard.cpp">
 			</File>
 			<File
 				RelativePath=".\src\cRZMutex.cpp">
@@ -179,6 +206,9 @@
 			</File>
 			<File
 				RelativePath=".\src\cRZTextOStream.cpp">
+			</File>
+			<File
+				RelativePath=".\src\cRZThreadSignal.cpp">
 			</File>
 			<File
 				RelativePath=".\src\cRZTime.cpp">
@@ -219,6 +249,30 @@
 				RelativePath=".\include\cGZFramework.h">
 			</File>
 			<File
+				RelativePath=".\include\cGZKeyMessage.h">
+			</File>
+			<File
+				RelativePath=".\include\cGZMessage.h">
+			</File>
+			<File
+				RelativePath=".\include\cGZMessageQueue.h">
+			</File>
+			<File
+				RelativePath=".\include\cGZMessageQueue2.h">
+			</File>
+			<File
+				RelativePath=".\include\cGZMessageQueueManager2.h">
+			</File>
+			<File
+				RelativePath=".\include\cGZMessageServer.h">
+			</File>
+			<File
+				RelativePath=".\include\cGZMessageServer2.h">
+			</File>
+			<File
+				RelativePath=".\include\cGZMouseMessage.h">
+			</File>
+			<File
 				RelativePath=".\include\cIGZAllocatorService.h">
 			</File>
 			<File
@@ -255,6 +309,36 @@
 				RelativePath=".\include\cIGZIStream.h">
 			</File>
 			<File
+				RelativePath=".\include\cIGZKeyMessage.h">
+			</File>
+			<File
+				RelativePath=".\include\cIGZMessage2.h">
+			</File>
+			<File
+				RelativePath=".\include\cIGZMessage2Standard.h">
+			</File>
+			<File
+				RelativePath=".\include\cIGZMessageQueue.h">
+			</File>
+			<File
+				RelativePath=".\include\cIGZMessageQueue2.h">
+			</File>
+			<File
+				RelativePath=".\include\cIGZMessageServer.h">
+			</File>
+			<File
+				RelativePath=".\include\cIGZMessageServer2.h">
+			</File>
+			<File
+				RelativePath=".\include\cIGZMessageTarget.h">
+			</File>
+			<File
+				RelativePath=".\include\cIGZMessageTarget2.h">
+			</File>
+			<File
+				RelativePath=".\include\cIGZMouseMessage.h">
+			</File>
+			<File
 				RelativePath=".\include\cIGZOStream.h">
 			</File>
 			<File
@@ -267,6 +351,9 @@
 				RelativePath=".\include\cIGZSystemService.h">
 			</File>
 			<File
+				RelativePath=".\include\cIGZThreadSignal.h">
+			</File>
+			<File
 				RelativePath=".\include\cIGZUnknown.h">
 			</File>
 			<File
@@ -274,6 +361,12 @@
 			</File>
 			<File
 				RelativePath=".\include\cIGZVariant.h">
+			</File>
+			<File
+				RelativePath=".\include\CriticalSectionPlatformData.h">
+			</File>
+			<File
+				RelativePath=".\include\cRZAutoMsg2Notification.h">
 			</File>
 			<File
 				RelativePath=".\include\cRZAutoRefCount.h">
@@ -300,6 +393,9 @@
 				RelativePath=".\include\cRZKeyboard.h">
 			</File>
 			<File
+				RelativePath=".\include\cRZMessage2Standard.h">
+			</File>
+			<File
 				RelativePath=".\include\cRZMutex.h">
 			</File>
 			<File
@@ -313,6 +409,9 @@
 			</File>
 			<File
 				RelativePath=".\include\cRZOStream.h">
+			</File>
+			<File
+				RelativePath=".\include\cRZPoint.h">
 			</File>
 			<File
 				RelativePath=".\include\cRZRandom.h">
@@ -333,6 +432,9 @@
 				RelativePath=".\include\cRZTextOStream.h">
 			</File>
 			<File
+				RelativePath=".\include\cRZThreadSignal.h">
+			</File>
+			<File
 				RelativePath=".\include\cRZTime.h">
 			</File>
 			<File
@@ -346,6 +448,9 @@
 			</File>
 			<File
 				RelativePath=".\include\RZStatics.h">
+			</File>
+			<File
+				RelativePath=".\include\SignalPlatformData.h">
 			</File>
 		</Filter>
 		<Filter

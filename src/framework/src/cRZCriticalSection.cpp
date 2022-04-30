@@ -22,26 +22,26 @@
 
 cRZCriticalSection::cRZCriticalSection()
 {
-	criticalSection = new CRITICAL_SECTION();
-	InitializeCriticalSection(criticalSection);
+	data = new CriticalSectionPlatformData();
+	InitializeCriticalSection(&data->criticalSection);
 }
 
 cRZCriticalSection::~cRZCriticalSection()
 {
-	DeleteCriticalSection(criticalSection);
-	delete criticalSection;
+	DeleteCriticalSection(&data->criticalSection);
+	delete data;
 }
 
 uint32_t cRZCriticalSection::Lock()
 {
-	EnterCriticalSection(criticalSection);
-	return ++lockCount;
+	EnterCriticalSection(&data->criticalSection);
+	return ++data->lockCount;
 }
 
 uint32_t cRZCriticalSection::Unlock()
 {
-	LeaveCriticalSection(criticalSection);
-	return --lockCount;
+	LeaveCriticalSection(&data->criticalSection);
+	return --data->lockCount;
 }
 
 uint32_t cRZCriticalSection::TryLock()
@@ -53,8 +53,8 @@ uint32_t cRZCriticalSection::TryLock()
 		return false;
 	}*/
 
-	EnterCriticalSection(criticalSection);
-	return ++lockCount;
+	EnterCriticalSection(&data->criticalSection);
+	return ++data->lockCount;
 }
 
 bool cRZCriticalSection::IsValid()
@@ -64,10 +64,10 @@ bool cRZCriticalSection::IsValid()
 
 bool cRZCriticalSection::IsLocked()
 {
-	return lockCount > 0;
+	return data->lockCount > 0;
 }
 
-void cRZCriticalSection::GetCriticalSectionHandle(CRITICAL_SECTION** handleOut)
+void cRZCriticalSection::GetCriticalSectionHandle(void* handleOut)
 {
-	*handleOut = this->criticalSection;
+	*reinterpret_cast<CRITICAL_SECTION**>(handleOut) = &this->data->criticalSection;
 }

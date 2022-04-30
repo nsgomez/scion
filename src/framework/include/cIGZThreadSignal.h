@@ -1,6 +1,6 @@
 /*
  *  Scion - an open-source implementation of the Maxis GZCOM/RZCOM framework
- *  Copyright (C) 2021  Nelson Gomez (nsgomez) <nelson@ngomez.me>
+ *  Copyright (C) 2022  Nelson Gomez (nsgomez) <nelson@ngomez.me>
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public
@@ -17,35 +17,22 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#pragma once
-#include "cIGZFramework.h"
-#include "RZStatics.h"
+#include "GZTypes.h"
 
-template <class T, GZREFIID iid, GZGUID srvid>
-class cRZSysServPtr
+class cIGZThreadSignal
 {
 public:
-	cRZSysServPtr()
+	enum TimedWaitResult
 	{
-		cIGZFramework* framework = RZGetFramework();
-		if (framework != NULL)
-		{
-			framework->GetSystemService(srvid, iid, reinterpret_cast<void**>(&srv));
-		}
-	}
+		Failure,
+		Success,
+		Timeout,
+	};
 
-	~cRZSysServPtr()
-	{
-		if (srv != NULL)
-		{
-			srv->Release();
-		}
-	}
-
-	T* operator->() const { return srv; }
-	T& operator*() const { return srv; }
-	operator T*() const { return srv; }
-
-protected:
-	T* srv;
+public:
+	virtual uint32_t Release() = 0;
+	virtual bool Signal() = 0;
+	virtual bool Broadcast() = 0;
+	virtual TimedWaitResult TimedWait(uint32_t waitTimeInMicroseconds) = 0;
+	virtual bool IsValid() = 0;
 };

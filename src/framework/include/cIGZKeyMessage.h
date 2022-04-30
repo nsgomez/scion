@@ -1,6 +1,6 @@
 /*
  *  Scion - an open-source implementation of the Maxis GZCOM/RZCOM framework
- *  Copyright (C) 2021  Nelson Gomez (nsgomez) <nelson@ngomez.me>
+ *  Copyright (C) 2022  Nelson Gomez (nsgomez) <nelson@ngomez.me>
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public
@@ -18,45 +18,23 @@
  */
 
 #pragma once
-#include <stdint.h>
-#include <Windows.h>
-#include "CriticalSectionPlatformData.h"
+#include "cIGZMessage2.h"
 
-class cRZCriticalSection
+static const GZIID GZIID_cIGZKeyMessage = 0x1A104742;
+static const GZGUID MSGID_KeyMessage = 0x7A104750;
+
+class cIGZKeyMessage : public cIGZMessage2
 {
 public:
-	cRZCriticalSection();
-	virtual ~cRZCriticalSection();
+	enum KeyEvent // TODO
+	{
+		Unknown = -1,
+	};
 
 public:
-	virtual uint32_t Lock();
-	virtual uint32_t Unlock();
-	virtual uint32_t TryLock();
-	virtual bool IsValid();
-	virtual bool IsLocked();
-
-protected:
-	virtual void GetCriticalSectionHandle(void* handleOut);
-
-private:
-	CriticalSectionPlatformData* data;
-};
-
-class cRZCriticalSectionHolder
-{
-public:
-	cRZCriticalSectionHolder(cRZCriticalSection& ref) : criticalSection(ref)
-	{
-		criticalSection.Lock();
-	}
-
-	~cRZCriticalSectionHolder()
-	{
-		criticalSection.Unlock();
-	}
-
-private:
-	cRZCriticalSectionHolder(cRZCriticalSectionHolder const& other);
-
-	cRZCriticalSection& criticalSection;
+	virtual void Initialize(KeyEvent event, uint32_t key, uint32_t keyFlags, uint32_t repeatCount) = 0;
+	virtual KeyEvent EventType() const = 0;
+	virtual uint32_t Key() const = 0;
+	virtual uint32_t KeyFlags() const = 0;
+	virtual uint32_t RepeatCount() const = 0;
 };

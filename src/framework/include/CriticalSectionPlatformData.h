@@ -1,6 +1,6 @@
 /*
  *  Scion - an open-source implementation of the Maxis GZCOM/RZCOM framework
- *  Copyright (C) 2021  Nelson Gomez (nsgomez) <nelson@ngomez.me>
+ *  Copyright (C) 2022  Nelson Gomez (nsgomez) <nelson@ngomez.me>
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public
@@ -18,45 +18,11 @@
  */
 
 #pragma once
-#include <stdint.h>
 #include <Windows.h>
-#include "CriticalSectionPlatformData.h"
 
-class cRZCriticalSection
+struct CriticalSectionPlatformData
 {
 public:
-	cRZCriticalSection();
-	virtual ~cRZCriticalSection();
-
-public:
-	virtual uint32_t Lock();
-	virtual uint32_t Unlock();
-	virtual uint32_t TryLock();
-	virtual bool IsValid();
-	virtual bool IsLocked();
-
-protected:
-	virtual void GetCriticalSectionHandle(void* handleOut);
-
-private:
-	CriticalSectionPlatformData* data;
-};
-
-class cRZCriticalSectionHolder
-{
-public:
-	cRZCriticalSectionHolder(cRZCriticalSection& ref) : criticalSection(ref)
-	{
-		criticalSection.Lock();
-	}
-
-	~cRZCriticalSectionHolder()
-	{
-		criticalSection.Unlock();
-	}
-
-private:
-	cRZCriticalSectionHolder(cRZCriticalSectionHolder const& other);
-
-	cRZCriticalSection& criticalSection;
+	CRITICAL_SECTION criticalSection;
+	uint32_t lockCount;
 };

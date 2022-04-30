@@ -1,6 +1,6 @@
 /*
  *  Scion - an open-source implementation of the Maxis GZCOM/RZCOM framework
- *  Copyright (C) 2021  Nelson Gomez (nsgomez) <nelson@ngomez.me>
+ *  Copyright (C) 2022  Nelson Gomez (nsgomez) <nelson@ngomez.me>
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public
@@ -18,45 +18,18 @@
  */
 
 #pragma once
-#include <stdint.h>
-#include <Windows.h>
-#include "CriticalSectionPlatformData.h"
+#include "cIGZUnknown.h"
 
-class cRZCriticalSection
+static const GZREFIID GZIID_cIGZMessage2 = 0xA52294B4;
+
+class cIGZMessage2 : public cIGZUnknown
 {
 public:
-	cRZCriticalSection();
-	virtual ~cRZCriticalSection();
+	virtual bool Create(GZREFIID iid, void** outPtr) const = 0;
 
-public:
-	virtual uint32_t Lock();
-	virtual uint32_t Unlock();
-	virtual uint32_t TryLock();
-	virtual bool IsValid();
-	virtual bool IsLocked();
+	virtual GZGUID GetType() const = 0;
+	virtual void SetType(GZGUID type) = 0;
 
-protected:
-	virtual void GetCriticalSectionHandle(void* handleOut);
-
-private:
-	CriticalSectionPlatformData* data;
-};
-
-class cRZCriticalSectionHolder
-{
-public:
-	cRZCriticalSectionHolder(cRZCriticalSection& ref) : criticalSection(ref)
-	{
-		criticalSection.Lock();
-	}
-
-	~cRZCriticalSectionHolder()
-	{
-		criticalSection.Unlock();
-	}
-
-private:
-	cRZCriticalSectionHolder(cRZCriticalSectionHolder const& other);
-
-	cRZCriticalSection& criticalSection;
+	virtual bool operator== (cIGZMessage2 const& other) const = 0;
+	virtual bool operator<  (cIGZMessage2 const& other) const = 0;
 };

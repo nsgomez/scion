@@ -1,6 +1,6 @@
 /*
  *  Scion - an open-source implementation of the Maxis GZCOM/RZCOM framework
- *  Copyright (C) 2021  Nelson Gomez (nsgomez) <nelson@ngomez.me>
+ *  Copyright (C) 2022  Nelson Gomez (nsgomez) <nelson@ngomez.me>
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public
@@ -18,45 +18,24 @@
  */
 
 #pragma once
-#include <stdint.h>
-#include <Windows.h>
-#include "CriticalSectionPlatformData.h"
+#include "cIGZMessage2.h"
+#include "cRZPoint.h"
 
-class cRZCriticalSection
+static const GZIID GZIID_cIGZMouseMessage = 0x1A0C615F;
+static const GZGUID MSGID_MouseMessage = 0xFA0C6390;
+
+class cIGZMouseMessage : public cIGZMessage2
 {
 public:
-	cRZCriticalSection();
-	virtual ~cRZCriticalSection();
+	enum MouseEvent // TODO
+	{
+		Unknown = -1,
+	};
 
 public:
-	virtual uint32_t Lock();
-	virtual uint32_t Unlock();
-	virtual uint32_t TryLock();
-	virtual bool IsValid();
-	virtual bool IsLocked();
-
-protected:
-	virtual void GetCriticalSectionHandle(void* handleOut);
-
-private:
-	CriticalSectionPlatformData* data;
-};
-
-class cRZCriticalSectionHolder
-{
-public:
-	cRZCriticalSectionHolder(cRZCriticalSection& ref) : criticalSection(ref)
-	{
-		criticalSection.Lock();
-	}
-
-	~cRZCriticalSectionHolder()
-	{
-		criticalSection.Unlock();
-	}
-
-private:
-	cRZCriticalSectionHolder(cRZCriticalSectionHolder const& other);
-
-	cRZCriticalSection& criticalSection;
+	virtual void Initialize(MouseEvent event, cRZPoint const& position, uint32_t wheelDelta, int32_t keyFlags) = 0;
+	virtual MouseEvent EventType() const = 0;
+	virtual cRZPoint const& Position() const = 0;
+	virtual uint32_t WheelDelta() const = 0;
+	virtual int32_t KeyFlags() const = 0;
 };

@@ -1,6 +1,6 @@
 /*
  *  Scion - an open-source implementation of the Maxis GZCOM/RZCOM framework
- *  Copyright (C) 2021  Nelson Gomez (nsgomez) <nelson@ngomez.me>
+ *  Copyright (C) 2022  Nelson Gomez (nsgomez) <nelson@ngomez.me>
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public
@@ -17,46 +17,28 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#pragma once
-#include <stdint.h>
 #include <Windows.h>
-#include "CriticalSectionPlatformData.h"
+#include "cIGZThreadSignal.h"
+#include "GZTypes.h"
+#include "SignalPlatformData.h"
 
-class cRZCriticalSection
+class cRZThreadSignal : public cIGZThreadSignal
 {
 public:
-	cRZCriticalSection();
-	virtual ~cRZCriticalSection();
+	cRZThreadSignal(bool manualReset);
+	virtual ~cRZThreadSignal();
 
 public:
-	virtual uint32_t Lock();
-	virtual uint32_t Unlock();
-	virtual uint32_t TryLock();
+	virtual uint32_t Release();
+	virtual bool Signal();
+	virtual bool Broadcast();
+	virtual TimedWaitResult TimedWait(uint32_t waitTimeInMicroseconds);
 	virtual bool IsValid();
-	virtual bool IsLocked();
+
+public:
+	virtual bool Unsignal();
+	virtual bool GetEventHandle(void* eventOut);
 
 protected:
-	virtual void GetCriticalSectionHandle(void* handleOut);
-
-private:
-	CriticalSectionPlatformData* data;
-};
-
-class cRZCriticalSectionHolder
-{
-public:
-	cRZCriticalSectionHolder(cRZCriticalSection& ref) : criticalSection(ref)
-	{
-		criticalSection.Lock();
-	}
-
-	~cRZCriticalSectionHolder()
-	{
-		criticalSection.Unlock();
-	}
-
-private:
-	cRZCriticalSectionHolder(cRZCriticalSectionHolder const& other);
-
-	cRZCriticalSection& criticalSection;
+	SignalPlatformData* signal;
 };

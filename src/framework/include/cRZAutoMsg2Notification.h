@@ -1,6 +1,6 @@
 /*
  *  Scion - an open-source implementation of the Maxis GZCOM/RZCOM framework
- *  Copyright (C) 2021  Nelson Gomez (nsgomez) <nelson@ngomez.me>
+ *  Copyright (C) 2022  Nelson Gomez (nsgomez) <nelson@ngomez.me>
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public
@@ -18,45 +18,21 @@
  */
 
 #pragma once
-#include <stdint.h>
-#include <Windows.h>
-#include "CriticalSectionPlatformData.h"
+#include <set>
+#include "GZTypes.h"
 
-class cRZCriticalSection
+class cIGZMessageServer2;
+class cIGZMessageTarget2;
+
+class cRZAutoMsg2Notification
 {
 public:
-	cRZCriticalSection();
-	virtual ~cRZCriticalSection();
-
-public:
-	virtual uint32_t Lock();
-	virtual uint32_t Unlock();
-	virtual uint32_t TryLock();
-	virtual bool IsValid();
-	virtual bool IsLocked();
+	bool AddMessageType(GZGUID type);
+	bool AddMessageTypes(GZGUID const* typePtr, uint32_t count);
+	
+	void AddAllNotifications(cIGZMessageTarget2* target, cIGZMessageServer2* server);
+	void RemoveAllNotifications(cIGZMessageTarget2* target, cIGZMessageServer2* server);
 
 protected:
-	virtual void GetCriticalSectionHandle(void* handleOut);
-
-private:
-	CriticalSectionPlatformData* data;
-};
-
-class cRZCriticalSectionHolder
-{
-public:
-	cRZCriticalSectionHolder(cRZCriticalSection& ref) : criticalSection(ref)
-	{
-		criticalSection.Lock();
-	}
-
-	~cRZCriticalSectionHolder()
-	{
-		criticalSection.Unlock();
-	}
-
-private:
-	cRZCriticalSectionHolder(cRZCriticalSectionHolder const& other);
-
-	cRZCriticalSection& criticalSection;
+	std::set<GZGUID> msgTypes;
 };
