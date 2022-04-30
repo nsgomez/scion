@@ -86,7 +86,7 @@ cGZCOMLibrary::~cGZCOMLibrary()
 {
 }
 
-bool cGZCOMLibrary::QueryInterface(GZREFIID iid, void** outPtr)
+bool cGZCOMLibrary::QueryInterface(GZIID iid, void** outPtr)
 {
 	if (iid == GZIID_cIGZCOMLibrary)
 	{

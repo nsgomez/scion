@@ -97,7 +97,7 @@ public:
 	virtual bool GetValVoid(void* dest, uint32_t& size) const = 0;
 	virtual void SetValVoid(void const* src, uint32_t size) = 0;
 
-	virtual bool GetValUnknown(GZREFIID iid, void** dest) = 0;
+	virtual bool GetValUnknown(GZIID iid, void** dest) = 0;
 	virtual cIGZUnknown* GetValUnknown() = 0;
 	virtual void SetValUnknown(cIGZUnknown* src) = 0;
 
@@ -137,7 +137,7 @@ public:
 	DECL_VARIANT_RETURN_AS_REF(Void, void);
 
 	virtual cIGZUnknown* RefIGZUnknown() const = 0;
-	virtual bool RefIGZUnknown(GZREFIID iid, void** out) = 0;
+	virtual bool RefIGZUnknown(GZIID iid, void** out) = 0;
 	virtual void RefIGZUnknown(cIGZUnknown* src) = 0;
 
 	virtual ~cIGZVariant();

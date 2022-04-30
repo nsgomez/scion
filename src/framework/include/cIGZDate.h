@@ -20,7 +20,7 @@
 #pragma once
 #include "cIGZUnknown.h"
 
-static const GZREFIID GZIID_cIGZDate = 0x43378255;
+static const GZIID GZIID_cIGZDate = 0x43378255;
 
 class cIGZString;
 class cRZTime;

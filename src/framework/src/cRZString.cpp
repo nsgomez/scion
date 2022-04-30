@@ -50,7 +50,7 @@ cRZString::~cRZString()
 {
 }
 
-bool cRZString::QueryInterface(GZREFIID iid, void** outPtr)
+bool cRZString::QueryInterface(GZIID iid, void** outPtr)
 {
 	if (iid == GZIID_cIGZString)
 	{

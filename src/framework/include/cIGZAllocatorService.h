@@ -20,7 +20,7 @@
 #pragma once
 #include "cIGZSystemService.h"
 
-static const GZREFIID GZIID_cIGZAllocatorService = 0x3AE4BEAB;
+static const GZIID GZIID_cIGZAllocatorService = 0x3AE4BEAB;
 
 class cIGZAllocatorService : public cIGZSystemService
 {

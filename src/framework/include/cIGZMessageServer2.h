@@ -45,5 +45,5 @@ public:
 
 	virtual uint32_t GetRefCount() const = 0;
 
-	virtual bool CreateMessage(GZCLSID clsid, GZREFIID iid, void** msgOut) = 0;
+	virtual bool CreateMessage(GZCLSID clsid, GZIID iid, void** msgOut) = 0;
 };

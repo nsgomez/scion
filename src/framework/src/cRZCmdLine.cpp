@@ -37,7 +37,7 @@ cRZCmdLine::~cRZCmdLine()
 {
 }
 
-bool cRZCmdLine::QueryInterface(GZREFIID iid, void** outPtr)
+bool cRZCmdLine::QueryInterface(GZIID iid, void** outPtr)
 {
 	if (iid == GZIID_cIGZUnknown)
 	{
@@ -186,30 +186,44 @@ int cRZCmdLine::FindSubString(cIGZString const& searchTerm, bool caseSensitive) 
 
 bool cRZCmdLine::IsSwitchPresent(char option, cIGZString& valueOut, bool unknown) const
 {
+	// TODO
+	return false;
 }
 
 int cRZCmdLine::GetIndexOfSwitch(char option, int unknown) const
 {
+	// TODO
+	return -1;
 }
 
 bool cRZCmdLine::IsSwitchPresent(cIGZString const& searchTerm) const
 {
+	// TODO
+	return false;
 }
 
 bool cRZCmdLine::IsSwitchPresent(cIGZString const& searchTerm, cIGZString& valueOut, bool unknown) const
 {
+	// TODO
+	return false;
 }
 
 int cRZCmdLine::GetIndexOfSwitch(cIGZString const& searchTerm, int unknown) const
 {
+	// TODO
+	return -1;
 }
 
 bool cRZCmdLine::InsertArgument(cIGZString const& arg, int unknown)
 {
+	// TODO
+	return false;
 }
 
 bool cRZCmdLine::EraseArgument(int index)
 {
+	// TODO
+	return false;
 }
 
 cRZString const& cRZCmdLine::operator[] (int index) const

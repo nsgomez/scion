@@ -33,7 +33,7 @@ cGZMessageQueue::~cGZMessageQueue()
 {
 }
 
-bool cGZMessageQueue::QueryInterface(GZREFIID iid, void** outPtr)
+bool cGZMessageQueue::QueryInterface(GZIID iid, void** outPtr)
 {
 	if (iid == GZIID_cIGZMessageQueue)
 	{

@@ -20,7 +20,7 @@
 #pragma once
 #include "cIGZUnknown.h"
 
-static const GZREFIID GZIID_cIGZCOM = 0x4241330D;
+static const GZIID GZIID_cIGZCOM = 0x4241330D;
 
 class cGZCOMLibrary;
 class cIGZCOMLibrary;
@@ -31,7 +31,7 @@ class cIGZSystemService;
 class cIGZCOM : public cIGZUnknown
 {
 public:
-	virtual bool GetClassObject(GZGUID clsid, GZREFIID iid, void** outPtr) = 0;
+	virtual bool GetClassObject(GZGUID clsid, GZIID iid, void** outPtr) = 0;
 
 	virtual cIGZFramework* Framework() = 0;
 

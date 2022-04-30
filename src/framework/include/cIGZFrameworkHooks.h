@@ -20,7 +20,7 @@
 #pragma once
 #include "cIGZUnknown.h"
 
-static const GZREFIID GZIID_cIGZFrameworkHooks = 0x03FA40BF;
+static const GZIID GZIID_cIGZFrameworkHooks = 0x03FA40BF;
 
 class cIGZFrameworkHooks : public cIGZUnknown
 {

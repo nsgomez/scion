@@ -29,7 +29,7 @@ cGZMouseMessage::cGZMouseMessage() :
 {
 }
 
-bool cGZMouseMessage::QueryInterface(GZREFIID iid, void** outPtr)
+bool cGZMouseMessage::QueryInterface(GZIID iid, void** outPtr)
 {
 	if (iid == GZIID_cIGZMouseMessage)
 	{
@@ -73,7 +73,7 @@ uint32_t cGZMouseMessage::Release()
 	}
 }
 
-bool cGZMouseMessage::Create(GZREFIID iid, void** outPtr) const
+bool cGZMouseMessage::Create(GZIID iid, void** outPtr) const
 {
 	cGZMouseMessage* newMsg = new cGZMouseMessage();
 

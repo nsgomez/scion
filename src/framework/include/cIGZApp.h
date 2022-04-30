@@ -20,7 +20,7 @@
 #pragma once
 #include "cIGZUnknown.h"
 
-static const GZREFIID GZIID_cIGZApp = 0x00000066;
+static const GZIID GZIID_cIGZApp = 0x00000066;
 
 class cIGZFramework;
 class cIGZSystemService;

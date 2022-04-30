@@ -20,7 +20,7 @@
 #pragma once
 #include "cIGZUnknown.h"
 
-static const GZREFIID GZIID_cIGZCOMDirector = 0xA21EE941;
+static const GZIID GZIID_cIGZCOMDirector = 0xA21EE941;
 
 class cIGZCOM;
 class cIGZFramework;
@@ -36,7 +36,7 @@ public:
 	virtual bool OnStart(cIGZCOM* pCOM) = 0;
 
 	virtual void EnumClassObjects(ClassObjectEnumerationCallback callback, void* context) = 0;
-	virtual bool GetClassObject(GZGUID clsid, GZREFIID iid, void** outPtr) = 0;
+	virtual bool GetClassObject(GZGUID clsid, GZIID iid, void** outPtr) = 0;
 
 	virtual bool CanUnloadNow(void) = 0;
 	virtual bool OnUnload(void) = 0;

@@ -26,12 +26,12 @@ public:
 	cGZKeyMessage();
 
 public:
-	virtual bool QueryInterface(GZREFIID iid, void** outPtr);
+	virtual bool QueryInterface(GZIID iid, void** outPtr);
 	virtual uint32_t AddRef();
 	virtual uint32_t Release();
 
 public:
-	virtual bool Create(GZREFIID iid, void** outPtr) const;
+	virtual bool Create(GZIID iid, void** outPtr) const;
 
 	virtual GZGUID GetType() const;
 	virtual void SetType(GZGUID type);

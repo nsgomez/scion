@@ -19,7 +19,7 @@
 
 #include "cRZUnknown.h"
 
-bool cRZUnknown::QueryInterface(GZREFIID iid, void** outPtr)
+bool cRZUnknown::QueryInterface(GZIID iid, void** outPtr)
 {
 	if (iid == GZIID_cIGZUnknown)
 	{

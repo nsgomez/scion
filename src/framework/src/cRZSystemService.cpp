@@ -35,7 +35,7 @@ cRZSystemService::cRZSystemService(GZGUID serviceId, int32_t servicePriority, in
 	this->running = false;
 }
 
-bool cRZSystemService::QueryInterface(GZREFIID iid, void** outPtr)
+bool cRZSystemService::QueryInterface(GZIID iid, void** outPtr)
 {
 	if (iid == GZIID_cIGZSystemService)
 	{

@@ -30,7 +30,7 @@ cGZMessageServer2::~cGZMessageServer2()
 {
 }
 
-bool cGZMessageServer2::QueryInterface(GZREFIID iid, void** outPtr)
+bool cGZMessageServer2::QueryInterface(GZIID iid, void** outPtr)
 {
 }
 
@@ -92,7 +92,7 @@ uint32_t cGZMessageServer2::GetRefCount() const
 {
 }
 
-bool cGZMessageServer2::CreateMessage(GZCLSID clsid, GZREFIID iid, void** msgOut)
+bool cGZMessageServer2::CreateMessage(GZCLSID clsid, GZIID iid, void** msgOut)
 {
 }
 

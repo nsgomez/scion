@@ -36,12 +36,12 @@ public:
 	virtual ~cGZCOM();
 
 public:
-	virtual bool QueryInterface(GZREFIID iid, void** outPtr);
+	virtual bool QueryInterface(GZIID iid, void** outPtr);
 	virtual uint32_t AddRef();
 	virtual uint32_t Release();
 
 public:
-	virtual bool GetClassObject(GZREFCLSID clsid, GZREFIID iid, void** outPtr);
+	virtual bool GetClassObject(GZCLSID clsid, GZIID iid, void** outPtr);
 
 	virtual cIGZFramework* Framework();
 
@@ -64,16 +64,16 @@ public:
 	virtual bool Shutdown();
 
 protected:
-	static void AddEntryCallback(GZREFCLSID clsid, uint32_t version, void* context);
+	static void AddEntryCallback(GZCLSID clsid, uint32_t version, void* context);
 
 	bool CanUnloadLibrary(cGZCOMLibrary& lib);
 	void FreeAllLibraries();
-	bool GetLibObject(cGZCOMLibrary& lib, GZREFCLSID clsid, GZREFIID iid, void** outPtr);
+	bool GetLibObject(cGZCOMLibrary& lib, GZCLSID clsid, GZIID iid, void** outPtr);
 	bool UpdateClassRegistry(cGZCOMLibrary& lib);
 
 protected:
 	typedef std::pair<uint32_t, cGZCOMLibrary*> tClassObjectData;
-	typedef std::map<GZREFCLSID, tClassObjectData> tIdMap;
+	typedef std::map<GZCLSID, tClassObjectData> tIdMap;
 	typedef std::set<cGZCOMLibrary> tLibraries;
 
 	cRZCriticalSection criticalSection;

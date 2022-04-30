@@ -50,15 +50,15 @@ public:
 	virtual ~cGZFramework();
 
 public:
-	virtual bool QueryInterface(GZREFIID iid, void** outPtr);
+	virtual bool QueryInterface(GZIID iid, void** outPtr);
 	virtual uint32_t AddRef();
 	virtual uint32_t Release();
 
 public:
 	virtual bool AddSystemService(cIGZSystemService* service);
 	virtual bool RemoveSystemService(cIGZSystemService* service);
-	virtual bool GetSystemService(GZGUID serviceId, GZREFIID iid, void** outPtr);
-	virtual bool EnumSystemServices(cIGZUnknownEnumerator* enumerator, cIGZUnknown* context, GZREFIID iid);
+	virtual bool GetSystemService(GZGUID serviceId, GZIID iid, void** outPtr);
+	virtual bool EnumSystemServices(cIGZUnknownEnumerator* enumerator, cIGZUnknown* context, GZIID iid);
 
 	virtual bool AddHook(cIGZFrameworkHooks* hook);
 	virtual bool RemoveHook(cIGZFrameworkHooks* hook);
@@ -100,7 +100,7 @@ public:
 	virtual cIGZOStream* StdErr();
 	virtual cIGZIStream* StdIn();
 
-	virtual bool GetStream(int32_t streamNum, GZREFIID iid, void** outPtr);
+	virtual bool GetStream(int32_t streamNum, GZIID iid, void** outPtr);
 	virtual bool SetStream(int32_t streamNum, cIGZUnknown* stream);
 
 	virtual void SetApplication(cIGZApp* app);

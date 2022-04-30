@@ -60,7 +60,7 @@ public:
 	cRZVariant& operator= (cIGZVariant const& other);
 
 public:
-	virtual bool QueryInterface(GZREFIID iid, void** outPtr);
+	virtual bool QueryInterface(GZIID iid, void** outPtr);
 	virtual uint32_t AddRef();
 	virtual uint32_t Release();
 
@@ -97,7 +97,7 @@ public:
 	virtual bool GetValVoid(void* dest, uint32_t& size) const;
 	virtual void SetValVoid(void const* src, uint32_t size);
 
-	virtual bool GetValUnknown(GZREFIID iid, void** dest);
+	virtual bool GetValUnknown(GZIID iid, void** dest);
 	virtual cIGZUnknown* GetValUnknown();
 	virtual void SetValUnknown(cIGZUnknown* src);
 
@@ -137,7 +137,7 @@ public:
 	DECL_VARIANT_RETURN_AS_REF(Void, void);
 
 	virtual cIGZUnknown* RefIGZUnknown() const;
-	virtual bool RefIGZUnknown(GZREFIID iid, void** out);
+	virtual bool RefIGZUnknown(GZIID iid, void** out);
 	virtual void RefIGZUnknown(cIGZUnknown* src);
 
 protected:

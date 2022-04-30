@@ -20,7 +20,7 @@
 #pragma once
 #include "cIGZUnknown.h"
 
-static const GZREFIID GZIID_cIGZMessageQueue2 = 0xA52294CD;
+static const GZIID GZIID_cIGZMessageQueue2 = 0xA52294CD;
 
 class cIGZMessage2;
 

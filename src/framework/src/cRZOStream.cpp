@@ -37,7 +37,7 @@ cRZOStream::~cRZOStream()
 	}
 }
 
-bool cRZOStream::QueryInterface(GZREFIID iid, void** outPtr)
+bool cRZOStream::QueryInterface(GZIID iid, void** outPtr)
 {
 	if (iid == GZIID_cIGZUnknown)
 	{

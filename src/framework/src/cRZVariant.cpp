@@ -134,7 +134,7 @@ cRZVariant::~cRZVariant()
 	Destroy();
 }
 
-bool cRZVariant::QueryInterface(GZREFIID iid, void** outPtr)
+bool cRZVariant::QueryInterface(GZIID iid, void** outPtr)
 {
 	if (iid = GZIID_cIGZUnknown)
 	{
@@ -263,7 +263,7 @@ void cRZVariant::SetValVoid(void const* src, uint32_t size)
 	}
 }
 
-bool cRZVariant::GetValUnknown(GZREFIID iid, void** dest)
+bool cRZVariant::GetValUnknown(GZIID iid, void** dest)
 {
 	if (typeTag == tagRZVariant::IGZUnknown && data.IGZUnknown != NULL)
 	{
@@ -324,7 +324,7 @@ cIGZUnknown* cRZVariant::RefIGZUnknown() const
 	return data.IGZUnknown;
 }
 
-bool cRZVariant::RefIGZUnknown(GZREFIID iid, void** out)
+bool cRZVariant::RefIGZUnknown(GZIID iid, void** out)
 {
 	if (typeTag == tagRZVariant::IGZUnknown && data.IGZUnknown != NULL)
 	{

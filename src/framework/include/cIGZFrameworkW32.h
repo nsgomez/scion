@@ -21,7 +21,7 @@
 #include <Windows.h>
 #include "cIGZUnknown.h"
 
-static const GZREFIID GZIID_cIGZFrameworkW32 = 0x23EA70A1;
+static const GZIID GZIID_cIGZFrameworkW32 = 0x23EA70A1;
 
 class cIGZFramework;
 

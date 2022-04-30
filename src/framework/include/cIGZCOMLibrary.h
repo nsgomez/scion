@@ -24,7 +24,7 @@
 class cIGZCOMDirector;
 class cIGZString;
 
-static const GZREFIID GZIID_cIGZCOMLibrary = 0x07D4922E;
+static const GZIID GZIID_cIGZCOMLibrary = 0x07D4922E;
 
 class cIGZCOMLibrary : public cIGZUnknown
 {

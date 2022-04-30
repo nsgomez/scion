@@ -63,7 +63,7 @@ cRZMessage2Standard::~cRZMessage2Standard()
 	}
 }
 
-bool cRZMessage2Standard::QueryInterface(GZREFIID iid, void** outPtr)
+bool cRZMessage2Standard::QueryInterface(GZIID iid, void** outPtr)
 {
 	if (iid == GZIID_cIGZMessage2Standard)
 	{
@@ -107,7 +107,7 @@ uint32_t cRZMessage2Standard::Release(void)
 	}
 }
 
-bool cRZMessage2Standard::Create(GZREFIID iid, void** outPtr) const
+bool cRZMessage2Standard::Create(GZIID iid, void** outPtr) const
 {
 	cRZMessage2Standard* newMsg = new cRZMessage2Standard();
 	if (iid == GZIID_cIGZUnknown || iid == GZIID_cIGZMessage2 || iid == GZIID_cIGZMessage2Standard)

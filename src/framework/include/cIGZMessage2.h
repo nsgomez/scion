@@ -20,12 +20,12 @@
 #pragma once
 #include "cIGZUnknown.h"
 
-static const GZREFIID GZIID_cIGZMessage2 = 0xA52294B4;
+static const GZIID GZIID_cIGZMessage2 = 0xA52294B4;
 
 class cIGZMessage2 : public cIGZUnknown
 {
 public:
-	virtual bool Create(GZREFIID iid, void** outPtr) const = 0;
+	virtual bool Create(GZIID iid, void** outPtr) const = 0;
 
 	virtual GZGUID GetType() const = 0;
 	virtual void SetType(GZGUID type) = 0;

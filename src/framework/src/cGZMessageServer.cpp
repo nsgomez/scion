@@ -30,7 +30,7 @@ cGZMessageServer::~cGZMessageServer()
 {
 }
 
-bool cGZMessageServer::QueryInterface(GZREFIID iid, void** outPtr)
+bool cGZMessageServer::QueryInterface(GZIID iid, void** outPtr)
 {
 }
 

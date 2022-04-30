@@ -31,7 +31,7 @@ cGZApp::~cGZApp()
 {
 }
 
-bool cGZApp::QueryInterface(GZREFIID iid, void** outPtr)
+bool cGZApp::QueryInterface(GZIID iid, void** outPtr)
 {
 	if (iid == GZIID_cIGZApp)
 	{

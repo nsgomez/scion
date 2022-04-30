@@ -29,7 +29,7 @@ public:
 	virtual ~cRZSystemService() { }
 
 public:
-	virtual bool QueryInterface(GZREFIID iid, void** outPtr);
+	virtual bool QueryInterface(GZIID iid, void** outPtr);
 	virtual uint32_t AddRef();
 	virtual uint32_t Release();
 

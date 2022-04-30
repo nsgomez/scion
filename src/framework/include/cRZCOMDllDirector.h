@@ -33,7 +33,7 @@ public:
 	virtual ~cRZCOMDllDirector();
 
 public:
-	virtual bool QueryInterface(GZREFIID iid, void** outPtr);
+	virtual bool QueryInterface(GZIID iid, void** outPtr);
 	virtual uint32_t AddRef();
 	virtual uint32_t Release();
 
@@ -46,7 +46,7 @@ public:
 	virtual bool OnStart(cIGZCOM* com);
 
 	virtual void EnumClassObjects(ClassObjectEnumerationCallback callback, void* context);
-	virtual bool GetClassObject(GZGUID clsid, GZREFIID iid, void** outPtr);
+	virtual bool GetClassObject(GZGUID clsid, GZIID iid, void** outPtr);
 
 	virtual bool CanUnloadNow(void);
 	virtual bool OnUnload(void);

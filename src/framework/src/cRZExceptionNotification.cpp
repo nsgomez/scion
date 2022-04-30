@@ -27,7 +27,7 @@ cRZExceptionNotification::~cRZExceptionNotification()
 {
 }
 
-bool cRZExceptionNotification::QueryInterface(GZREFIID iid, void** outPtr)
+bool cRZExceptionNotification::QueryInterface(GZIID iid, void** outPtr)
 {
 	if (iid == GZIID_cIGZUnknown)
 	{

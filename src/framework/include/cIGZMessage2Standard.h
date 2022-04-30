@@ -20,7 +20,7 @@
 #pragma once
 #include "cIGZMessage2.h"
 
-static const GZREFIID GZIID_cIGZMessage2Standard = 0x65297976;
+static const GZIID GZIID_cIGZMessage2Standard = 0x65297976;
 
 class cIGZSerializable;
 class cIGZString;

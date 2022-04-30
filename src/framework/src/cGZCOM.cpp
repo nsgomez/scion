@@ -33,7 +33,7 @@ cGZCOM::~cGZCOM()
 {
 }
 
-bool cGZCOM::QueryInterface(GZREFIID iid, void** outPtr)
+bool cGZCOM::QueryInterface(GZIID iid, void** outPtr)
 {
 	if (iid == GZIID_cIGZCOM)
 	{
@@ -55,7 +55,7 @@ uint32_t cGZCOM::Release()
 	return cRZSystemService::Release();
 }
 
-bool cGZCOM::GetClassObject(GZREFCLSID clsid, GZREFIID iid, void** outPtr)
+bool cGZCOM::GetClassObject(GZCLSID clsid, GZIID iid, void** outPtr)
 {
 	criticalSection.Lock();
 
@@ -241,7 +241,7 @@ bool cGZCOM::Shutdown()
 	return true;
 }
 
-void cGZCOM::AddEntryCallback(GZREFCLSID clsid, uint32_t version, void* context)
+void cGZCOM::AddEntryCallback(GZCLSID clsid, uint32_t version, void* context)
 {
 	cGZCOM* const com = reinterpret_cast<cGZCOM*>(context);
 
@@ -251,7 +251,7 @@ void cGZCOM::AddEntryCallback(GZREFCLSID clsid, uint32_t version, void* context)
 		com->clsidMap.erase(it);
 	}
 
-	com->clsidMap.insert(std::pair<const GZREFCLSID, tClassObjectData>(clsid, tClassObjectData(version, com->currentLibrary)));
+	com->clsidMap.insert(std::pair<const GZCLSID, tClassObjectData>(clsid, tClassObjectData(version, com->currentLibrary)));
 }
 
 bool cGZCOM::CanUnloadLibrary(cGZCOMLibrary& lib)
@@ -281,7 +281,7 @@ void cGZCOM::FreeAllLibraries()
 	criticalSection.Unlock();
 }
 
-bool cGZCOM::GetLibObject(cGZCOMLibrary& lib, GZREFCLSID clsid, GZREFIID iid, void** outPtr)
+bool cGZCOM::GetLibObject(cGZCOMLibrary& lib, GZCLSID clsid, GZIID iid, void** outPtr)
 {
 	if (!lib.IsLoaded() && !lib.Load())
 	{

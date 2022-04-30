@@ -32,7 +32,7 @@ public:
 	virtual ~cGZMessageServer2();
 
 public:
-	virtual bool QueryInterface(GZREFIID iid, void** outPtr);
+	virtual bool QueryInterface(GZIID iid, void** outPtr);
 	virtual uint32_t AddRef();
 	virtual uint32_t Release();
 
@@ -58,7 +58,7 @@ public:
 
 	virtual uint32_t GetRefCount() const;
 
-	virtual bool CreateMessage(GZCLSID clsid, GZREFIID iid, void** msgOut);
+	virtual bool CreateMessage(GZCLSID clsid, GZIID iid, void** msgOut);
 
 protected:
 	void DoDelayedNotificationAdditionsAndRemovals();

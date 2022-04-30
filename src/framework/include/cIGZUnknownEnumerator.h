@@ -23,5 +23,5 @@
 class cIGZUnknownEnumerator : public cIGZUnknown
 {
 public:
-	virtual void Next(cIGZUnknown* it, cIGZUnknown* context, GZREFIID iid) = 0;
+	virtual void Next(cIGZUnknown* it, cIGZUnknown* context, GZIID iid) = 0;
 };

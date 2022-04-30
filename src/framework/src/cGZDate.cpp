@@ -54,7 +54,7 @@ cGZDate::~cGZDate()
 {
 }
 
-bool cGZDate::QueryInterface(GZREFIID iid, void** outPtr)
+bool cGZDate::QueryInterface(GZIID iid, void** outPtr)
 {
 	if (iid == GZIID_cIGZUnknown)
 	{

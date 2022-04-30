@@ -21,7 +21,7 @@
 #include "cIGZFramework.h"
 #include "RZStatics.h"
 
-template <class T, GZREFIID iid, GZGUID srvid>
+template <class T, GZIID iid, GZGUID srvid>
 class cRZSysServPtr
 {
 public:

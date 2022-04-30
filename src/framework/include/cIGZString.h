@@ -20,7 +20,7 @@
 #pragma once
 #include "cIGZUnknown.h"
 
-static const GZREFIID GZIID_cIGZString = 0x089B7DC8;
+static const GZIID GZIID_cIGZString = 0x089B7DC8;
 
 class cIGZString : public cIGZUnknown
 {

@@ -20,7 +20,7 @@
 #pragma once
 #include "cIGZUnknown.h"
 
-static const GZREFIID GZIID_cIGZSystemService = 0x287FB697;
+static const GZIID GZIID_cIGZSystemService = 0x287FB697;
 
 class cIGZSystemService : public cIGZUnknown
 {

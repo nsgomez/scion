@@ -30,7 +30,7 @@ cRZCOMDllDirector::~cRZCOMDllDirector()
 {
 }
 
-bool cRZCOMDllDirector::QueryInterface(GZREFIID iid, void** outPtr)
+bool cRZCOMDllDirector::QueryInterface(GZIID iid, void** outPtr)
 {
 	switch (iid)
 	{
@@ -101,7 +101,7 @@ void cRZCOMDllDirector::EnumClassObjects(ClassObjectEnumerationCallback callback
 	}
 }
 
-bool cRZCOMDllDirector::GetClassObject(GZGUID clsid, GZREFIID iid, void** outPtr)
+bool cRZCOMDllDirector::GetClassObject(GZGUID clsid, GZIID iid, void** outPtr)
 {
 	for (ChildDirectorArray::iterator it = childDirectors.begin(); it != childDirectors.end(); ++it)
 	{

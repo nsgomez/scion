@@ -20,7 +20,7 @@
 #pragma once
 #include "cIGZUnknown.h"
 
-static const GZREFIID GZIID_cIGZFramework = 0x00000065;
+static const GZIID GZIID_cIGZFramework = 0x00000065;
 
 class cIGZApp;
 class cIGZCOM;
@@ -50,8 +50,8 @@ class cIGZFramework : public cIGZUnknown
 public:
 	virtual bool AddSystemService(cIGZSystemService* service) = 0;
 	virtual bool RemoveSystemService(cIGZSystemService* service) = 0;
-	virtual bool GetSystemService(GZGUID serviceId, GZREFIID iid, void** outPtr) = 0;
-	virtual bool EnumSystemServices(cIGZUnknownEnumerator* enumerator, cIGZUnknown* context, GZREFIID iid) = 0;
+	virtual bool GetSystemService(GZGUID serviceId, GZIID iid, void** outPtr) = 0;
+	virtual bool EnumSystemServices(cIGZUnknownEnumerator* enumerator, cIGZUnknown* context, GZIID iid) = 0;
 
 	virtual bool AddHook(cIGZFrameworkHooks* hook) = 0;
 	virtual bool RemoveHook(cIGZFrameworkHooks* hook) = 0;
@@ -93,7 +93,7 @@ public:
 	virtual cIGZOStream* StdErr(void) = 0;
 	virtual cIGZIStream* StdIn(void) = 0;
 
-	virtual bool GetStream(int32_t streamNum, GZREFIID iid, void** outPtr) = 0;
+	virtual bool GetStream(int32_t streamNum, GZIID iid, void** outPtr) = 0;
 	virtual bool SetStream(int32_t streamNum, cIGZUnknown* stream) = 0;
 
 	virtual void SetApplication(cIGZApp* app) = 0;

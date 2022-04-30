@@ -42,7 +42,7 @@ cGZFramework::~cGZFramework()
 	}
 }
 
-bool cGZFramework::QueryInterface(GZREFIID iid, void** outPtr)
+bool cGZFramework::QueryInterface(GZIID iid, void** outPtr)
 {
 	switch (iid)
 	{
@@ -222,7 +222,7 @@ bool cGZFramework::RemoveSystemService(cIGZSystemService* service)
 	}
 }
 
-bool cGZFramework::GetSystemService(GZGUID serviceId, GZREFIID iid, void** outPtr)
+bool cGZFramework::GetSystemService(GZGUID serviceId, GZIID iid, void** outPtr)
 {
 	cRZCriticalSectionHolder lock(criticalSection);
 	bool result;
@@ -243,7 +243,7 @@ bool cGZFramework::GetSystemService(GZGUID serviceId, GZREFIID iid, void** outPt
 	return result;
 }
 
-bool cGZFramework::EnumSystemServices(cIGZUnknownEnumerator* enumerator, cIGZUnknown* context, GZREFIID iid)
+bool cGZFramework::EnumSystemServices(cIGZUnknownEnumerator* enumerator, cIGZUnknown* context, GZIID iid)
 {
 	tServicesList copiedServices;
 	MakeSystemServiceListCopy(copiedServices);
@@ -642,7 +642,7 @@ cIGZIStream* cGZFramework::StdIn(void)
 	return stdIn;
 }
 
-bool cGZFramework::GetStream(int32_t streamNum, GZREFIID iid, void** outPtr)
+bool cGZFramework::GetStream(int32_t streamNum, GZIID iid, void** outPtr)
 {
 	cRZCriticalSectionHolder lock(criticalSection);
 

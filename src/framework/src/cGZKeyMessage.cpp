@@ -29,7 +29,7 @@ cGZKeyMessage::cGZKeyMessage() :
 {
 }
 
-bool cGZKeyMessage::QueryInterface(GZREFIID iid, void** outPtr)
+bool cGZKeyMessage::QueryInterface(GZIID iid, void** outPtr)
 {
 	if (iid == GZIID_cIGZKeyMessage)
 	{
@@ -73,7 +73,7 @@ uint32_t cGZKeyMessage::Release()
 	}
 }
 
-bool cGZKeyMessage::Create(GZREFIID iid, void** outPtr) const
+bool cGZKeyMessage::Create(GZIID iid, void** outPtr) const
 {
 	cGZKeyMessage* newMsg = new cGZKeyMessage();
 

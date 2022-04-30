@@ -32,7 +32,7 @@ public:
 	virtual ~cRZString();
 
 public:
-	virtual bool QueryInterface(GZREFIID iid, void** outPtr);
+	virtual bool QueryInterface(GZIID iid, void** outPtr);
 	virtual uint32_t AddRef(void);
 	virtual uint32_t Release(void);
 

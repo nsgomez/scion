@@ -20,7 +20,7 @@
 #pragma once
 #include "cIGZUnknown.h"
 
-static const GZREFIID GZIID_cIGZMessageQueue = 0x298B2F5E;
+static const GZIID GZIID_cIGZMessageQueue = 0x298B2F5E;
 
 struct cGZMessage;
 
