@@ -70,10 +70,8 @@
 			WholeProgramOptimization="TRUE">
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalOptions="/Oy-"
 				Optimization="1"
 				GlobalOptimizations="TRUE"
-				OmitFramePointers="FALSE"
 				OptimizeForProcessor="2"
 				OptimizeForWindowsApplication="TRUE"
 				AdditionalIncludeDirectories="..\include;..\stlport\stlport;.\include;..\framework\include"

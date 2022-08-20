@@ -66,10 +66,8 @@
 			WholeProgramOptimization="FALSE">
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalOptions="/Oy-"
 				Optimization="1"
 				GlobalOptimizations="TRUE"
-				OmitFramePointers="FALSE"
 				OptimizeForProcessor="2"
 				AdditionalIncludeDirectories="..\include;..\stlport\stlport;.\include"
 				PreprocessorDefinitions="WIN32;NDEBUG"
