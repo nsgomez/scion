@@ -25,5 +25,5 @@ struct cGZMessage;
 class cIGZMessageTarget : public cIGZUnknown
 {
 public:
-	virtual bool DoMessage(cGZMessage& msg) = 0;
+	virtual bool DoMessage(cGZMessage const& msg) = 0;
 };

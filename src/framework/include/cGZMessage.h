@@ -23,8 +23,12 @@
 struct cGZMessage
 {
 public:
+	cGZMessage()
+	{
+	}
+
 	cGZMessage(GZGUID msgType) :
-		messageType(0),
+		messageType(msgType),
 		data1(NULL),
 		data2(NULL),
 		data3(NULL)

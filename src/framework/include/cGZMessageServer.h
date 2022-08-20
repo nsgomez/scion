@@ -18,9 +18,12 @@
  */
 
 #pragma once
+#include <deque>
+#include <hash_map>
 #include <list>
-#include <map>
+#include "cGZMessageQueue.h"
 #include "cIGZMessageServer.h"
+#include "cRZCriticalSection.h"
 #include "cRZSystemService.h"
 
 static const GZGUID RZSRVID_cGZMessageServer = 0x64063387;
@@ -57,13 +60,58 @@ public:
 	virtual void SetAlwaysClearQueueOnTick(bool clearOnTick);
 
 protected:
+	struct DelayedNotificationInfo
+	{
+	public:
+		DelayedNotificationInfo(bool isAddition, cIGZMessageTarget* target, GZGUID msgType) :
+			isAddition(isAddition),
+			target(target),
+			msgType(msgType)
+		{
+		}
+
+		bool isAddition;
+		cIGZMessageTarget* target;
+		GZGUID msgType;
+	};
+
+	struct GeneralMessageTargetInfo
+	{
+	public:
+		GeneralMessageTargetInfo(cIGZMessageTarget* target, cGZMessage const& msg) :
+			target(target),
+			msg(msg)
+		{
+		}
+
+		cIGZMessageTarget* target;
+		cGZMessage msg;
+	};
+
 	void DoDelayedNotificationAdditionsAndRemovals();
 	void DoDelayedNotificationAdditionsAndRemovalsImmediately();
 	void SendGeneralMessages();
 
 protected:
 	typedef std::list<cIGZMessageTarget*> MessageTargetList;
-	typedef std::map<GZGUID, MessageTargetList> MessageTypeToTargetMap;
+	typedef std::list<DelayedNotificationInfo> DelayedNotificationList;
+	typedef std::hash_map<GZGUID, MessageTargetList*> MessageTargetMap;
+	typedef std::pair<GZGUID, MessageTargetList*> MessageTargetMapEntry;
+	typedef std::deque<GeneralMessageTargetInfo> GeneralMessageDeque;
 
-	// TODO
+	cRZCriticalSection notificationLock;
+	cRZCriticalSection messageQueueLock;
+	cRZCriticalSection generalMessagePostLock;
+
+	cGZMessageQueue messageQueue;
+	uint64_t totalMessagesDequeued;
+
+	int32_t pendingNotificationOps;
+	bool alwaysClearQueueOnTick;
+
+	DelayedNotificationList delayedNotificationChanges;
+	MessageTargetMap notificationTargets;
+
+	int32_t pendingGeneralMessageCount;
+	GeneralMessageDeque generalMessages;
 };
