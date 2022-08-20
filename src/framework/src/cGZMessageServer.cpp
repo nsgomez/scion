@@ -23,6 +23,15 @@
 #include "cIGZMessageTarget.h"
 #include "RZStatics.h"
 
+cGZMessageServer::GeneralMessageTargetInfo::GeneralMessageTargetInfo(GeneralMessageTargetInfo const& other)
+{
+	this->target = other.target;
+	this->msg.messageType = other.msg.messageType;
+	this->msg.data1 = other.msg.data1;
+	this->msg.data2 = other.msg.data2;
+	this->msg.data3 = other.msg.data3;
+}
+
 cGZMessageServer::cGZMessageServer() :
 	cRZSystemService(RZSRVID_cGZMessageServer, 5000000),
 	alwaysClearQueueOnTick(true)
@@ -109,32 +118,30 @@ bool cGZMessageServer::MessageSend(cGZMessage const& msg)
 	cIGZMessageTarget* targetsToNotify[kMaxTargetsPerMessage];
 	cIGZMessageTarget** currentTargetToNotify = targetsToNotify;
 
-	// We only need to hold the critical section for this inner block
+	notificationLock.Lock();
+	DoDelayedNotificationAdditionsAndRemovalsImmediately();
+
+	++pendingNotificationOps;
+	GZGUID msgType = msg.messageType;
+
+	if (msgType != 0)
 	{
-		cRZCriticalSectionHolder lock(notificationLock);
-		DoDelayedNotificationAdditionsAndRemovalsImmediately();
-
-		++pendingNotificationOps;
-		GZGUID msgType = msg.messageType;
-
-		if (msgType != 0)
+		MessageTargetMap::iterator targetMapIt = notificationTargets.find(msgType);
+		if (targetMapIt != notificationTargets.end())
 		{
-			MessageTargetMap::iterator targetMapIt = notificationTargets.find(msgType);
-			if (targetMapIt != notificationTargets.end())
+			const MessageTargetList* targetList = targetMapIt->second;
+			for (MessageTargetList::const_iterator it = targetList->begin(); it != targetList->end(); ++it)
 			{
-				const MessageTargetList* targetList = targetMapIt->second;
-				for (MessageTargetList::const_iterator it = targetList->begin(); it != targetList->end(); ++it)
-				{
-					cIGZMessageTarget* targetToAdd = *it;
-					*(currentTargetToNotify++) = targetToAdd;
-					targetToAdd->AddRef();
-				}
+				cIGZMessageTarget* targetToAdd = *it;
+				*(currentTargetToNotify++) = targetToAdd;
+				targetToAdd->AddRef();
 			}
 		}
-
-		*currentTargetToNotify = NULL;
-		--pendingNotificationOps;
 	}
+
+	*currentTargetToNotify = NULL;
+	--pendingNotificationOps;
+	notificationLock.Unlock();
 
 	currentTargetToNotify = targetsToNotify;
 	while (targetsToNotify[0] != NULL)
@@ -201,7 +208,6 @@ bool cGZMessageServer::RemoveNotification(cIGZMessageTarget* target, GZGUID msgT
 	if (pendingNotificationOps != 0)
 	{
 		delayedNotificationChanges.push_back(DelayedNotificationInfo(false, target, msgType));
-		target->AddRef();
 		return true;
 	}
 
@@ -263,14 +269,10 @@ void cGZMessageServer::CancelGeneralMessagePostsToTarget(cIGZMessageTarget* targ
 
 bool cGZMessageServer::OnTick(uint32_t tickCount)
 {
-	int32_t pendingMessageCount;
-	uint64_t targetMessageCount;
-
-	{
-		cRZCriticalSectionHolder lock(messageQueueLock);
-		pendingMessageCount = messageQueue.GetMessageCount();
-		targetMessageCount = pendingMessageCount + totalMessagesDequeued;
-	}
+	messageQueueLock.Lock();
+	int32_t pendingMessageCount = messageQueue.GetMessageCount();
+	uint64_t targetMessageCount = pendingMessageCount + totalMessagesDequeued;
+	messageQueueLock.Unlock();
 
 	do
 	{
@@ -279,15 +281,19 @@ bool cGZMessageServer::OnTick(uint32_t tickCount)
 			messageQueueLock.Lock();
 
 			cGZMessage msg;
-			if (!messageQueue.GetFrontMessage(msg))
+			bool haveMessage = messageQueue.GetFrontMessage(msg);
+			if (haveMessage)
 			{
-				messageQueueLock.Unlock();
+				++totalMessagesDequeued;
+			}
+
+			messageQueueLock.Unlock();
+			if (!haveMessage)
+			{
 				goto processGeneralMessages;
 			}
 
-			++totalMessagesDequeued;
-			messageQueueLock.Unlock();
-			MessageSend(msg);
+			static_cast<cIGZMessageServer*>(this)->MessageSend(msg);
 		}
 		while (alwaysClearQueueOnTick);
 	}
@@ -295,7 +301,7 @@ bool cGZMessageServer::OnTick(uint32_t tickCount)
 
 processGeneralMessages:
 	generalMessagePostLock.Lock();
-	if (generalMessages.begin() == generalMessages.end())
+	if (generalMessages.empty())
 	{
 		generalMessagePostLock.Unlock();
 	}
@@ -410,7 +416,7 @@ void cGZMessageServer::DoDelayedNotificationAdditionsAndRemovalsImmediately()
 
 void cGZMessageServer::SendGeneralMessages()
 {
-	cRZCriticalSectionHolder lock(generalMessagePostLock);
+	generalMessagePostLock.Lock();
 	if (pendingGeneralMessageCount < 1)
 	{
 		int32_t size = generalMessages.size();
@@ -418,18 +424,16 @@ void cGZMessageServer::SendGeneralMessages()
 
 		if (size < 1)
 		{
-			return;
+			goto end;
 		}
 	}
 
 	do
 	{
 		--pendingGeneralMessageCount;
-
-		GeneralMessageDeque::iterator it = generalMessages.begin();
-		if (it != generalMessages.end())
+		if (!generalMessages.empty())
 		{
-			GeneralMessageTargetInfo info = *it;
+			GeneralMessageTargetInfo info(generalMessages.front());
 			generalMessages.pop_front();
 
 			generalMessagePostLock.Unlock();
@@ -442,6 +446,7 @@ void cGZMessageServer::SendGeneralMessages()
 	}
 	while (pendingGeneralMessageCount > 0);
 
-	// FUTURE: This accounting just feels wrong
-	--pendingGeneralMessageCount;
+end:
+	--pendingGeneralMessageCount; // FUTURE: This accounting just feels wrong
+	generalMessagePostLock.Unlock();
 }

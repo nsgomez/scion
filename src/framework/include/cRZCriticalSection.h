@@ -50,7 +50,7 @@ public:
 		criticalSection.Lock();
 	}
 
-	~cRZCriticalSectionHolder()
+	virtual ~cRZCriticalSectionHolder()
 	{
 		criticalSection.Unlock();
 	}
