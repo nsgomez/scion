@@ -169,6 +169,9 @@ bool cGZMessageServer::AddNotification(cIGZMessageTarget* target, GZGUID msgType
 	if (pendingNotificationOps != 0)
 	{
 		delayedNotificationChanges.push_back(DelayedNotificationInfo(true, target, msgType));
+
+		// FUTURE: There's a bug here and in cGZMessageServer2 where these deferred objects are not released
+		// before the list is destroyed.
 		target->AddRef();
 		return true;
 	}
@@ -224,7 +227,7 @@ bool cGZMessageServer::RemoveNotification(cIGZMessageTarget* target, GZGUID msgT
 			list->remove(target);
 			target->Release();
 
-			if (list->begin() == list->end())
+			if (list->empty())
 			{
 				delete list;
 				notificationTargets.erase(msgType);
@@ -372,18 +375,21 @@ void cGZMessageServer::DoDelayedNotificationAdditionsAndRemovalsImmediately()
 		// It would be nice to refactor these and make them inline methods.
 		if (!isAddition)
 		{
-			MessageTargetList* list = targetMapIt->second;
-			MessageTargetList::iterator targetListIt = std::find(list->begin(), list->end(), target);
-
-			if (targetListIt != list->end())
+			if (targetMapIt != notificationTargets.end())
 			{
-				list->remove(target);
-				target->Release();
+				MessageTargetList* list = targetMapIt->second;
+				MessageTargetList::iterator targetListIt = std::find(list->begin(), list->end(), target);
 
-				if (list->begin() == list->end())
+				if (targetListIt != list->end())
 				{
-					delete list;
-					notificationTargets.erase(msgType);
+					list->remove(target);
+					target->Release();
+
+					if (list->empty())
+					{
+						delete list;
+						notificationTargets.erase(msgType);
+					}
 				}
 			}
 		}
