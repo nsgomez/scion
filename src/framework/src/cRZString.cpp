@@ -24,17 +24,17 @@ cRZString::cRZString()
 }
 
 cRZString::cRZString(const char* src) :
-	str(src)
+	std::string(src)
 {
 }
 
 cRZString::cRZString(const char* src, uint32_t len) :
-	str(src, len)
+	std::string(src, len)
 {
 }
 
 cRZString::cRZString(cIGZString const& src) :
-	str(src.Data())
+	std::string(src.Data())
 {
 }
 
@@ -42,7 +42,7 @@ cRZString::cRZString(cIGZString const* src)
 {
 	if (src != NULL)
 	{
-		str.assign(src->Data());
+		assign(src->Data());
 	}
 }
 
@@ -82,11 +82,11 @@ void cRZString::FromChar(char const* otherStr)
 {
 	if (otherStr == NULL)
 	{
-		str.erase();
+		erase();
 	}
 	else
 	{
-		str.assign(otherStr);
+		assign(otherStr);
 	}
 }
 
@@ -94,32 +94,32 @@ void cRZString::FromChar(char const* otherStr, uint32_t length)
 {
 	if (otherStr == NULL)
 	{
-		str.erase();
+		erase();
 	}
 	else
 	{
-		str.assign(otherStr, length);
+		assign(otherStr, length);
 	}
 }
 
 char const* cRZString::ToChar() const
 {
-	return str.c_str();
+	return c_str();
 }
 
 char const* cRZString::Data() const
 {
-	return str.c_str();
+	return c_str();
 }
 
 uint32_t cRZString::Strlen() const
 {
-	return str.length();
+	return length();
 }
 
 bool cRZString::IsEqual(cIGZString const* other, bool caseSensitive) const
 {
-	if (str.length() != other->Strlen())
+	if (std::string::length() != other->Strlen())
 	{
 		return false;
 	}
@@ -132,12 +132,12 @@ bool cRZString::IsEqual(cIGZString const* other, bool caseSensitive) const
 		lowercaseThis.MakeLower();
 		lowercaseOther.MakeLower();
 
-		return lowercaseThis.str == lowercaseOther.str;
+		return (std::string const&)lowercaseThis == (std::string const&)lowercaseOther;
 	}
 	else
 	{
 		char const* otherData = other->Data();
-		return strncmp(str.c_str(), otherData, str.length()) == 0;
+		return strncmp(c_str(), otherData, length()) == 0;
 	}
 }
 
@@ -153,7 +153,7 @@ bool cRZString::IsEqual(char const* other, uint32_t otherLen, bool caseSensitive
 		otherLen = strlen(other);
 	}
 
-	if (str.length() != otherLen)
+	if (length() != otherLen)
 	{
 		return false;
 	}
@@ -166,11 +166,11 @@ bool cRZString::IsEqual(char const* other, uint32_t otherLen, bool caseSensitive
 		lowercaseThis.MakeLower();
 		lowercaseOther.MakeLower();
 
-		return lowercaseThis.str == lowercaseOther.str;
+		return (std::string const&)lowercaseThis == (std::string const&)lowercaseOther;
 	}
 	else
 	{
-		return strncmp(str.c_str(), other, otherLen) == 0;
+		return strncmp(c_str(), other, otherLen) == 0;
 	}
 }
 
@@ -188,7 +188,7 @@ int cRZString::CompareTo(char const* other, uint32_t otherLen, bool caseSensitiv
 
 int cRZString::CompareTo(cRZString const& other) const
 {
-	return str.compare(other.str);
+	return compare(other);
 }
 
 cIGZString& cRZString::operator=(cIGZString const& other)
@@ -199,7 +199,7 @@ cIGZString& cRZString::operator=(cIGZString const& other)
 
 cRZString& cRZString::operator=(cRZString const& other)
 {
-	str.assign(other.str);
+	assign(other);
 	return *this;
 }
 
@@ -210,48 +210,48 @@ void cRZString::Copy(cIGZString const& src)
 
 void cRZString::Resize(uint32_t newLength)
 {
-	str.resize(newLength);
+	resize(newLength);
 }
 
 cIGZString& cRZString::Append(char const* src, uint32_t srcLen)
 {
-	str.append(src, srcLen);
+	append(src, srcLen);
 	return *this;
 }
 
 cIGZString& cRZString::Append(cIGZString const& src)
 {
-	str.append(src.ToChar(), src.Strlen());
+	append(src.ToChar(), src.Strlen());
 	return *this;
 }
 
 cIGZString& cRZString::Insert(uint32_t position, char const* src, uint32_t srcLen)
 {
-	str.insert(position, src, srcLen);
+	insert(position, src, srcLen);
 	return *this;
 }
 
 cIGZString& cRZString::Insert(uint32_t position, cIGZString const& src)
 {
-	str.insert(position, src.ToChar(), src.Strlen());
+	insert(position, src.ToChar(), src.Strlen());
 	return *this;
 }
 	
 cIGZString& cRZString::Replace(uint32_t position, char const* src, uint32_t srcLen)
 {
-	str.replace(position, srcLen, src);
+	replace(position, srcLen, src);
 	return *this;
 }
 
 cIGZString& cRZString::Replace(uint32_t position, cIGZString const& src)
 {
-	str.replace(position, src.Strlen(), src.ToChar());
+	replace(position, src.Strlen(), src.ToChar());
 	return *this;
 }
 	
 cIGZString& cRZString::Erase(uint32_t position, uint32_t length)
 {
-	str.erase(position, length);
+	erase(position, length);
 	return *this;
 }
 	
@@ -265,11 +265,11 @@ uint32_t cRZString::Find(char const* needle, uint32_t position, bool caseSensiti
 		lowercaseThis.MakeLower();
 		lowercaseNeedle.MakeLower();
 
-		return lowercaseThis.str.find(lowercaseNeedle.str, position);
+		return lowercaseThis.find(lowercaseNeedle, position);
 	}
 	else
 	{
-		return str.find(needle, position);
+		return find(needle, position);
 	}
 }
 
@@ -283,17 +283,17 @@ uint32_t cRZString::Find(cIGZString const& needle, uint32_t position, bool caseS
 		lowercaseThis.MakeLower();
 		lowercaseNeedle.MakeLower();
 
-		return lowercaseThis.str.find(lowercaseNeedle.str, position);
+		return lowercaseThis.find(lowercaseNeedle, position);
 	}
 	else
 	{
-		return str.find(needle.ToChar(), position);
+		return find(needle.ToChar(), position);
 	}
 }
 
 uint32_t cRZString::Find(cRZString const& needle, uint32_t position)
 {
-	return str.find(needle.str, position);
+	return find(needle, position);
 }
 
 uint32_t cRZString::RFind(char const* needle, uint32_t position, bool caseSensitive) const
@@ -306,11 +306,11 @@ uint32_t cRZString::RFind(char const* needle, uint32_t position, bool caseSensit
 		lowercaseThis.MakeLower();
 		lowercaseNeedle.MakeLower();
 
-		return lowercaseThis.str.rfind(lowercaseNeedle.str, position);
+		return lowercaseThis.rfind(lowercaseNeedle, position);
 	}
 	else
 	{
-		return str.rfind(needle, position);
+		return rfind(needle, position);
 	}
 }
 
@@ -324,17 +324,17 @@ uint32_t cRZString::RFind(cIGZString const& needle, uint32_t position, bool case
 		lowercaseThis.MakeLower();
 		lowercaseNeedle.MakeLower();
 
-		return lowercaseThis.str.rfind(lowercaseNeedle.str, position);
+		return lowercaseThis.rfind(lowercaseNeedle, position);
 	}
 	else
 	{
-		return str.rfind(needle.ToChar(), position);
+		return rfind(needle.ToChar(), position);
 	}
 }
 
 uint32_t cRZString::RFind(cRZString const& needle, uint32_t position)
 {
-	return str.rfind(needle.str, position);
+	return rfind(needle, position);
 }
 
 void cRZString::Sprintf(char const* format, ...)
@@ -371,23 +371,23 @@ void cRZString::Right(uint32_t) const
 	
 void cRZString::Trim()
 {
-	uint32_t index = str.find_first_not_of(" \t", 0, 2);
-	str.erase(0, index);
+	uint32_t index = find_first_not_of(" \t", 0, 2);
+	erase(0, index);
 
-	index = str.find_last_not_of(" \t", -1, 2);
-	str.erase(index + 1, -1);
+	index = find_last_not_of(" \t", -1, 2);
+	erase(index + 1, -1);
 }
 
 void cRZString::LTrim()
 {
-	uint32_t index = str.find_first_not_of(" \t", 0, 2);
-	str.erase(0, str.find_first_not_of(" \t", 0, 2));
+	uint32_t index = find_first_not_of(" \t", 0, 2);
+	erase(0, find_first_not_of(" \t", 0, 2));
 }
 
 void cRZString::RTrim()
 {
-	uint32_t index = str.find_last_not_of(" \t", -1, 2);
-	str.erase(index + 1, -1);
+	uint32_t index = find_last_not_of(" \t", -1, 2);
+	erase(index + 1, -1);
 }
 
 void cRZString::MakeLower()
@@ -425,7 +425,7 @@ bool cRZString::SplitTokenSeparated(cRZString&)
 
 void cRZString::Strcat(char const* str)
 {
-	this->str.append(str);
+	append(str);
 }
 
 void cRZString::Strncpy(char const* str, uint32_t count)
@@ -436,7 +436,7 @@ void cRZString::Strncpy(char const* str, uint32_t count)
 		count = len;
 	}
 
-	this->str.assign(str, count);
+	assign(str, count);
 }
 
 bool cRZString::operator< (const cIGZString& other) const

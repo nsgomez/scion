@@ -21,7 +21,7 @@
 #include <string>
 #include "cIGZString.h"
 
-class cRZString : public cIGZString
+class cRZString : public std::string, public cIGZString
 {
 public:
 	cRZString();
@@ -112,6 +112,5 @@ public:
 	bool operator== (char const* other) const;
 
 protected:
-	std::string str;
 	uint32_t refCount;
 };
