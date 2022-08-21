@@ -23,7 +23,23 @@ template<class T>
 class cRZAutoRefCount
 {
 public:
-	cRZAutoRefCount() : obj(NULL) { }
+	cRZAutoRefCount() : obj(NULL)
+	{
+		if (obj)
+		{
+			obj->AddRef();
+		}
+	}
+
+	cRZAutoRefCount(cRZAutoRefCount const& other)
+	{
+		obj = other.obj;
+		if (obj)
+		{
+			obj->AddRef();
+		}
+	}
+
 	cRZAutoRefCount(T* other) : obj(other)
 	{
 		if (other)
