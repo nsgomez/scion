@@ -48,3 +48,18 @@ uint32_t cRZUnknown::Release(void)
 
 	return refCount;
 }
+
+uint32_t cRZUnknown::RemoveRef(void)
+{
+	if (refCount != 0)
+	{
+		return --refCount;
+	}
+
+	return 0;
+}
+
+uint32_t cRZUnknown::RefCount(void) const
+{
+	return refCount;
+}

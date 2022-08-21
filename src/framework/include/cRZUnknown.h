@@ -24,12 +24,18 @@ class cRZUnknown : public cIGZUnknown
 {
 public:
 	cRZUnknown() : refCount(0) { }
-	virtual ~cRZUnknown() { }
 
 public:
 	virtual bool QueryInterface(GZIID iid, void** outPtr);
 	virtual uint32_t AddRef(void);
 	virtual uint32_t Release(void);
+
+public:
+	virtual ~cRZUnknown() { }
+
+public:
+	virtual uint32_t RemoveRef(void);
+	virtual uint32_t RefCount(void) const;
 
 protected:
 	uint32_t refCount;
