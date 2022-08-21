@@ -42,13 +42,13 @@ public:
 
 	cRZAutoRefCount(T* other) : obj(other)
 	{
-		if (other)
+		if (obj)
 		{
-			other->AddRef();
+			obj->AddRef();
 		}
 	}
 
-	virtual ~cRZAutoRefCount()
+	~cRZAutoRefCount()
 	{
 		if (obj)
 		{
@@ -58,18 +58,19 @@ public:
 
 	cRZAutoRefCount<T>& operator=(T* other)
 	{
-		if (obj != other)
+		T* objToReplace = obj;
+		if (other != objToReplace)
 		{
-			if (obj != NULL)
+			if (other != NULL)
 			{
-				obj->Release();
+				other->AddRef();
 			}
 
 			obj = other;
 
-			if (obj != NULL)
+			if (objToReplace != NULL)
 			{
-				obj->AddRef();
+				objToReplace->Release();
 			}
 		}
 
@@ -89,6 +90,16 @@ public:
 	operator T*() const
 	{
 		return obj;
+	}
+
+	bool operator==(T* const other) const
+	{
+		return obj == other;
+	}
+
+	bool operator==(cRZAutoRefCount<T> const& other) const
+	{
+		return obj == other.obj;
 	}
 
 protected:
