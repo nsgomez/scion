@@ -18,9 +18,14 @@
  */
 
 #pragma once
+#include <deque>
+#include <hash_map>
 #include <list>
-#include <map>
+#include "cGZMessageQueue2.h"
+#include "cIGZMessage2.h"
 #include "cIGZMessageServer2.h"
+#include "cIGZMessageTarget2.h"
+#include "cRZAutoRefCount.h"
 #include "cRZSystemService.h"
 
 static const GZGUID RZSRVID_cGZMessageServer2 = 0x04FA845B;
@@ -61,13 +66,59 @@ public:
 	virtual bool CreateMessage(GZCLSID clsid, GZIID iid, void** msgOut);
 
 protected:
+	struct DelayedAddOrRemove
+	{
+	public:
+		DelayedAddOrRemove(bool isAddition, cIGZMessageTarget2* target, GZGUID msgType) :
+			isAddition(isAddition),
+			target(target),
+			msgType(msgType)
+		{
+		}
+
+		bool isAddition;
+		cRZAutoRefCount<cIGZMessageTarget2> target;
+		GZGUID msgType;
+	};
+
+	struct GeneralMessageTargetInfo
+	{
+	public:
+		GeneralMessageTargetInfo(GeneralMessageTargetInfo const& other);
+		GeneralMessageTargetInfo(cIGZMessageTarget2* target, cIGZMessage2* msg) :
+			target(target),
+			msg(msg)
+		{
+		}
+
+		cRZAutoRefCount<cIGZMessageTarget2> target;
+		cRZAutoRefCount<cIGZMessage2> msg;
+	};
+
 	void DoDelayedNotificationAdditionsAndRemovals();
 	void DoDelayedNotificationAdditionsAndRemovalsImmediately();
 	void SendGeneralMessages();
 
 protected:
-	typedef std::list<cIGZMessageTarget2*> MessageTarget2List;
-	typedef std::map<GZGUID, MessageTarget2List> MessageTypeToTarget2Map;
+	typedef std::list<cRZAutoRefCount<cIGZMessageTarget2> > MessageTargetList;
+	typedef std::list<DelayedAddOrRemove> DelayedNotificationList;
+	typedef std::hash_map<GZGUID, MessageTargetList*> MessageTargetMap;
+	typedef std::pair<GZGUID, MessageTargetList*> MessageTargetMapEntry;
+	typedef std::deque<GeneralMessageTargetInfo> GeneralMessageDeque;
 
-	// TODO
+	cRZCriticalSection notificationLock;
+	cRZCriticalSection messageQueueLock;
+	cRZCriticalSection generalMessagePostLock;
+
+	cGZMessageQueue2 messageQueue;
+	uint64_t totalMessagesDequeued;
+
+	int32_t pendingNotificationOps;
+	bool alwaysClearQueueOnTick;
+
+	DelayedNotificationList delayedNotificationChanges;
+	MessageTargetMap notificationTargets;
+
+	int32_t pendingGeneralMessageCount;
+	GeneralMessageDeque generalMessages;
 };
