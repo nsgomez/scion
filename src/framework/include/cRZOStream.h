@@ -32,6 +32,8 @@ public:
 	virtual uint32_t Release();
 
 public:
+	virtual void Flush(void) = 0;
+
 	virtual bool SetSint8(int8_t value);
 	virtual bool SetUint8(uint8_t value);
 	virtual bool SetSint16(int16_t value);
@@ -46,6 +48,9 @@ public:
 	virtual bool SetRZCharStr(char const* str);
 	virtual bool SetGZStr(cIGZString const& str);
 	virtual bool SetGZSerializable(cIGZSerializable const& data);
+
+	virtual bool SetVoid(void const* buffer, uint32_t size) = 0;
+	virtual bool GetError(void) const = 0;
 
 	virtual void SetUserData(cIGZVariant* data);
 	virtual cIGZVariant* GetUserData();

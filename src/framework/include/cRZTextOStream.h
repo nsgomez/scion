@@ -23,6 +23,9 @@
 class cRZTextOStream : public cRZOStream
 {
 public:
+	cRZTextOStream(bool useLittleEndian) : cRZOStream(useLittleEndian) { }
+
+public:
 	virtual bool SetSint8(int8_t value);
 	virtual bool SetUint8(uint8_t value);
 	virtual bool SetSint16(int16_t value);
