@@ -46,22 +46,23 @@ public:
 	virtual int FindSubString(cIGZString const& searchTerm, bool caseSensitive = true) const;
 
 	virtual bool IsSwitchPresent(char option, cIGZString& valueOut, bool unknown) const; // TODO
-	virtual int GetIndexOfSwitch(char option, int unknown) const; // TODO
+	virtual int GetIndexOfSwitch(char option, int startIndex) const;
 
 	virtual bool IsSwitchPresent(cIGZString const& searchTerm) const;
 	virtual bool IsSwitchPresent(cIGZString const& searchTerm, cIGZString& valueOut, bool unknown) const; // TODO
-	virtual int GetIndexOfSwitch(cIGZString const& searchTerm, int unknown) const; // TODO
+	virtual int GetIndexOfSwitch(cIGZString const& searchTerm, int startIndex) const;
 
-	virtual bool InsertArgument(cIGZString const& arg, int unknown); // TODO
+	virtual bool InsertArgument(cIGZString const& arg, int index);
 	virtual bool EraseArgument(int index);
 
 	virtual cRZString const& operator[] (int index) const;
 
 protected:
+	void ConvertStringArrayToString(cRZString const& str, std::vector<cRZString>& array);
 	void ConvertStringArrayToString(std::vector<cRZString> const& array, cRZString& str);
 
 	uint32_t refCount;
 	tArgList arguments;
 	cRZString fullText;
-	cRZString unknownstr; // TODO
+	cRZString emptyStr;
 };

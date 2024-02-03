@@ -24,13 +24,19 @@ cRZCmdLine::cRZCmdLine()
 }
 
 cRZCmdLine::cRZCmdLine(cIGZCmdLine const& cmdLine)
+	: refCount(0), arguments(), fullText(), emptyStr()
 {
-	// TODO
+	cmdLine.GetCommandLineText(fullText);
+	for (int i = 0; i < cmdLine.argc(); i++)
+	{
+		arguments.push_back(cRZString(cmdLine.argv(i)));
+	}
 }
 
 cRZCmdLine::cRZCmdLine(char const* cmdLine)
+	: refCount(0), arguments(), fullText(cmdLine), emptyStr()
 {
-	// TODO
+	ConvertStringArrayToString(fullText, arguments);
 }
 
 cRZCmdLine::~cRZCmdLine()
@@ -82,7 +88,7 @@ char const* cRZCmdLine::argv(int index) const
 {
 	if (index >= arguments.size())
 	{
-		return unknownstr.ToChar();
+		return emptyStr.ToChar();
 	}
 	else
 	{
@@ -190,9 +196,51 @@ bool cRZCmdLine::IsSwitchPresent(char option, cIGZString& valueOut, bool unknown
 	return false;
 }
 
-int cRZCmdLine::GetIndexOfSwitch(char option, int unknown) const
+int cRZCmdLine::GetIndexOfSwitch(char option, int startIndex) const
 {
-	// TODO
+	size_t index = 0;
+	if (startIndex > -1)
+	{
+		index = startIndex;
+	}
+
+	if (!arguments.empty())
+	{
+		std::string delimiters("/-\\");
+		char upperFlag, lowerFlag;
+
+		if (option >= 'A' && option <= 'Z')
+		{
+			upperFlag = option;
+			lowerFlag = option + ' ';
+		}
+		else
+		{
+			upperFlag = option;
+			if (option >= 'a' && option <= 'z')
+			{
+				upperFlag = option - ' ';
+			}
+
+			lowerFlag = option;
+		}
+
+		for (; startIndex < arguments.size(); startIndex++)
+		{
+			cRZString const& arg = arguments[startIndex];
+			if (arg.length() == 2)
+			{
+				char argFlag = arg[1];
+				size_t delimiterOffset = delimiters.find(arg[0]);
+
+				if (delimiterOffset < delimiters.length() && (argFlag == upperFlag || argFlag == lowerFlag))
+				{
+					return index;
+				}
+			}
+		}
+	}
+
 	return -1;
 }
 
@@ -214,28 +262,73 @@ int cRZCmdLine::GetIndexOfSwitch(cIGZString const& searchTerm, int unknown) cons
 	return -1;
 }
 
-bool cRZCmdLine::InsertArgument(cIGZString const& arg, int unknown)
+bool cRZCmdLine::InsertArgument(cIGZString const& arg, int index)
 {
-	// TODO
-	return false;
+	int insertAt = 0;
+	if (!arguments.empty() && index > -1 && arguments.size() - index != 0 && index <= arguments.size())
+	{
+		insertAt = index;
+	}
+
+	arguments.insert(arguments.begin() + insertAt, cRZString(arg.Data(), arg.Strlen()));
+	ConvertStringArrayToString(arguments, fullText);
+	return true;
 }
 
 bool cRZCmdLine::EraseArgument(int index)
 {
-	// TODO
-	return false;
+	arguments.erase(arguments.begin() + index);
+	ConvertStringArrayToString(arguments, fullText);
+	return true;
 }
 
 cRZString const& cRZCmdLine::operator[] (int index) const
 {
 	if (index >= arguments.size())
 	{
-		return unknownstr;
+		return emptyStr;
 	}
 	else
 	{
 		return arguments[index];
 	}
+}
+
+void cRZCmdLine::ConvertStringArrayToString(cRZString const& str, std::vector<cRZString>& array)
+{
+	cRZString tempArg;
+	cRZString strCopy(str);
+	array.clear();
+
+	size_t length = strCopy.length();
+	while (length != 0)
+	{
+		if (strCopy[length - 1] >= ' ' && strCopy[length - 1] <= '~')
+		{
+			break;
+		}
+
+		strCopy.erase(length - 1, 1);
+		length = strCopy.length();
+	}
+
+	while (length != 0)
+	{
+		if (strCopy[length - 1] >= ' ' && strCopy[length - 1] <= '~')
+		{
+			break;
+		}
+
+		strCopy.erase(0, 1);
+		length = strCopy.length();
+	}
+
+	if (length == 0)
+	{
+		return;
+	}
+
+	// TODO
 }
 
 void cRZCmdLine::ConvertStringArrayToString(std::vector<cRZString> const& array, cRZString& str)

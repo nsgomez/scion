@@ -36,13 +36,13 @@ public:
 	virtual int FindSubString(cIGZString const& searchTerm, bool caseSensitive = true) const = 0;
 
 	virtual bool IsSwitchPresent(char option, cIGZString& valueOut, bool unknown) const = 0; // TODO
-	virtual int GetIndexOfSwitch(char option, int unknown) const = 0; // TODO
+	virtual int GetIndexOfSwitch(char option, int startIndex) const = 0;
 
 	virtual bool IsSwitchPresent(cIGZString const& searchTerm) const = 0;
 	virtual bool IsSwitchPresent(cIGZString const& searchTerm, cIGZString& valueOut, bool unknown) const = 0; // TODO
-	virtual int GetIndexOfSwitch(cIGZString const& searchTerm, int unknown) const = 0; // TODO
+	virtual int GetIndexOfSwitch(cIGZString const& searchTerm, int startIndex) const = 0;
 
-	virtual bool InsertArgument(cIGZString const& arg, int unknown) = 0; // TODO
+	virtual bool InsertArgument(cIGZString const& arg, int index) = 0;
 	virtual bool EraseArgument(int index) = 0;
 
 	virtual cRZString const& operator[] (int index) const = 0;

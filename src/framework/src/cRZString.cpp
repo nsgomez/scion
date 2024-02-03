@@ -33,8 +33,13 @@ cRZString::cRZString(const char* src, uint32_t len) :
 {
 }
 
+cRZString::cRZString(std::string const& src, uint32_t pos, uint32_t count) :
+	std::string(src, pos, count)
+{
+}
+
 cRZString::cRZString(cIGZString const& src) :
-	std::string(src.Data())
+	std::string(src.Data(), src.Strlen())
 {
 }
 
@@ -109,7 +114,7 @@ char const* cRZString::ToChar() const
 
 char const* cRZString::Data() const
 {
-	return c_str();
+	return data();
 }
 
 uint32_t cRZString::Strlen() const
@@ -176,14 +181,85 @@ bool cRZString::IsEqual(char const* other, uint32_t otherLen, bool caseSensitive
 
 int cRZString::CompareTo(cIGZString const& other, bool caseSensitive) const
 {
-	// TODO
-	return 0;
+	int result;
+	uint32_t comparisonLength = length();
+
+	if (caseSensitive)
+	{
+		uint32_t otherLength = other.Strlen();
+		if (otherLength < comparisonLength)
+		{
+			comparisonLength = otherLength;
+		}
+
+		result = strncmp(data(), other.Data(), comparisonLength);
+	}
+	else
+	{
+		cRZString first(*this);
+		cRZString second(other);
+
+		first.MakeLower();
+		second.MakeLower();
+
+		comparisonLength = first.length();
+		if (second.length() < first.length())
+		{
+			comparisonLength = second.length();
+		}
+
+		result = memcmp(first.data(), second.data(), comparisonLength);
+	}
+
+	if (result == 0)
+	{
+		result = length() - other.Strlen();
+	}
+
+	return result;
 }
 
 int cRZString::CompareTo(char const* other, uint32_t otherLen, bool caseSensitive) const
 {
-	// TODO
-	return 0;
+	int result;
+	if (otherLen == -1)
+	{
+		otherLen = strlen(other);
+	}
+
+	if (caseSensitive)
+	{
+		uint32_t comparisonLength = length();
+		if (otherLen < comparisonLength)
+		{
+			comparisonLength = otherLen;
+		}
+
+		result = strncmp(data(), other, comparisonLength);
+	}
+	else
+	{
+		cRZString first(*this);
+		cRZString second(other, otherLen);
+
+		first.MakeLower();
+		second.MakeLower();
+
+		uint32_t comparisonLength = first.length();
+		if (second.length() < first.length())
+		{
+			comparisonLength = second.length();
+		}
+
+		result = memcmp(first.data(), second.data(), comparisonLength);
+	}
+
+	if (result == 0)
+	{
+		result = length() - otherLen;
+	}
+
+	return result;
 }
 
 int cRZString::CompareTo(cRZString const& other) const
@@ -344,29 +420,91 @@ void cRZString::Sprintf(char const* format, ...)
 
 bool cRZString::BeginsWith(char const* needle, uint32_t needleLen) const
 {
-	// TODO
-	return false;
+	size_t thisLen = length();
+	if (needleLen > thisLen)
+	{
+		return false;
+	}
+
+	for (uint32_t i = 0; i < needleLen; i++)
+	{
+		if ((*this)[i] != needle[i])
+		{
+			return false;
+		}
+	}
+
+	return true;
 }
 
 bool cRZString::EndsWith(char const* needle, uint32_t needleLen) const
 {
-	// TODO
-	return false;
+	size_t thisLen = length();
+	if (needleLen > thisLen)
+	{
+		return false;
+	}
+	else if (needleLen == 0)
+	{
+		return true;
+	}
+
+	char const* haystack = c_str() + thisLen - 1;
+	needle = needle + needleLen - 1;
+
+	for (uint32_t i = 0; i < needleLen; i++)
+	{
+		if (*(haystack--) != *(needle--))
+		{
+			return false;
+		}
+	}
+
+	return true;
 }
 
-void cRZString::Left(uint32_t) const
+cRZString cRZString::Left(uint32_t count) const
 {
-	// TODO
+	if (count > length())
+	{
+		return cRZString(*this);
+	}
+	else
+	{
+		return Mid(0, count);
+	}
 }
 
-void cRZString::Mid(uint32_t, uint32_t) const
+cRZString cRZString::Mid(uint32_t position, uint32_t count) const
 {
-	// TODO
+	size_t currentLength = length();
+	size_t remainingLength = currentLength - position;
+
+	if (position > currentLength || remainingLength == 0)
+	{
+		return cRZString();
+	}
+	else
+	{
+		if (remainingLength > count)
+		{
+			remainingLength = count;
+		}
+
+		return cRZString(*this, position, remainingLength);
+	}
 }
 
-void cRZString::Right(uint32_t) const
+cRZString cRZString::Right(uint32_t count) const
 {
-	// TODO
+	if (count > length())
+	{
+		return cRZString(*this);
+	}
+	else
+	{
+		return Mid(length() - count, count);
+	}
 }
 	
 void cRZString::Trim()
@@ -400,27 +538,88 @@ void cRZString::MakeUpper()
 	// TODO
 }
 
-void cRZString::SplitToken(char const* token)
+cRZString cRZString::SplitToken(char const* delimiter)
 {
-	// TODO
+	size_t delimiterLen = strlen(delimiter);
+	if (delimiter == NULL || delimiterLen == 0)
+	{
+		return cRZString(*this);
+	}
+
+	uint32_t pos = find(delimiter);
+	if (pos == std::string::npos)
+	{
+		return cRZString();
+	}
+	else
+	{
+		cRZString token(*this, 0, pos);
+		erase(0, pos + delimiterLen);
+		return token;
+	}
 }
 
-bool cRZString::SplitTokenDelimited(char)
+bool cRZString::SplitTokenDelimited(char delimiter)
 {
-	// TODO
-	return false;
+	uint32_t pos = find(delimiter);
+	if (pos == std::string::npos)
+	{
+		erase();
+	}
+	else
+	{
+		erase(0, pos + 1);
+	}
+
+	return pos != std::string::npos;
 }
 
-bool cRZString::SplitTokenDelimited(char, cRZString&)
+bool cRZString::SplitTokenDelimited(char delimiter, cRZString& token)
 {
-	// TODO
-	return false;
+	uint32_t pos = find(delimiter);
+	if (pos == std::string::npos)
+	{
+		token.erase();
+		swap(token);
+	}
+	else
+	{
+		token.assign(*this, 0, pos);
+		erase(0, pos + 1);
+	}
+
+	return pos != std::string::npos;
 }
 
-bool cRZString::SplitTokenSeparated(cRZString&)
+bool cRZString::SplitTokenSeparated(char delimiter, cRZString& token)
 {
-	// TODO
-	return false;
+	while (true)
+	{
+		uint32_t delimiterPos = find(delimiter);
+		if (delimiterPos == std::string::npos)
+		{
+			if (length() == 0)
+			{
+				return false;
+			}
+			else
+			{
+				token.erase();
+				swap(token);
+				return true;
+			}
+		}
+
+		uint32_t nextTokenPos = find_first_not_of(delimiter);
+		if (delimiterPos != 0)
+		{
+			token.assign(0, delimiterPos);
+			erase(0, nextTokenPos);
+			return true;
+		}
+
+		erase(0, nextTokenPos);
+	}
 }
 
 void cRZString::Strcat(char const* str)

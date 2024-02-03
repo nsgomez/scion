@@ -27,6 +27,7 @@ public:
 	cRZString();
 	cRZString(const char* src);
 	cRZString(const char* src, uint32_t len);
+	cRZString(std::string const& src, uint32_t pos = 0, uint32_t count = -1);
 	cRZString(cIGZString const& src);
 	cRZString(cIGZString const* src);
 	virtual ~cRZString();
@@ -83,9 +84,9 @@ public:
 	bool BeginsWith(char const* needle, uint32_t needleLen) const;
 	bool EndsWith(char const* needle, uint32_t needleLen) const;
 
-	void Left(uint32_t) const;
-	void Mid(uint32_t, uint32_t) const;
-	void Right(uint32_t) const;
+	cRZString Left(uint32_t count) const;
+	cRZString Mid(uint32_t position, uint32_t count) const;
+	cRZString Right(uint32_t count) const;
 	
 	void Trim();
 	void LTrim();
@@ -94,10 +95,10 @@ public:
 	void MakeLower();
 	void MakeUpper();
 
-	void SplitToken(char const* token);
-	bool SplitTokenDelimited(char);
-	bool SplitTokenDelimited(char, cRZString&);
-	bool SplitTokenSeparated(cRZString&);
+	cRZString SplitToken(char const* delimiter);
+	bool SplitTokenDelimited(char delimiter);
+	bool SplitTokenDelimited(char delimiter, cRZString& token);
+	bool SplitTokenSeparated(char delimiter, cRZString& token);
 
 	void Strcat(char const* str);
 	void Strncpy(char const* str, uint32_t count);
