@@ -695,11 +695,22 @@ cRZExceptionNotification* cGZFramework::ExceptionNotificationObj(void) const
 
 bool cGZFramework::PreAppInit(void)
 {
-	cIGZSystemService* appAsSvc;
+	cIGZSystemService* appAsSvc = NULL;
 	cIGZApp* app = Application();
 
+	// FUTURE: a better compiler would've optimized this out completely, yet it exists in release.
+	// Is appAsSvc supposed to be an AutoRef type? Doesn't seem like it since there's no AddRef call.
+	if (appAsSvc != NULL)
+	{
+		appAsSvc->Release();
+		appAsSvc = NULL;
+	}
+
 	app->QueryInterface(GZIID_cIGZSystemService, reinterpret_cast<void**>(&appAsSvc));
-	AddSystemService(appAsSvc);
+	if (appAsSvc)
+	{
+		AddSystemService(appAsSvc);
+	}
 
 	tServicesList copiedServices;
 	MakeSystemServiceListCopy(copiedServices);
