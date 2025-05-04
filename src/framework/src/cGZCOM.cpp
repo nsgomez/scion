@@ -17,9 +17,12 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
+#include <ctime>
 #include "cGZCOM.h"
 #include "cGZFramework.h"
 #include "cRZCOMDllDirector.h"
+#include "cRZDate.h"
+#include "cRZThread.h"
 #include "RZStatics.h"
 
 static const GZGUID RZSRVID_cGZCOM = 0xA3CD8DB3;
@@ -27,6 +30,7 @@ static const GZGUID RZSRVID_cGZCOM = 0xA3CD8DB3;
 cGZCOM::cGZCOM() :
 	cRZSystemService(RZSRVID_cGZCOM, 10000000)
 {
+	nextGuidGenTime = 0;
 }
 
 cGZCOM::~cGZCOM()
@@ -116,7 +120,7 @@ bool cGZCOM::AddLibrary(const cIGZString& path)
 
 void cGZCOM::FreeUnusedLibraries(void)
 {
-	criticalSection.Lock();
+	cRZCriticalSectionHolder lock(criticalSection);
 
 	for (tLibraries::iterator it = libraries.begin(); it != libraries.end(); ++it)
 	{
@@ -126,20 +130,55 @@ void cGZCOM::FreeUnusedLibraries(void)
 			library.Free();
 		}
 	}
+}
 
-	criticalSection.Unlock();
+static int32_t GetGuidGenSeconds(void)
+{
+	cRZDate referenceDate(2, 2, 1997);
+	cRZDate currentDate;
+
+	// TODO
+
+	return 0;
 }
 
 bool cGZCOM::CreateGuid(GZGUID* outGuid)
 {
-	// TODO
-	return false;
+	cRZCriticalSectionHolder lock(criticalSection);
+	while (time(NULL) < nextGuidGenTime)
+	{
+		cRZThread::SleepCurrentThread(250000);
+	}
+
+	uint32_t rand = rng.RandomUint32Uniform(8);
+	*outGuid = (GetGuidGenSeconds() & 0x1FFFFFFF) | (rand << 29);
+	
+	nextGuidGenTime = time(NULL) + 1;
+	return true;
 }
 
 bool cGZCOM::CreateGuids(uint32_t guids[], uint32_t count)
 {
-	// TODO
-	return false;
+	cRZCriticalSectionHolder lock(criticalSection);
+	if (count != 0)
+	{
+		while (time(NULL) < nextGuidGenTime)
+		{
+			cRZThread::SleepCurrentThread(250000);
+		}
+
+		int32_t guidGenTime = GetGuidGenSeconds();
+		uint32_t prefix = 0;
+
+		for (uint32_t i = 0; i < count; i++, prefix += 0x20000000)
+		{
+			guids[i] = (((i / 8) + guidGenTime) & 0x1FFFFFFF) | prefix;
+		}
+
+		nextGuidGenTime = time(NULL) + ((count + 7) / 8);
+	}
+
+	return true;
 }
 
 bool cGZCOM::RealInit()
@@ -267,7 +306,7 @@ bool cGZCOM::CanUnloadLibrary(cGZCOMLibrary& lib)
 
 void cGZCOM::FreeAllLibraries()
 {
-	criticalSection.Lock();
+	cRZCriticalSectionHolder lock(criticalSection);
 
 	for (tLibraries::iterator it = libraries.begin(); it != libraries.end(); ++it)
 	{
@@ -277,8 +316,6 @@ void cGZCOM::FreeAllLibraries()
 			library.Free();
 		}
 	}
-
-	criticalSection.Unlock();
 }
 
 bool cGZCOM::GetLibObject(cGZCOMLibrary& lib, GZCLSID clsid, GZIID iid, void** outPtr)
@@ -298,10 +335,9 @@ bool cGZCOM::UpdateClassRegistry(cGZCOMLibrary& lib)
 	{
 		cIGZCOMDirector* const libDirector = lib.GetDirector();
 
-		criticalSection.Lock();
+		cRZCriticalSectionHolder lock(criticalSection);
 		currentLibrary = &lib;
 		libDirector->EnumClassObjects(cGZCOM::AddEntryCallback, static_cast<cGZCOM*>(this));
-		criticalSection.Unlock();
 	}
 
 	return false;

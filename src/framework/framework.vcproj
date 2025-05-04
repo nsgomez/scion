@@ -210,6 +210,9 @@
 				RelativePath=".\src\cRZTextOStream.cpp">
 			</File>
 			<File
+				RelativePath=".\src\cRZThread.cpp">
+			</File>
+			<File
 				RelativePath=".\src\cRZThreadSignal.cpp">
 			</File>
 			<File
@@ -432,6 +435,9 @@
 			</File>
 			<File
 				RelativePath=".\include\cRZTextOStream.h">
+			</File>
+			<File
+				RelativePath=".\include\cRZThread.h">
 			</File>
 			<File
 				RelativePath=".\include\cRZThreadSignal.h">

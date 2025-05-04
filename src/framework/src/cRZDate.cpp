@@ -23,6 +23,9 @@
 #include "cRZDate.h"
 #include "cRZString.h"
 
+cRZDate cRZDate::mRefDate = cRZDate(0, 0);
+cRZDate cRZDate::MaxDate = cRZDate(49709, 0);
+
 cRZDate::cRZDate()
 {
 	time_t currentTimestamp = time(NULL);

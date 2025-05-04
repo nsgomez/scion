@@ -56,6 +56,10 @@ public:
 	virtual void NameOfMonthString(cRZString& out, uint32_t format) const;
 	virtual void DateString(cRZString& out, uint32_t format) const;
 
+public:
+	static cRZDate mRefDate;
+	static cRZDate MaxDate;
+
 protected:
 	uint32_t dateCode;
 	friend class cGZDate;
