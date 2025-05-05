@@ -19,6 +19,7 @@
 
 #include "cGZCOMDirector.h"
 #include "cGZFramework.h"
+#include "cRZCOMDllDirector.h"
 #include "RZStatics.h"
 
 cIGZFramework* RZGetFramework()
@@ -32,12 +33,7 @@ cRZCOMDllDirector* RZGetCOMDllDirector()
 	return &gDirector;
 }
 
-bool RZIsKeyDownNow(uint32_t key)
+cIGZCOM* GZCOM()
 {
-	if (key == VK_LBUTTON && GetSystemMetrics(SM_SWAPBUTTON) != 0)
-	{
-		key = VK_RBUTTON;
-	}
-
-	return (GetAsyncKeyState(key) >> 15) != 0;
+	return RZGetCOMDllDirector()->GZCOM();
 }

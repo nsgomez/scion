@@ -1,6 +1,6 @@
 /*
  *  Scion - an open-source implementation of the Maxis GZCOM/RZCOM framework
- *  Copyright (C) 2021  Nelson Gomez (nsgomez) <nelson@ngomez.me>
+ *  Copyright (C) 2025  Nelson Gomez (nsgomez) <nelson@ngomez.me>
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public
@@ -16,16 +16,3 @@
  *  License along with this library; if not, write to the Free Software
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
-
-#pragma once
-#include <stdint.h>
-
-class cIGZCOM;
-class cIGZFramework;
-class cIGZString;
-class cRZCOMDllDirector;
-
-extern cIGZFramework* RZGetFramework();
-extern cRZCOMDllDirector* RZGetCOMDllDirector();
-//extern void RZGetCurrentAppPath(cIGZString& output);
-extern cIGZCOM* GZCOM();

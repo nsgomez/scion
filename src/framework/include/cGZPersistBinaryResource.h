@@ -1,6 +1,6 @@
 /*
  *  Scion - an open-source implementation of the Maxis GZCOM/RZCOM framework
- *  Copyright (C) 2021  Nelson Gomez (nsgomez) <nelson@ngomez.me>
+ *  Copyright (C) 2025  Nelson Gomez (nsgomez) <nelson@ngomez.me>
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public
@@ -18,14 +18,27 @@
  */
 
 #pragma once
-#include <stdint.h>
+#include "cIGZPersistBinaryResource.h"
+#include "cGZPersistResource.h"
 
-class cIGZCOM;
-class cIGZFramework;
-class cIGZString;
-class cRZCOMDllDirector;
+class cGZPersistBinaryResource : public cGZPersistResource, public cIGZPersistBinaryResource
+{
+public:
+	cGZPersistBinaryResource();
+	virtual ~cGZPersistBinaryResource() { }
 
-extern cIGZFramework* RZGetFramework();
-extern cRZCOMDllDirector* RZGetCOMDllDirector();
-//extern void RZGetCurrentAppPath(cIGZString& output);
-extern cIGZCOM* GZCOM();
+public:
+	virtual bool QueryInterface(GZIID iid, void** outPtr);
+	virtual uint32_t AddRef(void);
+	virtual uint32_t Release(void);
+
+public:
+	virtual void SetData(void* newData, uint32_t newLength);
+	virtual void* GetData(void) const;
+	virtual uint32_t GetDataLength(void) const;
+
+protected:
+	void* data;
+	uint32_t allocatedLength;
+	uint32_t length;
+};

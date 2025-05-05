@@ -1,6 +1,6 @@
 /*
  *  Scion - an open-source implementation of the Maxis GZCOM/RZCOM framework
- *  Copyright (C) 2021  Nelson Gomez (nsgomez) <nelson@ngomez.me>
+ *  Copyright (C) 2025  Nelson Gomez (nsgomez) <nelson@ngomez.me>
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public
@@ -18,14 +18,14 @@
  */
 
 #pragma once
-#include <stdint.h>
+#include "cIGZUnknown.h"
 
-class cIGZCOM;
-class cIGZFramework;
-class cIGZString;
-class cRZCOMDllDirector;
+static const GZIID GZIID_cIGZPersistResourceKeyFilter = 0x8865CD89;
 
-extern cIGZFramework* RZGetFramework();
-extern cRZCOMDllDirector* RZGetCOMDllDirector();
-//extern void RZGetCurrentAppPath(cIGZString& output);
-extern cIGZCOM* GZCOM();
+struct cGZPersistResourceKey;
+
+class cIGZPersistResourceKeyFilter : public cIGZUnknown
+{
+public:
+	virtual bool IsKeyIncluded(cGZPersistResourceKey const& key) = 0;
+};

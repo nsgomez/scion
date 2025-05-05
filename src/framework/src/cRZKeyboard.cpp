@@ -20,7 +20,7 @@
 #include <cstring>
 #include <Windows.h>
 #include "cRZKeyboard.h"
-#include "RZStatics.h"
+#include "RZPlatform.h"
 
 cRZKeyboard::cRZKeyboard()
 {

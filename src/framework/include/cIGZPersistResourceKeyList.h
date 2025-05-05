@@ -1,6 +1,6 @@
 /*
  *  Scion - an open-source implementation of the Maxis GZCOM/RZCOM framework
- *  Copyright (C) 2021  Nelson Gomez (nsgomez) <nelson@ngomez.me>
+ *  Copyright (C) 2025  Nelson Gomez (nsgomez) <nelson@ngomez.me>
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public
@@ -18,14 +18,27 @@
  */
 
 #pragma once
-#include "GZTypes.h"
+#include "cIGZUnknown.h"
 
-static const GZIID GZIID_cIGZUnknown = 0x00000001;
+static const GZIID GZIID_cIGZPersistResourceKeyList = 0x656B8F12;
 
-class cIGZUnknown
+struct cGZPersistResourceKey;
+
+class cIGZPersistResourceKeyList : public cIGZUnknown
 {
 public:
-	virtual bool QueryInterface(GZIID iid, void** outPtr) = 0;
-	virtual uint32_t AddRef(void) = 0;
-	virtual uint32_t Release(void) = 0;
+	typedef void (*tKeyListIterator)(cGZPersistResourceKey const& key, void* context);
+
+public:
+	virtual bool Insert(cGZPersistResourceKey const& key) = 0;
+	virtual bool Insert(cIGZPersistResourceKeyList const& list) = 0;
+
+	virtual bool Erase(cGZPersistResourceKey const& key) = 0;
+	virtual bool EraseAll(void) = 0;
+
+	virtual void EnumKeys(tKeyListIterator fn, void* context) const = 0;
+
+	virtual bool IsPresent(cGZPersistResourceKey const& key) = 0;
+	virtual uint32_t Size(void) const = 0;
+	virtual cGZPersistResourceKey GetKey(uint32_t other) const = 0;
 };

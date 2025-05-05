@@ -1,6 +1,6 @@
 /*
  *  Scion - an open-source implementation of the Maxis GZCOM/RZCOM framework
- *  Copyright (C) 2021  Nelson Gomez (nsgomez) <nelson@ngomez.me>
+ *  Copyright (C) 2025  Nelson Gomez (nsgomez) <nelson@ngomez.me>
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public
@@ -18,14 +18,28 @@
  */
 
 #pragma once
-#include <stdint.h>
+#include "cGZPersistResourceKey.h"
+#include "cIGZUnknown.h"
 
-class cIGZCOM;
-class cIGZFramework;
-class cIGZString;
-class cRZCOMDllDirector;
+static const GZIID GZIID_cIGZPersistDBRecord = 0xE56B8F03;
 
-extern cIGZFramework* RZGetFramework();
-extern cRZCOMDllDirector* RZGetCOMDllDirector();
-//extern void RZGetCurrentAppPath(cIGZString& output);
-extern cIGZCOM* GZCOM();
+class cIGZPersistDBSegment;
+
+class cIGZPersistDBRecord : public cIGZUnknown
+{
+public:
+	virtual cGZPersistResourceKey GetKey(void) = 0;
+	virtual int32_t GetAccessFlags(void) = 0;
+
+	virtual bool Close(void) = 0;
+
+	virtual bool GetFieldVoid(void* data, uint32_t length) = 0;
+	virtual bool SetFieldVoid(void const* data, uint32_t length) = 0;
+
+	virtual uint32_t GetSize(void) = 0;
+	virtual void SetSize(uint32_t size) = 0;
+
+	virtual uint32_t GetPosition(void) = 0;
+	virtual bool SeekAbsolute(uint32_t position) = 0;
+	virtual bool SeekRelative(int32_t offset) = 0;
+};

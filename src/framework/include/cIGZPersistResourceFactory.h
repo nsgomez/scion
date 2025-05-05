@@ -1,6 +1,6 @@
 /*
  *  Scion - an open-source implementation of the Maxis GZCOM/RZCOM framework
- *  Copyright (C) 2021  Nelson Gomez (nsgomez) <nelson@ngomez.me>
+ *  Copyright (C) 2025  Nelson Gomez (nsgomez) <nelson@ngomez.me>
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public
@@ -18,14 +18,17 @@
  */
 
 #pragma once
-#include <stdint.h>
+#include "cIGZUnknown.h"
 
-class cIGZCOM;
-class cIGZFramework;
-class cIGZString;
-class cRZCOMDllDirector;
+class cIGZPersistDBRecord;
+class cIGZPersistResource;
 
-extern cIGZFramework* RZGetFramework();
-extern cRZCOMDllDirector* RZGetCOMDllDirector();
-//extern void RZGetCurrentAppPath(cIGZString& output);
-extern cIGZCOM* GZCOM();
+class cIGZPersistResourceFactory : public cIGZUnknown
+{
+public:
+	virtual bool CreateInstance(uint32_t, uint32_t, void**, uint32_t, cIGZUnknown*) = 0;
+	virtual bool CreateInstance(cIGZPersistDBRecord&, uint32_t, void**, int32_t, cIGZUnknown*) = 0;
+
+	virtual bool Read(cIGZPersistResource&, cIGZPersistDBRecord&) = 0;
+	virtual bool Write(cIGZPersistResource const&, cIGZPersistDBRecord&) = 0;
+};
