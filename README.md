@@ -1,8 +1,9 @@
 # Scion · a Maxis framework implementation
 
-**Scion** is an implementation of the GZCOM/RZCOM framework used by SimCity 4 and The Sims 2. Its goal is to produce
-binary output identical to the framework used in SimCity 4 Deluxe Edition: when compiled for Windows with the right
-toolset and options, the assembly should match.
+**Scion** is an implementation of the GZCOM/RZCOM framework used by SimCity 4 and The Sims 2. Its main goal is to
+achieve functional parity with the framework used in SimCity 4 Deluxe Edition. As a stretch goal, it also tries,
+where possible, to produce identical machine code, such that the assembly matches when compiled for Windows with
+the right toolset and options.
 
 After the framework is finished, I'd like to use Scion to reverse-engineer SimCity 4 itself in the same vein as
 other open-source game projects (e.g. OpenTTD, OpenRCT2).
