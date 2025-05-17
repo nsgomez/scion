@@ -26,8 +26,8 @@ static int AppStart(cRZCmdLine const& cmdLine, bool unknown)
 	cGZFramework* framework = new cGZFramework();
 	// TODO: set up app
 
-	framework->sSetFramework(framework);
-	// framework->sSetApplication(NULL); // TODO
+	cGZFramework::sSetFramework(framework);
+	// cGZFramework::sSetApplication(NULL); // TODO
 
 	int returnCode = cGZFramework::Main(cmdLine, unknown);
 	// TODO
