@@ -104,8 +104,8 @@ public:
 
 	virtual bool SetFieldVoid(void const* data, size_t length) = 0;
 
-	virtual size_t GetSize(void) = 0;
-	virtual void SetSize(size_t size) = 0;
+	virtual uint32_t GetSize(void) = 0;
+	virtual bool SetSize(size_t size) = 0;
 
 	virtual uint32_t GetPosition(void) = 0;
 	virtual bool SeekAbsolute(uint32_t position) = 0;

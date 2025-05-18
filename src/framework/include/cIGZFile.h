@@ -35,6 +35,7 @@ enum GZFileAccessFlags
 {
 	GZFileAccessRead = 1,
 	GZFileAccessWrite = 2,
+	GZFileAccessReadWrite = GZFileAccessRead | GZFileAccessWrite,
 };
 
 enum GZFileCreateMode
@@ -97,6 +98,6 @@ public:
 	virtual void SetPath(char const* path) = 0;
 
 	virtual bool GetOpenModes(uint32_t& accessFlags, uint32_t& createMode, uint32_t& shareFlags) = 0;
-	virtual void GetBuffering(uint32_t&, uint32_t&) = 0;
-	virtual bool SetBuffering(uint32_t, uint32_t) = 0;
+	virtual void GetBuffering(uint32_t& readBufferSize, uint32_t& writeBufferSize) = 0;
+	virtual bool SetBuffering(uint32_t newReadBufferSize, uint32_t newWriteBufferSize) = 0;
 };

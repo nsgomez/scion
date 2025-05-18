@@ -18,28 +18,17 @@
  */
 
 #pragma once
-#include "cGZPersistResourceKey.h"
 #include "cIGZUnknown.h"
 
-static const GZIID GZIID_cIGZPersistDBRecord = 0xE56B8F03;
+static const GZIID GZIID_cIGZDBSerialRecordAsIGZFile = 0x8A32C0AC;
 
-class cIGZPersistDBSegment;
+class cIGZFile;
+class cIGZPersistDBSerialRecord;
 
-class cIGZPersistDBRecord : public cIGZUnknown
+class cIGZDBSerialRecordAsIGZFile : public cIGZUnknown
 {
 public:
-	virtual cGZPersistResourceKey GetKey(void) = 0;
-	virtual int32_t GetAccessFlags(void) = 0;
-
-	virtual bool Close(void) = 0;
-
-	virtual bool GetFieldVoid(void* data, uint32_t length) = 0;
-	virtual bool SetFieldVoid(void const* data, uint32_t length) = 0;
-
-	virtual uint32_t GetSize(void) = 0;
-	virtual bool SetSize(uint32_t size) = 0;
-
-	virtual uint32_t GetPosition(void) = 0;
-	virtual bool SeekAbsolute(uint32_t position) = 0;
-	virtual bool SeekRelative(int32_t offset) = 0;
+	virtual bool SetDBSerialRecord(cIGZPersistDBSerialRecord* record) = 0;
+	virtual cIGZPersistDBSerialRecord* GetDBSerialRecord(void) = 0;
+	virtual cIGZFile* AsIGZFile(void) = 0;
 };

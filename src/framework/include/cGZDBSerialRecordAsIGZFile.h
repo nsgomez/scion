@@ -18,22 +18,24 @@
  */
 
 #pragma once
-#include <vector>
+#include "cIGZDBSerialRecordAsIGZFile.h"
 #include "cIGZFile.h"
-#include "cRZString.h"
 
-class cRZFile : public cIGZFile
+class cGZDBSerialRecordAsIGZFile : public cIGZDBSerialRecordAsIGZFile, public cIGZFile
 {
 public:
-	cRZFile(void);
-	cRZFile(cIGZString const& pathStr);
-	cRZFile(char const* pathCStr);
-	virtual ~cRZFile(void);
+	cGZDBSerialRecordAsIGZFile(cIGZPersistDBSerialRecord* record);
+	virtual ~cGZDBSerialRecordAsIGZFile();
 
 public:
 	virtual bool QueryInterface(GZIID iid, void** outPtr);
 	virtual uint32_t AddRef(void);
 	virtual uint32_t Release(void);
+
+public:
+	virtual bool SetDBSerialRecord(cIGZPersistDBSerialRecord* record);
+	virtual cIGZPersistDBSerialRecord* GetDBSerialRecord(void);
+	virtual cIGZFile* AsIGZFile(void);
 
 public:
 	virtual bool Open(uint32_t accessFlags, uint32_t securityFlags, uint32_t shareFlags);
@@ -72,37 +74,11 @@ public:
 	virtual bool GetOpenModes(uint32_t& accessFlags, uint32_t& createMode, uint32_t& shareFlags);
 	virtual void GetBuffering(uint32_t& readBufferSize, uint32_t& writeBufferSize);
 	virtual bool SetBuffering(uint32_t newReadBufferSize, uint32_t newWriteBufferSize);
-	
-public:
-	static bool MakeTempFileName();
-	static bool FileExists(cIGZString const& name);
-	static bool Remove(cIGZString const& name);
-	static bool Copy(cIGZString const& srcName, cIGZString const& destName, bool overwrite);
 
 protected:
-	void UpdateErrorCode(void);
-	bool FillReadBuffer(void);
-	bool FillWriteBuffer(uint8_t const* data, int size);
-	bool FlushWriteBuffer(void);
+	void FinalRelease(void);
 
 protected:
-	cRZString path;
-	bool isOpen;
-	void* fileHandle;
-	uint32_t accessFlags;
-	uint32_t createMode;
-	uint32_t shareFlags;
 	uint32_t refCount;
-	uint32_t lastError;
-	// TODO: there seems to be another string that should be here
-	uint32_t position;
-	uint32_t filePointer;
-	uint32_t readBufferSize;
-	std::vector<uint8_t> readBuffer;
-	uint32_t bufferedReadFilePosition;
-	uint32_t readBytesBuffered;
-	uint32_t writeBufferSize;
-	std::vector<uint8_t> writeBuffer;
-	uint32_t bufferedWriteFilePosition;
-	uint32_t writeBytesBuffered;
+	cIGZPersistDBSerialRecord* record;
 };

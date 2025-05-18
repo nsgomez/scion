@@ -36,8 +36,8 @@ public:
 	virtual bool Lock(void);
 	virtual bool Unlock(void);
 
-	virtual bool GetResourceKeyList(cIGZPersistResourceKeyList* list, cIGZPersistResourceKeyFilter* filter);
-	virtual bool GetResourceKeyList(cIGZPersistResourceKeyList& list);
+	virtual uint32_t GetResourceKeyList(cIGZPersistResourceKeyList* list, cIGZPersistResourceKeyFilter* filter);
+	virtual uint32_t GetResourceKeyList(cIGZPersistResourceKeyList& list);
 
 	virtual bool TestForRecord(cGZPersistResourceKey const& key);
 	virtual int32_t GetRecordSize(cGZPersistResourceKey const& key);

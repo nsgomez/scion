@@ -58,9 +58,29 @@ public:
 		return type == other.type && group == other.group && instance == other.instance;
 	}
 
+	bool operator< (cGZPersistResourceKey const& other)
+	{
+		return type < other.type || group < other.group || instance < other.instance;
+	}
+
+	bool operator> (cGZPersistResourceKey const& other)
+	{
+		return !(*this < other);
+	}
+
 	friend bool operator==(cGZPersistResourceKey const& left, cGZPersistResourceKey const& right)
 	{
 		return left.type == right.type && left.group == right.group && left.instance == right.instance;
+	}
+
+	friend bool operator< (cGZPersistResourceKey const& left, cGZPersistResourceKey const& right)
+	{
+		return left.type < right.type || left.group < right.group || left.instance < right.instance;
+	}
+
+	friend bool operator> (cGZPersistResourceKey const& left, cGZPersistResourceKey const& right)
+	{
+		return !(left < right);
 	}
 
 public:

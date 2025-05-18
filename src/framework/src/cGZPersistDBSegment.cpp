@@ -81,12 +81,12 @@ bool cGZPersistDBSegment::Unlock(void)
 	return true;
 }
 
-bool cGZPersistDBSegment::GetResourceKeyList(cIGZPersistResourceKeyList* list, cIGZPersistResourceKeyFilter* filter)
+uint32_t cGZPersistDBSegment::GetResourceKeyList(cIGZPersistResourceKeyList* list, cIGZPersistResourceKeyFilter* filter)
 {
-	return false;
+	return 0;
 }
 
-bool cGZPersistDBSegment::GetResourceKeyList(cIGZPersistResourceKeyList& list)
+uint32_t cGZPersistDBSegment::GetResourceKeyList(cIGZPersistResourceKeyList& list)
 {
 	return GetResourceKeyList(&list, NULL);
 }

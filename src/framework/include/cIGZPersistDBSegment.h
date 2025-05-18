@@ -31,27 +31,27 @@ class cIGZString;
 class cIGZPersistDBSegment : public cIGZUnknown
 {
 public:
-	virtual bool Init(bool) = 0;
+	virtual bool Init(void) = 0;
 	virtual bool Shutdown(void) = 0;
 
-	virtual bool Open(bool, bool) = 0;
+	virtual bool Open(bool readable, bool writable) = 0;
 	virtual bool IsOpen(void) const = 0;
 
-	virtual void Close(void) = 0;
-	virtual void Flush(void) = 0;
+	virtual bool Close(void) = 0;
+	virtual bool Flush(void) = 0;
 
 	virtual void GetPath(cIGZString& out) const = 0;
-	virtual void SetPath(cIGZString const& path) = 0;
+	virtual bool SetPath(cIGZString const& path) = 0;
 
 	virtual bool Lock(void) = 0;
 	virtual bool Unlock(void) = 0;
 
 	virtual uint32_t GetSegmentID(void) const = 0;
-	virtual void SetSegmentID(uint32_t const& id) = 0;
+	virtual bool SetSegmentID(uint32_t const& id) = 0;
 
 	virtual uint32_t GetRecordCount(cIGZPersistResourceKeyFilter* filter) = 0;
-	virtual bool GetResourceKeyList(cIGZPersistResourceKeyList* list, cIGZPersistResourceKeyFilter* filter) = 0;
-	virtual bool GetResourceKeyList(cIGZPersistResourceKeyList& list) = 0;
+	virtual uint32_t GetResourceKeyList(cIGZPersistResourceKeyList* list, cIGZPersistResourceKeyFilter* filter) = 0;
+	virtual uint32_t GetResourceKeyList(cIGZPersistResourceKeyList& list) = 0;
 
 	virtual bool TestForRecord(cGZPersistResourceKey const& key) = 0;
 	virtual int32_t GetRecordSize(cGZPersistResourceKey const& key) = 0;

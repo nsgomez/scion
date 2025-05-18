@@ -65,8 +65,8 @@ protected:
 	virtual bool GarbageCollect(void);
 
 protected:
-	typedef std::hash_map<const cGZPersistResourceKey, cIGZPersistResource*, ResourceKeyHash> ResourceCacheMap;
-	typedef std::pair<const cGZPersistResourceKey, cIGZPersistResource*> ResourceCacheMapEntry;
+	typedef std::hash_map<cGZPersistResourceKey, cIGZPersistResource*, ResourceKeyHash> ResourceCacheMap;
+	typedef std::pair<cGZPersistResourceKey, cIGZPersistResource*> ResourceCacheMapEntry;
 
 	cRZCriticalSection mainLock;
 	ResourceCacheMap cacheMap;
