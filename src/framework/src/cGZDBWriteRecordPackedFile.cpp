@@ -16,35 +16,3 @@
  *  License along with this library; if not, write to the Free Software
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
-
-#pragma once
-#include "cGZDBRecord.h"
-
-class cGZDBSegmentPackedFile;
-
-class cGZDBReadRecordRAM : public cGZDBRecord
-{
-public:
-	cGZDBReadRecordRAM(uint8_t* data, uint32_t size, cGZPersistResourceKey const& key, cGZDBSegmentPackedFile* segment, bool useLittleEndian);
-	virtual ~cGZDBReadRecordRAM(void);
-
-	friend class cGZDBSegmentPackedFile;
-
-public:
-	virtual bool GetFieldVoid(void* data, uint32_t size);
-	virtual bool SetFieldVoid(void const* data, uint32_t size);
-
-	virtual uint32_t GetSize(void);
-	virtual bool SetSize(size_t size);
-
-	virtual uint32_t GetPosition(void);
-	virtual bool SeekAbsolute(uint32_t position);
-	virtual bool SeekRelative(int32_t offset);
-
-	virtual void DoPostClose(void);
-
-protected:
-	uint8_t* data;
-	int32_t position;
-	uint32_t size;
-};

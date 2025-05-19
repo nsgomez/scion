@@ -157,7 +157,7 @@ bool cGZPersistDBSegment::DeleteRecord(cGZPersistResourceKey const& key)
 	return DoDeleteRecord(key);
 }
 
-bool cGZPersistDBSegment::ReadRecord(cGZPersistResourceKey const& key, void* data, uint32_t& length)
+uint32_t cGZPersistDBSegment::ReadRecord(cGZPersistResourceKey const& key, void* data, uint32_t& length)
 {
 	cRZCriticalSectionHolder lock(criticalSection);
 	return DoReadRecord(key, data, length);

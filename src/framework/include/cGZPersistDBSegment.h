@@ -52,7 +52,7 @@ public:
 	virtual bool AbortRecord(cIGZPersistDBRecord** recordPtr);
 
 	virtual bool DeleteRecord(cGZPersistResourceKey const& key);
-	virtual bool ReadRecord(cGZPersistResourceKey const& key, void* data, uint32_t& length);
+	virtual uint32_t ReadRecord(cGZPersistResourceKey const& key, void* data, uint32_t& length);
 	virtual bool WriteRecord(cGZPersistResourceKey const& key, void* data, uint32_t length);
 
 public:
@@ -65,7 +65,7 @@ public:
 	virtual bool DoCloseRecord(cIGZPersistDBRecord* record) = 0;
 	virtual bool DoAbortRecord(cIGZPersistDBRecord* recordPtr) = 0;
 	virtual bool DoDeleteRecord(cGZPersistResourceKey const& key) = 0;
-	virtual bool DoReadRecord(cGZPersistResourceKey const& key, void* data, uint32_t& length) = 0;
+	virtual uint32_t DoReadRecord(cGZPersistResourceKey const& key, void* data, uint32_t& length) = 0;
 	virtual bool DoWriteRecord(cGZPersistResourceKey const& key, void* data, uint32_t length) = 0;
 
 protected:

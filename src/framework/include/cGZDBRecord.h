@@ -18,33 +18,28 @@
  */
 
 #pragma once
-#include "cGZDBRecord.h"
+#include "cGZPersistDBSerialRecord.h"
 
-class cGZDBSegmentPackedFile;
+enum GZDBRecordType
+{
+	DBReadRecordTypePackedFile = 1,
+	DBReadRecordTypeRAM,
+	DBWriteRecordPackedFile,
+};
 
-class cGZDBReadRecordRAM : public cGZDBRecord
+class cGZDBRecord : public cGZPersistDBSerialRecord
 {
 public:
-	cGZDBReadRecordRAM(uint8_t* data, uint32_t size, cGZPersistResourceKey const& key, cGZDBSegmentPackedFile* segment, bool useLittleEndian);
-	virtual ~cGZDBReadRecordRAM(void);
-
-	friend class cGZDBSegmentPackedFile;
+	cGZDBRecord(uint32_t type, cGZPersistResourceKey const& key, cIGZPersistDBSegment* segment, bool useLittleEndian) :
+        cGZPersistDBSerialRecord(key, segment, useLittleEndian),
+		type(type)
+	{
+	}
 
 public:
-	virtual bool GetFieldVoid(void* data, uint32_t size);
-	virtual bool SetFieldVoid(void const* data, uint32_t size);
-
-	virtual uint32_t GetSize(void);
-	virtual bool SetSize(size_t size);
-
-	virtual uint32_t GetPosition(void);
-	virtual bool SeekAbsolute(uint32_t position);
-	virtual bool SeekRelative(int32_t offset);
-
-	virtual void DoPostClose(void);
+	virtual void DoPostClose(void) = 0;
+	uint32_t GetReadRecordType(void) { return type; }
 
 protected:
-	uint8_t* data;
-	int32_t position;
-	uint32_t size;
+	uint32_t type;
 };

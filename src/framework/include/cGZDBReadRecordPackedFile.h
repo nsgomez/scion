@@ -18,15 +18,17 @@
  */
 
 #pragma once
-#include "cGZPersistDBSerialRecord.h"
+#include "cGZDBRecord.h"
 
 class cGZDBSegmentPackedFile;
 
-class cGZDBReadRecordPackedFile : public cGZPersistDBSerialRecord
+class cGZDBReadRecordPackedFile : public cGZDBRecord
 {
 public:
 	cGZDBReadRecordPackedFile(uint32_t recordOffset, uint32_t size, cGZPersistResourceKey const& key, cGZDBSegmentPackedFile* segment, bool useLittleEndian);
 	virtual ~cGZDBReadRecordPackedFile(void) { }
+
+	friend class cGZDBSegmentPackedFile;
 
 public:
 	virtual bool GetFieldVoid(void* data, uint32_t size);

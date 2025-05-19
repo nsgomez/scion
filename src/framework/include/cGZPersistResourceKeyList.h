@@ -28,6 +28,8 @@ public:
 	cGZPersistResourceKeyList(void);
 	virtual ~cGZPersistResourceKeyList(void) { }
 
+	friend class cGZDBSegmentPackedFile;
+
 public:
 	virtual bool QueryInterface(GZIID iid, void** outPtr);
 	virtual uint32_t AddRef();

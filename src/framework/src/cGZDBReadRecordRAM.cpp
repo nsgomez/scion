@@ -23,7 +23,7 @@
 // TODO: create + use SharedMemoryPointer type
 
 cGZDBReadRecordRAM::cGZDBReadRecordRAM(uint8_t* data, uint32_t size, cGZPersistResourceKey const& key, cGZDBSegmentPackedFile* segment, bool useLittleEndian) :
-	cGZPersistDBSerialRecord(key, segment, useLittleEndian),
+	cGZDBRecord(DBReadRecordTypeRAM, key, segment, useLittleEndian),
 	data(data),
 	position(0),
 	size(size)
