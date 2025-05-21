@@ -1523,8 +1523,6 @@ bool cGZDBSegmentPackedFile::WriteCompressedSetRecord(void)
 	{
 		cursor->key = it->second.key;
 		cursor->uncompressedSize = it->second.uncompressedSize;
-
-		it++;
 		cursor++;
 	}
 
@@ -1765,6 +1763,10 @@ bool cGZDBSegmentPackedFile::ReadHeaderRecord(void)
 	}
 
 	return false;
+}
+
+bool cGZDBSegmentPackedFile::FindHeaderRecord(void)
+{
 }
 
 bool cGZDBSegmentPackedFile::ReadIndexRecord(void)
