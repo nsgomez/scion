@@ -120,7 +120,7 @@ public:
 	virtual bool DoWriteRecord(cGZPersistResourceKey const& key, void* data, uint32_t length);
 	virtual bool DoWriteRecord(cGZPersistResourceKey const& key, cIGZString const& filename);
 
-	virtual bool GetModificationTime(uint32_t&, uint32_t&);
+	virtual bool GetModificationTime(uint32_t& creationTime, uint32_t& modificationTime);
 	virtual bool SeekAbsolute(int32_t position);
 	virtual uint32_t ReadFileSpan(void* data, uint32_t offset, uint32_t length);
 	virtual bool ReadFileSpanWithCount(void* data, uint32_t offset, uint32_t& length);
@@ -142,17 +142,24 @@ protected:
 
 	bool CopyDatabaseRecord(cIGZPersistDBSegment* segment, cGZPersistResourceKey const& key, bool, bool);
 
-	bool DecompressData(uint8_t* data, uint32_t size, uint32_t*& decompressedData, uint32_t& decompressedSize);
-	bool DecompressRecord(uint32_t offset, uint32_t size, uint8_t*& data, uint32_t& decompressedSize);
+	bool DecompressData(uint8_t* data, uint32_t size, uint8_t*& decompressedData, uint32_t& decompressedSize);
+	bool DecompressRecord(uint32_t fileOffset, uint32_t size, uint8_t*& decompressedData, uint32_t& decompressedSize);
 	bool DecompressRecord(cGZPersistResourceKey const& key, uint8_t*& data, uint32_t& decompressedSize);
+
 	bool ReadHeaderRecord(void);
+	bool FindHeaderRecord(void);
 	bool ReadIndexRecord(void);
 	bool ReadHoleRecord(void);
 	bool ReadCompressedSetRecord(void);
 
+	bool VerifyHeaderRecordIntegrity(void);
+	bool VerifyHoleRecordIntegrity(void);
+	bool VerifyIndexRecordIntegrity(void);
+
 	bool ShouldCompactDatabase(void);
 	bool ShouldRecordBeCompressed(cGZPersistResourceKey const& key, uint32_t size);
 	bool ShouldRecordBeCompressed(uint8_t* data, uint32_t size, uint8_t*& compressedData, uint32_t& compressedSize);
+	bool CompressData(uint8_t* data, uint32_t size, uint8_t*& compressedData, uint32_t& compressedSize);
 
 	void IncrementTypeAndGroupUse(uint32_t type, uint32_t group, bool add);
 	bool CloseOpenRecords(void);
@@ -204,22 +211,18 @@ protected:
 		RecordDataInfo() { }
 		RecordDataInfo(cGZPersistResourceKey const& key, uint32_t offset, uint32_t size)
 		{
-			type = key.type;
-			group = key.group;
-			instance = key.instance;
+			this->key = key;
 			this->offset = offset;
 			this->size = size;
 		}
 
 		operator cGZPersistResourceKey() const
 		{
-			return cGZPersistResourceKey(type, group, instance);
+			return cGZPersistResourceKey(key.type, key.group, key.instance);
 		}
 
 	public:
-		uint32_t type;
-		uint32_t group;
-		uint32_t instance;
+		cGZPersistResourceKey key;
 		uint32_t offset;
 		uint32_t size;
 	};
@@ -227,18 +230,15 @@ protected:
 	struct CompressedRecordData
 	{
 	public:
+		CompressedRecordData() { }
 		CompressedRecordData(cGZPersistResourceKey const& key, uint32_t size)
 		{
-			type = key.type;
-			group = key.group;
-			instance = key.instance;
+			this->key = key;
 			uncompressedSize = size;
 		}
 
 	public:
-		uint32_t type;
-		uint32_t group;
-		uint32_t instance;
+		cGZPersistResourceKey key;
 		uint32_t uncompressedSize;
 	};
 
@@ -311,7 +311,7 @@ protected:
 	uint32_t segmentID;
 	uint32_t fileAccessFlags;
 
-	uint32_t unknown5;
+	uint32_t unknown;
 	tRecordInfoTable* recordInfoTable;
 	bool shouldWriteRecords;
 
@@ -343,7 +343,7 @@ protected:
 		uint32_t currentUserVersionMajor;
 		uint32_t currentUserVersionMinor;
 
-		uint32_t unknown23;
+		uint32_t __reserved0;
 
 		uint32_t timestampCreated;
 		uint32_t timestampModified;
@@ -360,8 +360,7 @@ protected:
 		uint32_t indexMinorVersion;
 		uint32_t indexTableOffset;
 
-		uint32_t unknown35;
-		char unknown36[24];
+		char __reserved1[28];
 	} header;
 
 	////////////////////////////////////////
@@ -378,10 +377,11 @@ protected:
 	tUseCountMap typeUseCount;
 	tUseCountMap groupUseCount;
 
-	bool addedOrRemovedCompressedRecords;
+	bool shouldWriteCompressedRecords;
 	bool compressAllRecords;
 	std::hash_set<uint32_t> compressedTypeIDs;
 	std::hash_set<uint32_t> compressedGroupIDs;
 	tCompressedRecordsMap compressedRecords;
-	void* unknown52;
+
+	uint8_t* smallScratchBuffer;
 };

@@ -16,3 +16,59 @@
  *  License along with this library; if not, write to the Free Software
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
+
+#include "cGZDBSegmentPackedFile.h"
+#include "cGZDBWriteRecordPackedFile.h"
+
+cGZDBWriteRecordPackedFile::cGZDBWriteRecordPackedFile(uint8_t* data, uint32_t size, cGZPersistResourceKey const& key, cGZDBSegmentPackedFile* segment, bool useLittleEndian)
+{
+}
+
+cGZDBWriteRecordPackedFile::cGZDBWriteRecordPackedFile(uint32_t parentOffset, uint32_t size, cGZPersistResourceKey const& key, cGZDBSegmentPackedFile* segment, bool useLittleEndian)
+{
+}
+
+cGZDBWriteRecordPackedFile::~cGZDBWriteRecordPackedFile(void)
+{
+}
+
+bool cGZDBWriteRecordPackedFile::GetFieldVoid(void* data, uint32_t size)
+{
+	if (!accessFlags)
+	{
+		return false;
+	}
+
+}
+
+bool cGZDBWriteRecordPackedFile::SetFieldVoid(void const* data, uint32_t size)
+{
+}
+
+uint32_t cGZDBWriteRecordPackedFile::GetSize(void)
+{
+}
+
+bool cGZDBWriteRecordPackedFile::SetSize(size_t size)
+{
+}
+
+uint32_t cGZDBWriteRecordPackedFile::GetPosition(void)
+{
+}
+
+bool cGZDBWriteRecordPackedFile::SeekAbsolute(uint32_t position)
+{
+}
+
+bool cGZDBWriteRecordPackedFile::SeekRelative(int32_t offset)
+{
+}
+
+void cGZDBWriteRecordPackedFile::DoPostClose(void)
+{
+}
+
+bool cGZDBWriteRecordPackedFile::WriteRecordToParent(uint32_t offset, uint32_t size)
+{
+}

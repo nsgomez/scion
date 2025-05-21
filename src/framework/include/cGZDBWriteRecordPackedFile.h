@@ -18,3 +18,32 @@
  */
 
 #pragma once
+#include "cGZDBRecord.h"
+
+class cGZDBSegmentPackedFile;
+
+class cGZDBWriteRecordPackedFile : public cGZDBRecord
+{
+public:
+	cGZDBWriteRecordPackedFile(uint8_t* data, uint32_t size, cGZPersistResourceKey const& key, cGZDBSegmentPackedFile* segment, bool useLittleEndian);
+	cGZDBWriteRecordPackedFile(uint32_t parentOffset, uint32_t size, cGZPersistResourceKey const& key, cGZDBSegmentPackedFile* segment, bool useLittleEndian);
+	virtual ~cGZDBWriteRecordPackedFile(void);
+
+	friend class cGZDBSegmentPackedFile;
+
+public:
+	virtual bool GetFieldVoid(void* data, uint32_t size);
+	virtual bool SetFieldVoid(void const* data, uint32_t size);
+
+	virtual uint32_t GetSize(void);
+	virtual bool SetSize(size_t size);
+
+	virtual uint32_t GetPosition(void);
+	virtual bool SeekAbsolute(uint32_t position);
+	virtual bool SeekRelative(int32_t offset);
+
+	virtual void DoPostClose(void);
+
+public:
+	virtual bool WriteRecordToParent(uint32_t offset, uint32_t size);
+};

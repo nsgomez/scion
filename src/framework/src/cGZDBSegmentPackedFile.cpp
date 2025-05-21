@@ -27,8 +27,10 @@
 #include "cGZPersistResourceKeyList.h"
 #include "cIGZPersistResourceKeyFilter.h"
 #include "cRZCriticalSection.h"
+#include "cRZFastCompression3.h"
 
-static const uint32_t TypeID_DBPFDirectory = 0xE86B1EEF;
+static const uint32_t TypeID_PackedFileCompressedSet = 0xE86B1EEF;
+static const uint32_t InstanceID_PackedFileCompressedSet = 0x286B1F03;
 
 cGZDBSegmentPackedFile::cGZDBSegmentPackedFile(void)
 {
@@ -88,12 +90,12 @@ bool cGZDBSegmentPackedFile::Shutdown(void)
 		{
 		}
 
-		if (unknown52 != NULL)
+		if (smallScratchBuffer != NULL)
 		{
-			delete unknown52;
+			delete smallScratchBuffer;
 		}
 
-		unknown52 = NULL;
+		smallScratchBuffer = NULL;
 	}
 
 	return true;
@@ -333,7 +335,7 @@ uint32_t cGZDBSegmentPackedFile::GetUsedTypeCount(void)
 		std::hash_set<uint32_t> set;
 		for (tRecordInfoTable::iterator it = recordInfoTable->begin(); it != recordInfoTable->end(); it++)
 		{
-			set.insert(it->second.type);
+			set.insert(it->second.key.type);
 		}
 
 		for (tOpenRecordMap::iterator it = openRecords.begin(); it != openRecords.end(); it++)
@@ -357,7 +359,7 @@ uint32_t cGZDBSegmentPackedFile::GetUsedGroupCount(void)
 		std::hash_set<uint32_t> set;
 		for (tRecordInfoTable::iterator it = recordInfoTable->begin(); it != recordInfoTable->end(); it++)
 		{
-			set.insert(it->second.group);
+			set.insert(it->second.key.group);
 		}
 
 		for (tOpenRecordMap::iterator it = openRecords.begin(); it != openRecords.end(); it++)
@@ -385,7 +387,7 @@ void cGZDBSegmentPackedFile::EnableUsedTypeAndGroupCounting(bool enabled)
 		{
 			for (tRecordInfoTable::iterator it = recordInfoTable->begin(); it != recordInfoTable->end(); it++)
 			{
-				IncrementTypeAndGroupUse(it->second.type, it->second.group, true);
+				IncrementTypeAndGroupUse(it->second.key.type, it->second.key.group, true);
 			}
 		}
 	}
@@ -518,7 +520,7 @@ void cGZDBSegmentPackedFile::SetRecordCompressed(cGZPersistResourceKey const& ke
 		{
 			CompressedRecordData record(key, size);
 			compressedRecords.insert(std::pair<cGZPersistResourceKey, CompressedRecordData>(key, record));
-			addedOrRemovedCompressedRecords = true;
+			shouldWriteCompressedRecords = true;
 		}
 		else
 		{
@@ -528,7 +530,7 @@ void cGZDBSegmentPackedFile::SetRecordCompressed(cGZPersistResourceKey const& ke
 	else if (it != compressedRecords.end())
 	{
 		compressedRecords.erase(it);
-		addedOrRemovedCompressedRecords = true;
+		shouldWriteCompressedRecords = true;
 	}
 }
 
@@ -760,7 +762,7 @@ uint32_t cGZDBSegmentPackedFile::GetResourceKeyList(cIGZPersistResourceKeyList* 
 		for (tRecordInfoTable::iterator it = recordInfoTable->begin(); it != recordInfoTable->end(); it++)
 		{
 			cGZPersistResourceKey key = it->second;
-			if (it->second.type != TypeID_DBPFDirectory)
+			if (it->second.key.type != TypeID_PackedFileCompressedSet)
 			{
 				if (filter != NULL && !filter->IsKeyIncluded(key))
 				{
@@ -1246,9 +1248,17 @@ bool cGZDBSegmentPackedFile::DoWriteRecord(cGZPersistResourceKey const& key, cIG
 	// TODO
 }
 
-bool cGZDBSegmentPackedFile::GetModificationTime(uint32_t&, uint32_t&)
+bool cGZDBSegmentPackedFile::GetModificationTime(uint32_t& creationTime, uint32_t& modificationTime)
 {
-	// TODO
+	cRZCriticalSectionHolder lock(criticalSection);
+	if (IsOpenInternal())
+	{
+		creationTime = header.timestampCreated;
+		modificationTime = header.timestampModified;
+		return true;
+	}
+
+	return false;
 }
 
 bool cGZDBSegmentPackedFile::SeekAbsolute(int32_t position)
@@ -1320,7 +1330,7 @@ bool cGZDBSegmentPackedFile::WriteEmptyHeaderRecord(void)
 	header.currentUserVersionMajor = nextUserVersionMajor;
 	header.currentUserVersionMinor = nextUserVersionMinor;
 
-	header.unknown23 = 0; // TODO
+	header.__reserved0 = 0;
 
 	header.timestampCreated = time(NULL);
 	header.timestampModified = time(NULL);
@@ -1497,58 +1507,615 @@ bool cGZDBSegmentPackedFile::WriteHoleRecord(void)
 
 bool cGZDBSegmentPackedFile::WriteCompressedSetRecord(void)
 {
+	if ((fileAccessFlags & GZFileAccessWrite) == 0 || !shouldWriteCompressedRecords)
+	{
+		return true;
+	}
+
+	cGZPersistResourceKey key(TypeID_PackedFileCompressedSet, TypeID_PackedFileCompressedSet, InstanceID_PackedFileCompressedSet);
+	DoDeleteRecord(key);
+
+	uint32_t compressedRecordCount = compressedRecords.size();
+	CompressedRecordData* compressedRecInfo = new CompressedRecordData[compressedRecordCount];
+	CompressedRecordData* cursor = compressedRecInfo;
+	
+	for (tCompressedRecordsMap::iterator it = compressedRecords.begin(); it != compressedRecords.end(); it++)
+	{
+		cursor->key = it->second.key;
+		cursor->uncompressedSize = it->second.uncompressedSize;
+
+		it++;
+		cursor++;
+	}
+
+	bool succeeded = DoWriteRecord(key, compressedRecInfo, compressedRecordCount * sizeof(CompressedRecordData));
+	if (succeeded)
+	{
+		shouldWriteCompressedRecords = false;
+	}
+
+	delete[] compressedRecInfo;
+	return succeeded;
 }
 
 bool cGZDBSegmentPackedFile::WriteRecordInternal(cGZPersistDBSerialRecord* record, cGZPersistResourceKey const& key)
 {
+	if ((fileAccessFlags & GZFileAccessWrite) == 0)
+	{
+		return false;
+	}
+
+	tRecordInfoTable::iterator infoIt = recordInfoTable->find(key);
+	if (infoIt != recordInfoTable->end())
+	{
+		IncrementTypeAndGroupUse(infoIt->second.key.type, infoIt->second.key.group, false);
+		SetRecordCompressed(key, false, 0);
+		FreeSpace(infoIt->second.offset, infoIt->second.size);
+
+		recordInfoTable->erase(infoIt);
+		shouldWriteRecords = true;
+	}
+
+	uint32_t size = record->GetSize();
+	if (size == 0)
+	{
+		RecordDataInfo info(key, 0, 0);
+		recordInfoTable->insert(std::pair<KeyTGI, RecordDataInfo>(key, info));
+		IncrementTypeAndGroupUse(key.type, key.group, true);
+
+		shouldWriteRecords = true;
+		return true;
+	}
+
+	if (ShouldRecordBeCompressed(key, size))
+	{
+		uint8_t* data = new uint8_t[size + 2];
+		data[size] = 0;
+		data[size + 1] = 0;
+
+		uint8_t* compressedData = NULL;
+		uint32_t compressedSize = 0;
+
+		if (record->SeekAbsolute(0)
+			&& record->GetFieldVoid(data, size)
+			&& ShouldRecordBeCompressed(data, size, compressedData, compressedSize))
+		{
+			uint32_t offset = 0;
+			bool wroteCompressed;
+
+			if (!AllocateSpace(offset, compressedSize))
+			{
+				wroteCompressed = false;
+			}
+			else if (!WriteFileSpan(compressedData, offset, compressedSize))
+			{
+				FreeSpace(offset, compressedSize);
+				wroteCompressed = false;
+			}
+			else
+			{
+				RecordDataInfo info(key, offset, compressedSize);
+				IncrementTypeAndGroupUse(key.type, key.group, true);
+				SetRecordCompressed(key, true, size);
+
+				recordInfoTable->insert(std::pair<KeyTGI, RecordDataInfo>(key, info));
+				shouldWriteRecords = true;
+			}
+
+			if (compressedData != NULL)
+			{
+				delete[] compressedData;
+			}
+
+			if (wroteCompressed)
+			{
+				delete[] data;
+				return true;
+			}
+		}
+
+		delete[] data;
+	}
+
+	uint32_t offset = 0;
+	if (AllocateSpace(offset, size))
+	{
+		cGZDBWriteRecordPackedFile* writeRecord = static_cast<cGZDBWriteRecordPackedFile*>(record);
+		if (writeRecord->GetAccessFlags() == (GZFileAccessRead | GZFileAccessWrite)
+			&& writeRecord->WriteRecordToParent(offset, size))
+		{
+			RecordDataInfo info(key, offset, size);
+			recordInfoTable->insert(std::pair<KeyTGI, RecordDataInfo>(key, info));
+			IncrementTypeAndGroupUse(key.type, key.group, true);
+
+			shouldWriteRecords = true;
+			return true;
+		}
+
+		FreeSpace(offset, size);
+	}
+
+	return false;
 }
 
 bool cGZDBSegmentPackedFile::CopyDatabaseRecord(cIGZPersistDBSegment* segment, cGZPersistResourceKey const& key, bool, bool)
 {
 }
 
-bool cGZDBSegmentPackedFile::DecompressData(uint8_t* data, uint32_t size, uint32_t*& decompressedData, uint32_t& decompressedSize)
+bool cGZDBSegmentPackedFile::DecompressData(uint8_t* data, uint32_t size, uint8_t*& decompressedData, uint32_t& decompressedSize)
 {
+	cRZFastCompression3 compressor;
+	if (!compressor.ValidateCompressedData(data, size))
+	{
+		return false;
+	}
+
+	uint32_t realDecompressedSize = compressor.GetLengthOfCompressedData(data);
+	uint8_t* originalDecompressedDataPtr = decompressedData;
+	uint8_t* target;
+
+	if (decompressedData == NULL)
+	{
+		decompressedSize = realDecompressedSize;
+		target = new uint8_t[realDecompressedSize];
+		decompressedData = target;
+	}
+	else
+	{
+		target = decompressedData;
+	}
+
+	if (target != NULL && realDecompressedSize <= decompressedSize)
+	{
+		if (size == 0 || decompressedSize == 0 || compressor.DecompressData(data, size, target, decompressedSize))
+		{
+			return true;
+		}
+
+		decompressedSize = 0;
+		if (originalDecompressedDataPtr == NULL)
+		{
+			delete[] decompressedData;
+			decompressedData = NULL;
+		}
+	}
+
+	return false;
 }
 
-bool cGZDBSegmentPackedFile::DecompressRecord(uint32_t offset, uint32_t size, uint8_t*& data, uint32_t& decompressedSize)
+bool cGZDBSegmentPackedFile::DecompressRecord(uint32_t fileOffset, uint32_t size, uint8_t*& decompressedData, uint32_t& decompressedSize)
 {
+	if (fileOffset == 0)
+	{
+		return false;
+	}
+
+	uint8_t* allocatedBuffer;
+	uint8_t* target;
+
+	if (size <= 2048)
+	{
+		allocatedBuffer = NULL;
+		target = smallScratchBuffer;
+
+		if (smallScratchBuffer == NULL)
+		{
+			target = new uint8_t[2048];
+			smallScratchBuffer = target;
+		}
+	}
+	else
+	{
+		allocatedBuffer = new uint8_t[size];
+		target = allocatedBuffer;
+	}
+
+	bool result = ReadFileSpan(target, fileOffset, size) && DecompressData(target, size, decompressedData, decompressedSize);
+	if (allocatedBuffer != NULL)
+	{
+		delete[] allocatedBuffer;
+	}
+
+	return result;
 }
 
 bool cGZDBSegmentPackedFile::DecompressRecord(cGZPersistResourceKey const& key, uint8_t*& data, uint32_t& decompressedSize)
 {
+	tCompressedRecordsMap::iterator compressedIt = compressedRecords.find(key);
+	if (compressedIt != compressedRecords.end())
+	{
+		tRecordInfoTable::iterator infoIt = recordInfoTable->find(key);
+		if (infoIt != recordInfoTable->end())
+		{
+			return DecompressRecord(infoIt->second.offset, infoIt->second.size, data, decompressedSize);
+		}
+	}
+
+	return false;
 }
 
 bool cGZDBSegmentPackedFile::ReadHeaderRecord(void)
 {
+	if (file.SeekToPosition(startingOffset) != startingOffset
+		|| !file.Read(&header, sizeof(header)))
+	{
+		return false;
+	}
+
+	if (VerifyHeaderRecordIntegrity())
+	{
+		return true;
+	}
+
+	uint32_t headerRecordOffset = FindHeaderRecord();
+	startingOffset = headerRecordOffset;
+
+	static bool bHereAlready = false;
+	if (headerRecordOffset == -1)
+	{
+		startingOffset = 0;
+	}
+	else if (!bHereAlready)
+	{
+		bHereAlready = true;
+		bool result = ReadHeaderRecord();
+		bHereAlready = false;
+
+		return result;
+	}
+
+	return false;
 }
 
 bool cGZDBSegmentPackedFile::ReadIndexRecord(void)
 {
+	if (header.indexEntryCount == 0)
+	{
+		if (recordInfoTable != NULL)
+		{
+			return true;
+		}
+
+		recordInfoTable = new tRecordInfoTable();
+		return true;
+	}
+
+	if (file.SeekToPosition(startingOffset + header.indexRecordOffset) != startingOffset + header.indexRecordOffset)
+	{
+		return false;
+	}
+
+	RecordDataInfo* recordData = new RecordDataInfo[header.indexEntryCount];
+	if (!file.Read(recordData, header.indexEntryCount * sizeof(RecordDataInfo)))
+	{
+		delete[] recordData;
+		return false;
+	}
+
+	if (recordInfoTable == NULL)
+	{
+		recordInfoTable = new tRecordInfoTable();
+	}
+
+	RecordDataInfo* cursor = recordData;
+	for (uint32_t i = 0; i < header.indexEntryCount; i++)
+	{
+		RecordDataInfo info(cursor->key, cursor->offset, cursor->size);
+		recordInfoTable->insert(std::pair<cGZPersistResourceKey, RecordDataInfo>(cursor->key, info));
+
+		IncrementTypeAndGroupUse(cursor->key.type, cursor->key.group, true);
+		cursor++;
+	}
+
+	if (VerifyIndexRecordIntegrity())
+	{
+		shouldWriteRecords = false;
+		delete[] recordData;
+		return true;
+	}
+
+	delete[] recordData;
+	return false;
 }
 
 bool cGZDBSegmentPackedFile::ReadHoleRecord(void)
 {
+	if (header.holeEntryCount == 0)
+	{
+		return true;
+	}
+
+	if (file.SeekToPosition(startingOffset + header.holeRecordOffset) != startingOffset + header.holeRecordOffset)
+	{
+		return false;
+	}
+
+	HoleRecord* holeRecords = new HoleRecord[header.holeEntryCount];
+	if (!file.Read(holeRecords, header.holeEntryCount * sizeof(HoleRecord)))
+	{
+		delete[] holeRecords;
+		return false;
+	}
+
+	HoleRecord* cursor = holeRecords;
+	for (uint32_t i = 0; i < header.holeEntryCount; i++)
+	{
+		holes.insert(*cursor);
+		cursor++;
+	}
+	
+	bool success = VerifyHoleRecordIntegrity();
+	if (success)
+	{
+		shouldWriteHoles = false;
+	}
+
+	delete[] holeRecords;
+	return success;
 }
 
 bool cGZDBSegmentPackedFile::ReadCompressedSetRecord(void)
 {
+	compressedRecords.clear();
+
+	cGZPersistResourceKey key(TypeID_PackedFileCompressedSet, TypeID_PackedFileCompressedSet, InstanceID_PackedFileCompressedSet);
+	uint32_t compressedSize = 0;
+
+	if (DoReadRecord(key, 0, compressedSize) == -1)
+	{
+		return true;
+	}
+
+	uint8_t* data = new uint8_t[compressedSize + 4];
+	if (!DoReadRecord(key, data, compressedSize))
+	{
+		delete[] data;
+		return false;
+	}
+
+	uint32_t recordCount = compressedSize / sizeof(CompressedRecordData);
+	if (recordCount == 0)
+	{
+		delete[] data;
+		return true;
+	}
+
+	CompressedRecordData* cursor = reinterpret_cast<CompressedRecordData*>(data);
+	for (uint32_t i = 0; i < recordCount; i++)
+	{
+		compressedRecords.insert(std::pair<cGZPersistResourceKey, CompressedRecordData>(cursor->key, *cursor));
+		cursor++;
+	}
+
+	delete[] data;
+	return true;
+}
+
+bool cGZDBSegmentPackedFile::VerifyHeaderRecordIntegrity(void)
+{
+	return header.signature == kPackedFileHeaderFileIdentifier
+		&& header.majorVersion <= kPackedFileHeaderMajorVersion
+		&& header.indexEntryCount < INT_MAX
+		&& header.indexRecordOffset < file.Length()
+		&& header.indexRecordOffset + header.indexTableSize <= file.Length()
+		&& header.holeEntryCount < INT_MAX
+		&& header.holeRecordOffset < file.Length()
+		&& header.holeRecordOffset + header.holeRecordSize <= file.Length();
+}
+
+bool cGZDBSegmentPackedFile::VerifyHoleRecordIntegrity(void)
+{
+	uint32_t offset = header.holeRecordOffset;
+	if (offset != 0 && (offset < sizeof(header) || offset >= file.Length()))
+	{
+		return false;
+	}
+
+	return header.holeEntryCount == header.holeRecordSize / sizeof(HoleRecord);
+}
+
+bool cGZDBSegmentPackedFile::VerifyIndexRecordIntegrity(void)
+{
+	uint32_t fileLength = file.Length();
+	for (tRecordInfoTable::iterator it = recordInfoTable->begin(); it != recordInfoTable->end(); it++)
+	{
+		uint32_t recordOffset = it->second.offset;
+		if (recordOffset < sizeof(header)
+			|| fileLength <= recordOffset
+			|| fileLength < recordOffset + it->second.size)
+		{
+			return false;
+		}
+	}
+
+	return true;
 }
 
 bool cGZDBSegmentPackedFile::ShouldCompactDatabase(void)
 {
+	if ((fileAccessFlags & GZFileAccessWrite) == 0)
+	{
+		return false;
+	}
+
+	uint32_t fileSize = file.Length();
+	uint32_t holeSize = 0;
+
+	for (tHoleSet::iterator it = holes.begin(); it != holes.end(); it++)
+	{
+		holeSize = it->size;
+	}
+
+	return fileSize >= holeSize
+		&& fileSize - holeSize != 0
+		&& (float)holeSize / (float)(fileSize - holeSize) > holeCompactionMinRatio;
 }
 
 bool cGZDBSegmentPackedFile::ShouldRecordBeCompressed(cGZPersistResourceKey const& key, uint32_t size)
 {
+	const uint32_t kMaxSizeForCompression = 15999909;
+	if (size > kMaxSizeForCompression || key.type == TypeID_PackedFileCompressedSet)
+	{
+		return false;
+	}
+
+	return compressAllRecords
+		|| (compressedTypeIDs.size() != 0 && compressedTypeIDs.find(key.type) != compressedTypeIDs.end())
+		|| (compressedGroupIDs.size() != 0 && compressedGroupIDs.find(key.group) != compressedGroupIDs.end());
 }
 
 bool cGZDBSegmentPackedFile::ShouldRecordBeCompressed(uint8_t* data, uint32_t size, uint8_t*& compressedData, uint32_t& compressedSize)
 {
+	const uint32_t kMaxSizeForCompression = 15999951;
+
+	compressedData = NULL;
+	compressedSize = 0;
+
+	if (size >= kMaxSizeForCompression || CompressData(data, size, compressedData, compressedSize))
+	{
+		if ((float)compressedSize / (float)size < 0.8)
+		{
+			return true;
+		}
+
+		if (compressedData != NULL)
+		{
+			delete[] compressedData;
+		}
+
+		compressedData = NULL;
+		compressedSize = 0;
+	}
+
+	return false;
+}
+
+bool cGZDBSegmentPackedFile::CompressData(uint8_t* data, uint32_t size, uint8_t*& compressedData, uint32_t& compressedSize)
+{
+	uint8_t* originalTarget = compressedData;
+	if (size >= 40000000)
+	{
+		if (originalTarget == NULL)
+		{
+			compressedSize = size;
+			originalTarget = new uint8_t[size];
+			compressedData = originalTarget;
+		}
+		else
+		{
+			if (compressedSize < size)
+			{
+				compressedSize = 0;
+				return false;
+			}
+
+			compressedSize = size;
+			originalTarget = compressedData;
+		}
+
+		memcpy(originalTarget, data, size);
+		return true;
+	}
+
+	cRZFastCompression3 compressor;
+	uint8_t* compressedTarget;
+
+	if (originalTarget == NULL)
+	{
+		uint32_t maxLengthNeeded = compressor.GetMaxLengthRequiredForCompressedData(size);
+		compressedSize = maxLengthNeeded;
+		compressedTarget = new uint8_t[maxLengthNeeded];
+		compressedData = compressedTarget;
+	}
+	else
+	{
+		compressedTarget = compressedData;
+	}
+
+	if (compressedTarget != NULL)
+	{
+		if (size > 250000)
+		{
+			compressor.EnableQuickCompression(true);
+			compressedTarget = compressedData;
+		}
+
+		if (compressor.CompressData(data, size, compressedTarget, compressedSize))
+		{
+			return true;
+		}
+
+		compressedSize = 0;
+		if (originalTarget == NULL)
+		{
+			if (compressedData != NULL)
+			{
+				delete[] compressedData;
+			}
+
+			compressedData = NULL;
+		}
+	}
+
+	return false;
 }
 
 void cGZDBSegmentPackedFile::IncrementTypeAndGroupUse(uint32_t type, uint32_t group, bool add)
 {
+	if (!typeAndGroupUseTrackingEnabled)
+	{
+		return;
+	}
+
+	tUseCountMap::iterator typeIt = typeUseCount.find(type);
+	if (typeIt == typeUseCount.end())
+	{
+		if (add)
+		{
+			typeUseCount.insert(std::pair<uint32_t, int>(type, 1));
+		}
+	}
+	else
+	{
+		int previousCount = typeIt->second;
+		if (add)
+		{
+			typeIt->second++;
+		}
+		else if (previousCount <= 1)
+		{
+			typeUseCount.erase(typeIt);
+		}
+		else
+		{
+			typeIt->second--;
+		}
+	}
+
+	tUseCountMap::iterator groupIt = groupUseCount.find(group);
+	if (groupIt == groupUseCount.end())
+	{
+		if (add)
+		{
+			groupUseCount.insert(std::pair<uint32_t, int>(group, 1));
+		}
+	}
+	else
+	{
+		int previousCount = groupIt->second;
+		if (add)
+		{
+			groupIt->second++;
+		}
+		else if (previousCount <= 1)
+		{
+			groupUseCount.erase(groupIt);
+		}
+		else
+		{
+			groupIt->second--;
+		}
+	}
 }
 
 bool cGZDBSegmentPackedFile::CloseOpenRecords(void)
