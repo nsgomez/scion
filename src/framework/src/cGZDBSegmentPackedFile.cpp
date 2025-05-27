@@ -18,6 +18,8 @@
  */
 
 #include <ctime>
+#include <list>
+#include <string>
 #include "cGZDBSegmentPackedFile.h"
 #include "cGZDBReadRecordPackedFile.h"
 #include "cGZDBReadRecordRAM.h"
@@ -393,7 +395,7 @@ void cGZDBSegmentPackedFile::EnableUsedTypeAndGroupCounting(bool enabled)
 	}
 }
 
-uint32_t cGZDBSegmentPackedFile::CopyDatabaseRecords(cIGZPersistDBSegment* segment, cIGZPersistResourceKeyFilter* filter, bool param_3, bool param_4)
+uint32_t cGZDBSegmentPackedFile::CopyDatabaseRecords(cIGZPersistDBSegment* segment, cIGZPersistResourceKeyFilter* filter, bool copyFromSegmentToSelf, bool skipDeletingSourceRecord)
 {
 	cRZCriticalSectionHolder lock(criticalSection);
 
@@ -403,7 +405,7 @@ uint32_t cGZDBSegmentPackedFile::CopyDatabaseRecords(cIGZPersistDBSegment* segme
 	cGZPersistResourceKeyList* keyList = new cGZPersistResourceKeyList();
 	keyList->AddRef();
 
-	if (param_3)
+	if (copyFromSegmentToSelf)
 	{
 		segment->GetResourceKeyList(keyList, filter);
 	}
@@ -417,8 +419,7 @@ uint32_t cGZDBSegmentPackedFile::CopyDatabaseRecords(cIGZPersistDBSegment* segme
 
 	while (it != keyList->keys.end())
 	{
-		// TODO
-		if (CopyDatabaseRecord(segment, *it, param_3, param_4))
+		if (CopyDatabaseRecord(segment, *it, copyFromSegmentToSelf, skipDeletingSourceRecord))
 		{
 			++recordsCopied;
 		}
@@ -433,7 +434,7 @@ uint32_t cGZDBSegmentPackedFile::CopyDatabaseRecords(cIGZPersistDBSegment* segme
 	return recordsCopied;
 }
 
-uint32_t cGZDBSegmentPackedFile::CopyDatabaseRecords(cIGZString const& path, cIGZPersistResourceKeyFilter* filter, bool param_3, bool param_4)
+uint32_t cGZDBSegmentPackedFile::CopyDatabaseRecords(cIGZString const& path, cIGZPersistResourceKeyFilter* filter, bool copyFromSegmentToSelf, bool skipDeletingSourceRecord)
 {
 	cRZCriticalSectionHolder lock(criticalSection);
 
@@ -443,10 +444,9 @@ uint32_t cGZDBSegmentPackedFile::CopyDatabaseRecords(cIGZString const& path, cIG
 	uint32_t recordsCopied = -1;
 	if (otherFile->Init())
 	{
-		// TODO
-		if (otherFile->SetPath(path) && otherFile->Open(true, !param_3 || !param_4))
+		if (otherFile->SetPath(path) && otherFile->Open(true, !copyFromSegmentToSelf || !skipDeletingSourceRecord))
 		{
-			recordsCopied = CopyDatabaseRecords(otherFile, filter, param_3, param_4);
+			recordsCopied = CopyDatabaseRecords(otherFile, filter, copyFromSegmentToSelf, skipDeletingSourceRecord);
 			otherFile->Close();
 		}
 
@@ -459,6 +459,8 @@ uint32_t cGZDBSegmentPackedFile::CopyDatabaseRecords(cIGZString const& path, cIG
 
 bool cGZDBSegmentPackedFile::CompactDatabase(void)
 {
+	// TODO
+	return false;
 }
 
 bool cGZDBSegmentPackedFile::VerifyDatabase(void)
@@ -1012,7 +1014,28 @@ bool cGZDBSegmentPackedFile::DoOpenRecord(cGZPersistResourceKey const& key, cIGZ
 
 bool cGZDBSegmentPackedFile::DoCreateNewRecord(cGZPersistResourceKey const& key, cIGZPersistDBRecord** outPtr)
 {
-	// TODO
+	if ((fileAccessFlags & GZFileAccessWrite) == 0)
+	{
+		return false;
+	}
+
+	tRecordInfoTable::iterator infoIt = recordInfoTable->find(key);
+	if (infoIt != recordInfoTable->end())
+	{
+		return false;
+	}
+
+	tOpenRecordMap::iterator openIt = openRecords.find(key);
+	if (openIt != openRecords.end())
+	{
+		return false;
+	}
+
+	cGZDBWriteRecordPackedFile* newRecord = new cGZDBWriteRecordPackedFile(0U, 0U, key, this, true);
+	newRecord->AddRef();
+
+	openRecords.insert(std::pair<cGZPersistResourceKey, cGZPersistDBSerialRecord*>(key, newRecord));
+	return true;
 }
 
 bool cGZDBSegmentPackedFile::DoCloseRecord(cIGZPersistDBRecord* record)
@@ -1171,6 +1194,7 @@ uint32_t cGZDBSegmentPackedFile::DoReadRecord(cGZPersistResourceKey const& key, 
 bool cGZDBSegmentPackedFile::DoReadRecord(cGZPersistResourceKey const& key, cIGZString const& filename)
 {
 	// TODO
+	return false;
 }
 
 bool cGZDBSegmentPackedFile::DoWriteRecord(cGZPersistResourceKey const& key, void* data, uint32_t length)
@@ -1246,6 +1270,7 @@ bool cGZDBSegmentPackedFile::DoWriteRecord(cGZPersistResourceKey const& key, voi
 bool cGZDBSegmentPackedFile::DoWriteRecord(cGZPersistResourceKey const& key, cIGZString const& filename)
 {
 	// TODO
+	return false;
 }
 
 bool cGZDBSegmentPackedFile::GetModificationTime(uint32_t& creationTime, uint32_t& modificationTime)
@@ -1318,6 +1343,17 @@ bool cGZDBSegmentPackedFile::WriteFileSpan(void const* data, uint32_t offset, ui
 	}
 
 	return file.Write(data, length);
+}
+
+uint32_t cGZDBSegmentPackedFile::GetDecompressedRecordLength(cGZPersistResourceKey const& key)
+{
+	tCompressedRecordsMap::iterator it = compressedRecords.find(key);
+	if (it != compressedRecords.end())
+	{
+		return it->second.uncompressedSize;
+	}
+
+	return -1;
 }
 
 bool cGZDBSegmentPackedFile::WriteEmptyHeaderRecord(void)
@@ -1636,8 +1672,133 @@ bool cGZDBSegmentPackedFile::WriteRecordInternal(cGZPersistDBSerialRecord* recor
 	return false;
 }
 
-bool cGZDBSegmentPackedFile::CopyDatabaseRecord(cIGZPersistDBSegment* segment, cGZPersistResourceKey const& key, bool, bool)
+bool cGZDBSegmentPackedFile::CopyDatabaseRecord(cIGZPersistDBSegment* segment, cGZPersistResourceKey const& key, bool copyFromSegmentToSelf, bool skipDeletingSourceRecord)
 {
+	cRZCriticalSectionHolder lock(criticalSection);
+	bool succeeded = false;
+
+	if (copyFromSegmentToSelf)
+	{
+		if (!segment->TestForRecord(key))
+		{
+			return false;
+		}
+
+		cIGZDBSegmentPackedFile* packedFile = NULL;
+		bool retry = true;
+
+		if (segment->QueryInterface(GZIID_cIGZDBSegmentPackedFile, reinterpret_cast<void**>(&packedFile)))
+		{
+			if (packedFile->GetRecordCompressed(key))
+			{
+				uint32_t rawSize = packedFile->GetRecordSizeRaw(key);
+				uint32_t decompressedSize = segment->GetRecordSize(key);
+
+				if (decompressedSize != -1)
+				{
+					uint8_t* rawBuffer = new uint8_t[rawSize];
+					if (packedFile->ReadRecordRaw(key, rawBuffer, rawSize) != -1 && WriteRecordRaw(key, rawBuffer, rawSize))
+					{
+						SetRecordCompressed(key, true, decompressedSize);
+						if (!skipDeletingSourceRecord)
+						{
+							segment->DeleteRecord(key);
+						}
+
+						succeeded = true;
+						retry = false;
+					}
+
+					delete[] rawBuffer;
+				}
+			}
+
+			packedFile->Release();
+			packedFile = NULL;
+		}
+
+		if (retry)
+		{
+			uint32_t size = segment->GetRecordSize(key);
+			if (size != -1)
+			{
+				uint8_t* buffer = new uint8_t[size];
+				if (segment->ReadRecord(key, buffer, size) && WriteRecord(key, buffer, size))
+				{
+					if (!skipDeletingSourceRecord)
+					{
+						segment->DeleteRecord(key);
+					}
+
+					succeeded = true;
+				}
+
+				delete[] buffer;
+			}
+		}
+	}
+	else
+	{
+		if (!TestForRecord(key))
+		{
+			return false;
+		}
+
+		cIGZDBSegmentPackedFile* packedFile = NULL;
+		bool retry = true;
+
+		if (segment->QueryInterface(GZIID_cIGZDBSegmentPackedFile, reinterpret_cast<void**>(&packedFile)))
+		{
+			if (GetRecordCompressed(key))
+			{
+				uint32_t rawSize = GetRecordSizeRaw(key);
+				uint32_t decompressedSize = GetDecompressedRecordLength(key);
+
+				if (decompressedSize != -1)
+				{
+					uint8_t* rawBuffer = new uint8_t[rawSize];
+					if (ReadRecordRaw(key, rawBuffer, rawSize) != -1 && packedFile->WriteRecordRaw(key, rawBuffer, rawSize))
+					{
+						packedFile->SetRecordCompressed(key, true, decompressedSize);
+						if (!skipDeletingSourceRecord)
+						{
+							DeleteRecord(key);
+						}
+
+						succeeded = true;
+						retry = false;
+					}
+
+					delete[] rawBuffer;
+				}
+			}
+
+			packedFile->Release();
+			packedFile = NULL;
+		}
+
+		if (retry)
+		{
+			uint32_t size = GetRecordSize(key);
+			if (size != -1)
+			{
+				uint8_t* buffer = new uint8_t[size];
+				if (ReadRecord(key, buffer, size) && segment->WriteRecord(key, buffer, size))
+				{
+					if (!skipDeletingSourceRecord)
+					{
+						DeleteRecord(key);
+					}
+
+					succeeded = true;
+				}
+
+				delete[] buffer;
+			}
+		}
+	}
+
+	return succeeded;
 }
 
 bool cGZDBSegmentPackedFile::DecompressData(uint8_t* data, uint32_t size, uint8_t*& decompressedData, uint32_t& decompressedSize)
@@ -1765,8 +1926,80 @@ bool cGZDBSegmentPackedFile::ReadHeaderRecord(void)
 	return false;
 }
 
-bool cGZDBSegmentPackedFile::FindHeaderRecord(void)
+uint32_t cGZDBSegmentPackedFile::FindHeaderRecord(void)
 {
+	bool wasFileOpen = file.IsOpen();
+	if (!wasFileOpen)
+	{
+		file.SetPath(path);
+		file.Open(GZFileAccessRead, GZFileOpenExistingOnly, GZFileShareRead);
+
+		if (!file.IsOpen())
+		{
+			return -1;
+		}
+	}
+
+	static const uint32_t bufferSize = 512;
+	static char kFileIdentifierArray[] = {
+		(char)0x7F, (char)0x9D, (char)0x88, (char)0xEC,
+		(char)0x8F, (char)0x24, (char)0x03, (char)0x6C,
+		(char)0xC9, (char)0xA6, (char)0x31, (char)0x56,
+		(char)0x5B, (char)0xCF, (char)0x77, (char)0x22,
+	};
+
+	if (file.Length() <= sizeof(kFileIdentifierArray))
+	{
+		return -1;
+	}
+
+	std::string haystack(bufferSize, '\0');
+	std::string needle(kFileIdentifierArray);
+
+	uint32_t byteCount = bufferSize;
+	file.SeekToBegin();
+
+	uint32_t result = -1;
+	while (byteCount == bufferSize)
+	{
+		uint32_t originalPosition = file.Position();
+		byteCount = bufferSize;
+
+		if (!file.ReadWithCount(&haystack[0], byteCount))
+		{
+			break;
+		}
+
+		haystack.resize(byteCount);
+		int offset = haystack.find(needle);
+		if (offset != -1)
+		{
+			uint32_t indexPosition = file.Position();
+			result = originalPosition + offset + sizeof(kFileIdentifierArray);
+			file.SeekToPosition(result);
+
+			char signature[4];
+			if (file.Read(signature, sizeof(signature))
+				&& signature[0] == 'D'
+				&& signature[1] == 'B'
+				&& signature[2] == 'P'
+				&& signature[3] == 'F')
+			{
+				break;
+			}
+
+			file.SeekToPosition(indexPosition);
+		}
+
+		file.SeekToRelativePosition(-sizeof(kFileIdentifierArray));
+	}
+
+	if (!wasFileOpen)
+	{
+		file.Close();
+	}
+
+	return result;
 }
 
 bool cGZDBSegmentPackedFile::ReadIndexRecord(void)
@@ -2122,4 +2355,26 @@ void cGZDBSegmentPackedFile::IncrementTypeAndGroupUse(uint32_t type, uint32_t gr
 
 bool cGZDBSegmentPackedFile::CloseOpenRecords(void)
 {
+	if (!IsOpenInternal())
+	{
+		return false;
+	}
+
+	if (openRecords.size() == 0)
+	{
+		return true;
+	}
+
+	std::list<cGZPersistDBSerialRecord*> recordsToClose;
+	for (tOpenRecordMap::iterator it = openRecords.begin(); it != openRecords.end(); it++)
+	{
+		recordsToClose.push_back(it->second);
+	}
+
+	for (std::list<cGZPersistDBSerialRecord*>::iterator it = recordsToClose.begin(); it != recordsToClose.end(); it++)
+	{
+		CloseRecord(*it);
+	}
+
+	return true;
 }

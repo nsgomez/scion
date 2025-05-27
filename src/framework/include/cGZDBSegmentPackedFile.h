@@ -77,8 +77,8 @@ public:
 	virtual uint32_t GetUsedGroupCount(void);
 	virtual void EnableUsedTypeAndGroupCounting(bool enabled);
 
-	virtual uint32_t CopyDatabaseRecords(cIGZPersistDBSegment* segment, cIGZPersistResourceKeyFilter* filter, bool, bool);
-	virtual uint32_t CopyDatabaseRecords(cIGZString const& path, cIGZPersistResourceKeyFilter* filter, bool, bool);
+	virtual uint32_t CopyDatabaseRecords(cIGZPersistDBSegment* segment, cIGZPersistResourceKeyFilter* filter, bool copyFromSegmentToSelf, bool skipDeletingSourceRecord);
+	virtual uint32_t CopyDatabaseRecords(cIGZString const& path, cIGZPersistResourceKeyFilter* filter, bool copyFromSegmentToSelf, bool skipDeletingSourceRecord);
 
 	virtual bool CompactDatabase(void);
 	virtual bool VerifyDatabase(void);
@@ -131,6 +131,7 @@ public:
 
 protected:
 	bool IsOpenInternal(void) const { return (fileAccessFlags & GZFileAccessReadWrite) != 0; }
+	uint32_t GetDecompressedRecordLength(cGZPersistResourceKey const& key);
 
 	bool WriteEmptyHeaderRecord(void);
 	bool WriteHeaderRecord(void);
@@ -140,14 +141,14 @@ protected:
 	bool WriteRecordInternal(cGZPersistDBSerialRecord* record, cGZPersistResourceKey const& key);
 	void DoPostRecordClose(void);
 
-	bool CopyDatabaseRecord(cIGZPersistDBSegment* segment, cGZPersistResourceKey const& key, bool, bool);
+	bool CopyDatabaseRecord(cIGZPersistDBSegment* segment, cGZPersistResourceKey const& key, bool copyFromSegmentToSelf, bool skipDeletingSourceRecord);
 
 	bool DecompressData(uint8_t* data, uint32_t size, uint8_t*& decompressedData, uint32_t& decompressedSize);
 	bool DecompressRecord(uint32_t fileOffset, uint32_t size, uint8_t*& decompressedData, uint32_t& decompressedSize);
 	bool DecompressRecord(cGZPersistResourceKey const& key, uint8_t*& data, uint32_t& decompressedSize);
 
 	bool ReadHeaderRecord(void);
-	bool FindHeaderRecord(void);
+	uint32_t FindHeaderRecord(void);
 	bool ReadIndexRecord(void);
 	bool ReadHoleRecord(void);
 	bool ReadCompressedSetRecord(void);
