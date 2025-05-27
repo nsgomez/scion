@@ -72,9 +72,11 @@ public:
 	virtual bool GetOpenModes(uint32_t& accessFlags, uint32_t& createMode, uint32_t& shareFlags);
 	virtual void GetBuffering(uint32_t& readBufferSize, uint32_t& writeBufferSize);
 	virtual bool SetBuffering(uint32_t newReadBufferSize, uint32_t newWriteBufferSize);
-	
+
 public:
-	static bool MakeTempFileName();
+	static bool GetTempDirectory(cIGZString& out);
+	static bool MakeTempFileName(cIGZString const& prefix, cIGZString& name, cIGZString const* suffix);
+	static bool MakeTempPathName(cIGZString& name, cIGZString const* suffix);
 	static bool FileExists(cIGZString const& name);
 	static bool Remove(cIGZString const& name);
 	static bool Copy(cIGZString const& srcName, cIGZString const& destName, bool overwrite);
@@ -94,7 +96,6 @@ protected:
 	uint32_t shareFlags;
 	uint32_t refCount;
 	uint32_t lastError;
-	// TODO: there seems to be another string that should be here
 	uint32_t position;
 	uint32_t filePointer;
 	uint32_t readBufferSize;

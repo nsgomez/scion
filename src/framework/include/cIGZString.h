@@ -28,9 +28,9 @@ public:
 	virtual void FromChar(char const* otherStr) = 0;
 	virtual void FromChar(char const* otherStr, uint32_t length) = 0;
 
-	virtual char const* ToChar() const = 0;
-	virtual char const* Data() const = 0;
-	virtual uint32_t Strlen() const = 0;
+	virtual char const* ToChar(void) const = 0;
+	virtual char const* Data(void) const = 0;
+	virtual uint32_t Strlen(void) const = 0;
 
 	virtual bool IsEqual(cIGZString const*, bool caseSensitive = true) const = 0;
 	virtual bool IsEqual(cIGZString const&, bool caseSensitive = true) const = 0;

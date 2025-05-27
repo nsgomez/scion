@@ -19,6 +19,7 @@
 
 // FUTURE: make platform agnostic
 #define WIN32_LEAN_AND_MEAN
+#include <time.h>
 #include <Windows.h>
 
 #include "cRZFile.h"
@@ -600,13 +601,6 @@ bool cRZFile::Exists(void)
 	return true;
 }
 
-bool cRZFile::Copy(cIGZString const& srcName, cIGZString const& destName, bool overwrite)
-{
-	cRZString srcStr(srcName);
-	cRZString destStr(destName);
-	return CopyFile(srcStr.ToChar(), destStr.ToChar(), !overwrite);
-}
-
 bool cRZFile::Copy(cIGZFile const& srcFile, bool overwrite)
 {
 	cRZString srcPath(path);
@@ -861,4 +855,136 @@ bool cRZFile::FlushWriteBuffer(void)
 
 		return false;
 	}
+}
+
+bool cRZFile::GetTempDirectory(cIGZString& out)
+{
+	char tmpPath[MAX_PATH];
+	DWORD tmpPathLen = GetTempPath(MAX_PATH, tmpPath);
+
+	if (tmpPathLen == 0)
+	{
+		return false;
+	}
+
+	// TODO: there is supposed to be a call to ConvertStringEncoding, which is
+	// not implemented yet. We're just going to copy the string verbatim, which
+	// probably does not work on Windows installations w/ non-Latin code pages.
+	out = cRZString(tmpPath);
+	return true;
+}
+
+bool cRZFile::MakeTempFileName(cIGZString const& prefix, cIGZString& name, cIGZString const* suffix)
+{
+	time_t seedNum = time(NULL);
+	cRZString tmpName;
+	cRZString originalName(name.Data(), name.Strlen());
+	cRZString suffixStr;
+
+	if (suffix == NULL)
+	{
+		suffixStr = cRZString(".tmp");
+	}
+	else
+	{
+		suffixStr = suffix;
+	}
+
+	if (originalName.Strlen() < 245)
+	{
+		if (originalName.Strlen() == 0)
+		{
+			originalName = cRZString("RZ_");
+		}
+	}
+	else
+	{
+		originalName.Resize(245);
+	}
+
+	for (int i = 0; i < 10000; i++)
+	{
+		tmpName.Sprintf("%s%s%d%s", prefix.Data(), originalName, seedNum, suffixStr.Data());
+
+		cRZFile newFile(tmpName);
+		if (newFile.Open(GZFileAccessRead | GZFileAccessWrite, GZFileCreateNewOnly, GZFileShareExclusive))
+		{
+			name.FromChar(tmpName.Data(), tmpName.Strlen());
+			return true;
+		}
+		else
+		{
+			seedNum--;
+		}
+	}
+
+	return false;
+}
+
+bool cRZFile::MakeTempPathName(cIGZString& name, cIGZString const* suffix)
+{
+	time_t seedNum = time(NULL);
+	cRZString tmpName;
+	cRZString originalName(name.Data(), name.Strlen());
+
+	cRZString tmpPath;
+	GetTempDirectory(tmpPath);
+
+	cRZString suffixStr;
+	if (suffix == NULL)
+	{
+		suffixStr = cRZString(".tmp");
+	}
+	else
+	{
+		suffixStr = suffix;
+	}
+
+	if (originalName.Strlen() < 245)
+	{
+		if (originalName.Strlen() == 0)
+		{
+			originalName = cRZString("RZ_");
+		}
+	}
+	else
+	{
+		originalName.Resize(245);
+	}
+
+	for (int i = 0; i < 10000; i++)
+	{
+		tmpName.Sprintf("%s%s%d%s", tmpPath.Data(), originalName, seedNum, suffixStr.Data());
+
+		cRZFile newFile(tmpName);
+		if (newFile.Open(GZFileAccessRead | GZFileAccessWrite, GZFileCreateNewOnly, GZFileShareExclusive))
+		{
+			name.FromChar(tmpName.Data(), tmpName.Strlen());
+			return true;
+		}
+		else
+		{
+			seedNum--;
+		}
+	}
+
+	return false;
+}
+
+bool cRZFile::FileExists(cIGZString const& name)
+{
+	// TODO: another missing ConvertStringEncoding call here and in Remove
+	return GetFileAttributes(name.ToChar()) != -1;
+}
+
+bool cRZFile::Remove(cIGZString const& name)
+{
+	return DeleteFile(name.ToChar());
+}
+
+bool cRZFile::Copy(cIGZString const& srcName, cIGZString const& destName, bool overwrite)
+{
+	cRZString srcStr(srcName);
+	cRZString destStr(destName);
+	return CopyFile(srcStr.ToChar(), destStr.ToChar(), !overwrite);
 }
