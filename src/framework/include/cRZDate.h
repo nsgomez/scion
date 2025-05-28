@@ -36,12 +36,13 @@ public:
 	cRZDate(uint32_t month, uint32_t day, uint32_t year);
 
 public:
-	uint32_t DayOfMonth() const;
-	uint32_t DayOfYear() const;
+	uint32_t DateCode(void) const;
+	uint32_t DayOfMonth(void) const;
+	uint32_t DayOfYear(void) const;
 	uint32_t FirstDayOfMonth(uint32_t month) const;
 	void Mdy(uint32_t& month, uint32_t& day, uint32_t& year) const;
-	uint32_t Month() const;
-	uint32_t Year() const;
+	uint32_t Month(void) const;
+	uint32_t Year(void) const;
 
 	void Set(char const* monthAbbr, uint32_t day, uint32_t year);
 	void Set(uint32_t month, uint32_t day, uint32_t year);

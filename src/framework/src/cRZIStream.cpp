@@ -90,7 +90,7 @@ bool cRZIStream::GetSint16(int16_t& out)
 	}
 	else
 	{
-		// TODO: During compilation we should check the target endianness and do the byte swaps accordingly.
+		// FUTURE: During compilation we should check the target endianness and do the byte swaps accordingly.
 		if (!useLittleEndian)
 		{
 			out = (int16_t)_byteswap_ushort((uint16_t)out);

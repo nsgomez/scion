@@ -87,7 +87,7 @@ bool cRZOStream::SetUint8(uint8_t value)
 
 bool cRZOStream::SetSint16(int16_t value)
 {
-	// TODO: See cRZIStream, this should change depending on compiler target
+	// FUTURE: See cRZIStream, this should change depending on compiler target
 	if (!useLittleEndian)
 	{
 		value = (int16_t)_byteswap_ushort((uint16_t)value);

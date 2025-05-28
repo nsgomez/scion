@@ -73,14 +73,19 @@ cRZDate::cRZDate(uint32_t month, uint32_t day, uint32_t year)
 	dateCode = Jday(month, day, year);
 }
 
-uint32_t cRZDate::DayOfMonth() const
+uint32_t cRZDate::DateCode(void) const
+{
+	return dateCode;
+}
+
+uint32_t cRZDate::DayOfMonth(void) const
 {
 	uint32_t month, day, year;
 	Mdy(month, day, year);
 	return day;
 }
 
-uint32_t cRZDate::DayOfYear() const
+uint32_t cRZDate::DayOfYear(void) const
 {
 	uint32_t month, day, year;
 	uint32_t date = dateCode;
@@ -146,14 +151,14 @@ void cRZDate::Mdy(uint32_t& month, uint32_t& day, uint32_t& year) const
 	}
 }
 
-uint32_t cRZDate::Month() const
+uint32_t cRZDate::Month(void) const
 {
 	uint32_t month, day, year;
 	Mdy(month, day, year);
 	return month;
 }
 
-uint32_t cRZDate::Year() const
+uint32_t cRZDate::Year(void) const
 {
 	uint32_t month, day, year;
 	Mdy(month, day, year);
@@ -243,10 +248,12 @@ uint32_t cRZDate::Jday(uint32_t month, uint32_t day, uint32_t year)
 
 void cRZDate::NameOfDayString(cRZString& out, uint32_t format) const
 {
+	// TODO
 }
 
 void cRZDate::NameOfMonthString(cRZString& out, uint32_t format) const
 {
+	// TODO
 }
 
 void cRZDate::DateString(cRZString& out, uint32_t format) const

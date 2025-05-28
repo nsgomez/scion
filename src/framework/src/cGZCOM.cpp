@@ -23,6 +23,7 @@
 #include "cRZCOMDllDirector.h"
 #include "cRZDate.h"
 #include "cRZThread.h"
+#include "RZPlatform.h"
 #include "RZStatics.h"
 
 static const GZGUID RZSRVID_cGZCOM = 0xA3CD8DB3;
@@ -135,11 +136,32 @@ void cGZCOM::FreeUnusedLibraries(void)
 static int32_t GetGuidGenSeconds(void)
 {
 	cRZDate referenceDate(2, 2, 1997);
-	cRZDate currentDate;
+	cRZDate nowDate1;
 
-	// TODO
+	time_t rawTime;
+	time(&rawTime);
 
-	return 0;
+	tm* localTime = localtime(&rawTime);
+	cRZDate nowDate2(localTime->tm_mon + 1, localTime->tm_mday, localTime->tm_year + 1900);
+
+	uint32_t timestamp;
+	if (nowDate2.DateCode() == 0)
+	{
+		timestamp = 0;
+	}
+	else
+	{
+		timestamp = localTime->tm_sec
+			+ (localTime->tm_min * 60)
+			+ ((localTime->tm_hour - 1) * 60 * 60)
+			+ ((nowDate2.DateCode() - cRZDate::mRefDate.DateCode()) * 60 * 60 * 24)
+			+ (60 * 60);
+	}
+
+	return ((nowDate1.DateCode() - referenceDate.DateCode()) * 60 * 60 * 24)
+		+ (((timestamp % (60 * 60 * 24)) / (60 * 60)) * (60 * 60))
+		+ (((timestamp % (60 * 60)) / 60) * 60)
+		+ (timestamp % 60);
 }
 
 bool cGZCOM::CreateGuid(GZGUID* outGuid)
@@ -189,7 +211,7 @@ bool cGZCOM::RealInit()
 		comDirector = RZGetCOMDllDirector();
 
 		cRZString appPath;
-		// RZGetCurrentAppPath(appPath); // TODO
+		RZGetCurrentAppPath(appPath);
 
 		if (comDirector->InitializeCOM(this, appPath))
 		{

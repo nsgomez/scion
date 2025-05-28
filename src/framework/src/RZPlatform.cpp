@@ -17,11 +17,10 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#pragma once
-#include "RZPlatform.h"
-
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
+#include "cIGZString.h"
+#include "RZPlatform.h"
 
 bool RZIsKeyDownNow(uint32_t key)
 {
@@ -36,4 +35,33 @@ bool RZIsKeyDownNow(uint32_t key)
 int32_t RZThreadSafeAdd(int32_t volatile* addend, int32_t value)
 {
 	return InterlockedExchangeAdd(reinterpret_cast<LONG volatile*>(addend), value) + value;
+}
+
+uint32_t RZGetCurrentAppPath(cIGZString& out)
+{
+	// TODO: use GetModuleFileNameW instead if supported
+	if (out.Strlen() == 0)
+	{
+		char path[MAX_PATH];
+		DWORD pathLen = GetModuleFileName(NULL, path, MAX_PATH);
+
+		if (pathLen != 0)
+		{
+			out.FromChar(path, pathLen);
+		}
+	}
+
+	return out.Strlen();
+}
+
+bool RZLoadLibraryA(void** handleOut, char const* path)
+{
+	*handleOut = LoadLibraryA(path);
+	return true;
+}
+
+bool RZGetProcAddress(void** fnOut, void** module, char const* name)
+{
+	*fnOut = GetProcAddress(reinterpret_cast<HMODULE>(*module), name);
+	return true;
 }

@@ -20,5 +20,10 @@
 #pragma once
 #include <stdint.h>
 
+class cIGZString;
+
 extern bool RZIsKeyDownNow(uint32_t key);
 extern int32_t RZThreadSafeAdd(int32_t volatile* addend, int32_t value);
+extern uint32_t RZGetCurrentAppPath(cIGZString& out);
+extern bool RZLoadLibraryA(void** handleOut, const char* path);
+extern bool RZGetProcAddress(void** fnOut, void** module, char const* name);
