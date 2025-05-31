@@ -57,7 +57,7 @@ public:
 	virtual cIGZFramework* FrameWork(void);
 	virtual cIGZCOM* GZCOM(void);
 
-	virtual GZGUID GetDirectorID() const = 0;
+	virtual GZGUID GetDirectorID(void) const = 0;
 	virtual bool GetLibraryPath(cIGZString& path);
 	virtual uint32_t GetHeapAllocatedSize(void);
 

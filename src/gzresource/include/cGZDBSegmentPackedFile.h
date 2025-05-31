@@ -27,6 +27,8 @@
 #include "cIGZDBSegmentPackedFile.h"
 #include "cRZFile.h"
 
+static const GZGUID GZCLSID_cGZDBSegmentPackedFile = 0x086D4A89;
+
 class cGZPersistDBSerialRecord;
 
 enum DBPFHoleUseFlags

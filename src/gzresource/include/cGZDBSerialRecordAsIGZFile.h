@@ -21,6 +21,8 @@
 #include "cIGZDBSerialRecordAsIGZFile.h"
 #include "cIGZFile.h"
 
+static const GZGUID GZCLSID_cGZDBSerialRecordAsIGZFile = 0x0A32C0DA;
+
 class cGZDBSerialRecordAsIGZFile : public cIGZDBSerialRecordAsIGZFile, public cIGZFile
 {
 public:

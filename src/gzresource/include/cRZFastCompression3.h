@@ -18,41 +18,37 @@
  */
 
 #pragma once
-#include <deque>
-#include "cGZPersistResourceKey.h"
-#include "cIGZPersistResourceKeyList.h"
+#include "cIGZCompression.h"
 
-class cGZPersistResourceKeyList : public cIGZPersistResourceKeyList
+static const GZGUID GZCLSID_cRZFastCompression3 = 0x035990A3;
+
+class cRZFastCompression3 : public cIGZCompression
 {
 public:
-	cGZPersistResourceKeyList(void);
-	virtual ~cGZPersistResourceKeyList(void) { }
-
-	friend class cGZDBSegmentPackedFile;
+	cRZFastCompression3(void);
+	virtual ~cRZFastCompression3(void) { }
 
 public:
 	virtual bool QueryInterface(GZIID iid, void** outPtr);
-	virtual uint32_t AddRef();
-	virtual uint32_t Release();
+	virtual uint32_t AddRef(void);
+	virtual uint32_t Release(void);
 
 public:
-	virtual bool Insert(cGZPersistResourceKey const& key);
-	virtual bool Insert(cIGZPersistResourceKeyList const& list);
+	virtual bool CompressData(void const* data, uint32_t size, uint8_t* compressedData, uint32_t& compressedSize);
+	virtual bool DecompressData(uint8_t const* data, uint32_t size, void* decompressedData, uint32_t& decompressedSize);
+	virtual uint32_t GetMaxLengthRequiredForCompressedData(uint32_t size);
+	virtual uint32_t GetLengthOfCompressedData(uint8_t const* data);
+	virtual uint32_t GetLengthOfDecompressedData(uint8_t const* data);
+	virtual void GetCompressionVersionString(cIGZString& str);
 
-	virtual bool Erase(cGZPersistResourceKey const& key);
-	virtual bool EraseAll(void);
-
-	virtual void EnumKeys(tKeyListIterator fn, void* context) const;
-
-	virtual bool IsPresent(cGZPersistResourceKey const& key);
-	virtual uint32_t Size(void) const;
-	virtual cGZPersistResourceKey GetKey(uint32_t index) const;
+public:
+	void EnableQuickCompression(bool flag);
+	bool ValidateCompressedData(uint8_t const* data, uint32_t size);
 
 protected:
-	static void InsertKeyCallback(cGZPersistResourceKey const& key, void* context);
+	static const uint32_t kMaxRefPackDataLength = 0x1000000;
 
-	typedef std::deque<cGZPersistResourceKey> ResourceKeyDeque;
-
+protected:
 	uint32_t refCount;
-	ResourceKeyDeque keys;
+	bool quickCompressionEnabled;
 };
