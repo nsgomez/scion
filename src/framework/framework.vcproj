@@ -168,7 +168,16 @@
 				RelativePath=".\src\cRZDate.cpp">
 			</File>
 			<File
+				RelativePath=".\src\cRZDirectory.cpp">
+			</File>
+			<File
 				RelativePath=".\src\cRZExceptionNotification.cpp">
+			</File>
+			<File
+				RelativePath=".\src\cRZFile.cpp">
+			</File>
+			<File
+				RelativePath=".\src\cRZHashStringCRCInitializer.cpp">
 			</File>
 			<File
 				RelativePath=".\src\cRZIStream.cpp">
@@ -223,6 +232,18 @@
 			</File>
 			<File
 				RelativePath=".\src\cRZVariant.cpp">
+			</File>
+			<File
+				RelativePath=".\src\nRZHash.cpp">
+			</File>
+			<File
+				RelativePath=".\src\RZFindFileUtil.cpp">
+			</File>
+			<File
+				RelativePath=".\src\RZPathUtil.cpp">
+			</File>
+			<File
+				RelativePath=".\src\RZPlatform.cpp">
 			</File>
 			<File
 				RelativePath=".\src\RZStatics.cpp">
@@ -300,6 +321,9 @@
 			</File>
 			<File
 				RelativePath=".\include\cIGZExceptionNotification.h">
+			</File>
+			<File
+				RelativePath=".\include\cIGZFile.h">
 			</File>
 			<File
 				RelativePath=".\include\cIGZFramework.h">
@@ -389,7 +413,16 @@
 				RelativePath=".\include\cRZDate.h">
 			</File>
 			<File
+				RelativePath=".\include\cRZDirectory.h">
+			</File>
+			<File
 				RelativePath=".\include\cRZExceptionNotification.h">
+			</File>
+			<File
+				RelativePath=".\include\cRZFile.h">
+			</File>
+			<File
+				RelativePath=".\include\cRZHashStringCRCInitializer.h">
 			</File>
 			<File
 				RelativePath=".\include\cRZIStream.h">
@@ -453,6 +486,18 @@
 			</File>
 			<File
 				RelativePath=".\include\GZTypes.h">
+			</File>
+			<File
+				RelativePath=".\include\nRZHash.h">
+			</File>
+			<File
+				RelativePath=".\include\RZFindFileUtil.h">
+			</File>
+			<File
+				RelativePath=".\include\RZPathUtil.h">
+			</File>
+			<File
+				RelativePath=".\include\RZPlatform.h">
 			</File>
 			<File
 				RelativePath=".\include\RZStatics.h">
