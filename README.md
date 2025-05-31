@@ -1,12 +1,10 @@
 # Scion · a Maxis framework implementation
 
-**Scion** is an implementation of the GZCOM/RZCOM framework used by SimCity 4 and The Sims 2. Its main goal is to
-achieve functional parity with the framework used in SimCity 4 Deluxe Edition. As a stretch goal, it also tries,
-where possible, to produce identical machine code, such that the assembly matches when compiled for Windows with
-the right toolset and options.
-
-After the framework is finished, I'd like to use Scion to reverse-engineer SimCity 4 itself in the same vein as
-other open-source game projects (e.g. OpenTTD, OpenRCT2).
+**Scion** is a reference implementation of the Gonzo/Rizzo framework used by Maxis. This framework was used by
+games such as SimCity 3000, SimCity 4, The Sims 2, and Spore, but this project aims for functional partiy with
+the version specifically used in SimCity 4 Deluxe Edition. As a stretch goal, it also tries (where practical)
+to produce identical machine code, such that the assembly matches when compiled for Windows with the right
+toolset and options.
 
 This project is not affiliated with or endorsed by EA Games.
 
@@ -31,9 +29,9 @@ Once STLport is built, the framework solution can be built too.
 
 Scion is licensed under the [GNU Lesser General Public License, version 2.1](https://www.gnu.org/licenses/old-licenses/lgpl-2.1.en.html).
 
-The LGPL allows you to dynamically link this project with proprietary software like the Maxis games that use this
-framework; in other words, you can use it to write framework hooks for those non-free games. But if you make changes to
-Scion itself, those changes must be shared under the LGPLv2.1 license.
+The LGPL allows you to dynamically link this project with proprietary software, like retail Maxis games; in other words,
+you can use it to write framework hooks for those non-free games. But if you make changes to Scion itself, those changes
+must be shared under the LGPLv2.1 license.
 
 ## Progress
 
