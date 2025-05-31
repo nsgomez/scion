@@ -299,7 +299,7 @@ protected:
 	struct ResourceKeyHash
 	{
 	public:
-		size_t operator()(cGZPersistResourceKey const key) const;
+		size_t operator()(cGZPersistResourceKey const key) const { return key.type; }
 	};
 
 protected:

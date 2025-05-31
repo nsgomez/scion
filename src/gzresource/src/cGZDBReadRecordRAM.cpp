@@ -31,6 +31,11 @@ cGZDBReadRecordRAM::cGZDBReadRecordRAM(uint8_t* data, uint32_t size, cGZPersistR
 	accessFlags = GZFileAccessRead;
 }
 
+cGZDBReadRecordRAM::~cGZDBReadRecordRAM(void)
+{
+	// TODO: release SharedMemoryPointer once implemented
+}
+
 bool cGZDBReadRecordRAM::GetFieldVoid(void* data, uint32_t size)
 {
 	if (!accessFlags || this->size < position + size)

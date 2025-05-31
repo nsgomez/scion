@@ -23,6 +23,11 @@
 #include "cIGZPersistSerializable2.h"
 #include "cIGZPersistSerializableReferent.h"
 
+cGZPersistBinaryWriter::cGZPersistBinaryWriter(void) :
+	refCount(0)
+{
+}
+
 bool cGZPersistBinaryWriter::QueryInterface(GZIID iid, void** outPtr)
 {
 	if (outPtr == NULL)

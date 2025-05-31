@@ -63,7 +63,7 @@ uint32_t cGZPersistResourceKeyFilter::Release(void)
 	}
 }
 
-bool IsKeyIncluded(cGZPersistResourceKey const& key)
+bool cGZPersistResourceKeyFilter::IsKeyIncluded(cGZPersistResourceKey const& key)
 {
 	return true;
 }
