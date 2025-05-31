@@ -34,3 +34,17 @@ Scion is licensed under the [GNU Lesser General Public License, version 2.1](htt
 The LGPL allows you to dynamically link this project with proprietary software like the Maxis games that use this
 framework; in other words, you can use it to write framework hooks for those non-free games. But if you make changes to
 Scion itself, those changes must be shared under the LGPLv2.1 license.
+
+## Progress
+
+| **Component**                        | **Status**                           |
+|--------------------------------------|--------------------------------------|
+| Core framework                       | 🟨 Work in progress                  |
+| Resource manager (GZResourceD)       | 🟨 Work in progress                  |
+| Lua                                  | ❌ Not started                       |
+| Graphics (GZGraphicD)                | ❌ Not started                       |
+| UI primitives (GZWinD)               | ❌ Not started                       |
+| Sound (GZSoundD)                     | ❌ Not started                       |
+| Internet (GZWWWD)                    | ❌ Not started                       |
+| Debug tools (GZToolsD)               | ❌ Not started                       |
+| Gimex (GXCOM)                        | ❌ Not started                       |
