@@ -13,6 +13,5 @@
  *  Lesser General Public License for more details.
  *
  *  You should have received a copy of the GNU Lesser General Public
- *  You should have received a copy of the GNU Lesser General Public
  *  License along with this library; if not, see <https://www.gnu.org/licenses/>.
  */
