@@ -27,11 +27,12 @@ Once STLport is built, the framework solution can be built too.
 
 ## License
 
-Scion is licensed under the [GNU Lesser General Public License, version 2.1](https://www.gnu.org/licenses/old-licenses/lgpl-2.1.en.html).
+Scion is licensed under the [GNU Lesser General Public License, version 2.1](https://www.gnu.org/licenses/old-licenses/lgpl-2.1.en.html)
+or (at your option) any later version published by the Free Software Foundation.
 
 The LGPL allows you to dynamically link this project with proprietary software, like retail Maxis games; in other words,
 you can use it to write framework hooks for those non-free games. But if you make changes to Scion itself, those changes
-must be shared under the LGPLv2.1 license.
+must be shared under the LGPLv2.1 license or later.
 
 ## Progress
 
