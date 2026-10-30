@@ -18,6 +18,7 @@
 
 #pragma once
 #include <Windows.h>
+#include "MutexPlatformData.h"
 
 class cIGZString;
 
@@ -26,15 +27,15 @@ class cRZMutex
 public:
 	cRZMutex(cIGZString const& mutexName);
 
-	virtual void Release();
-	virtual bool Lock();
-	virtual bool Unlock();
-	virtual bool TryLock();
-	virtual bool IsValid();
+	virtual uint32_t Release();
+	virtual uint32_t Lock();
+	virtual uint32_t Unlock();
+	virtual uint32_t TryLock();
+	virtual uint32_t IsValid();
 	virtual ~cRZMutex();
 
-	virtual HANDLE GetMutexHandle();
+	virtual uint32_t GetMutexHandle(HANDLE* handleOut);
 
 protected:
-	HANDLE mutex;
+	MutexPlatformData* mMutex;
 };

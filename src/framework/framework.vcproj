@@ -153,6 +153,9 @@
 				RelativePath=".\src\cGZMouseMessage.cpp">
 			</File>
 			<File
+				RelativePath=".\src\CriticalSectionPlatformData.cpp">
+			</File>
+			<File
 				RelativePath=".\src\cRZAutoMsg2Notification.cpp">
 			</File>
 			<File
@@ -232,6 +235,9 @@
 			</File>
 			<File
 				RelativePath=".\src\cRZVariant.cpp">
+			</File>
+			<File
+				RelativePath=".\src\MutexPlatformData.cpp">
 			</File>
 			<File
 				RelativePath=".\src\nRZHash.cpp">
@@ -486,6 +492,9 @@
 			</File>
 			<File
 				RelativePath=".\include\GZTypes.h">
+			</File>
+			<File
+				RelativePath=".\include\MutexPlatformData.h">
 			</File>
 			<File
 				RelativePath=".\include\nRZHash.h">

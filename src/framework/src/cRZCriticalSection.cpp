@@ -17,56 +17,72 @@
  */
 
 #include <cstddef>
+#include <cstdlib>
 #include "cRZCriticalSection.h"
 
-cRZCriticalSection::cRZCriticalSection()
+cRZCriticalSection::cRZCriticalSection() :
+	mPlatformData(NULL)
 {
-	data = new CriticalSectionPlatformData();
-	InitializeCriticalSection(&data->criticalSection);
+	mPlatformData = new CriticalSectionPlatformData();
+	InitializeCriticalSection(&mPlatformData->mCriticalSection);
 }
 
 cRZCriticalSection::~cRZCriticalSection()
 {
-	DeleteCriticalSection(&data->criticalSection);
+	CriticalSectionPlatformData* data = mPlatformData;
+	DeleteCriticalSection(&data->mCriticalSection);
 	delete data;
+}
+
+uint32_t cRZCriticalSection::Release()
+{
+	if (this)
+	{
+		delete this;
+	}
+
+	return 0;
 }
 
 uint32_t cRZCriticalSection::Lock()
 {
-	EnterCriticalSection(&data->criticalSection);
-	return ++data->lockCount;
+	CriticalSectionPlatformData* data = mPlatformData;
+	EnterCriticalSection(&data->mCriticalSection);
+	return ++data->mLockCount;
 }
 
 uint32_t cRZCriticalSection::Unlock()
 {
-	LeaveCriticalSection(&data->criticalSection);
-	return --data->lockCount;
+	CriticalSectionPlatformData* data = mPlatformData;
+	const uint32_t lockCount = --data->mLockCount;
+	LeaveCriticalSection(&data->mCriticalSection);
+	return lockCount;
 }
 
 uint32_t cRZCriticalSection::TryLock()
 {
-	// TODO: This API is only available on Windows XP and above, so the game tries
-	// to dynamically load it and can fall back to EnterCriticalSection.
-	/*if (!TryEnterCriticalSection(criticalSection))
+	CriticalSectionPlatformData* data = mPlatformData;
+	if (gTryEnterCriticalSection != NULL && !gTryEnterCriticalSection(&data->mCriticalSection))
 	{
-		return false;
-	}*/
+		return 0;
+	}
 
-	EnterCriticalSection(&data->criticalSection);
-	return ++data->lockCount;
+	EnterCriticalSection(&data->mCriticalSection);
+	return ++data->mLockCount;
 }
 
-bool cRZCriticalSection::IsValid()
+uint32_t cRZCriticalSection::IsValid()
 {
-	return true;
+	return 1;
 }
 
-bool cRZCriticalSection::IsLocked()
+uint32_t cRZCriticalSection::IsLocked()
 {
-	return data->lockCount > 0;
+	return mPlatformData->mLockCount;
 }
 
-void cRZCriticalSection::GetCriticalSectionHandle(void* handleOut)
+uint32_t cRZCriticalSection::GetCriticalSectionHandle(void* handleOut)
 {
-	*reinterpret_cast<CRITICAL_SECTION**>(handleOut) = &this->data->criticalSection;
+	*reinterpret_cast<CRITICAL_SECTION**>(handleOut) = &mPlatformData->mCriticalSection;
+	return 1;
 }

@@ -17,11 +17,18 @@
  */
 
 #pragma once
+#include <stdint.h>
 #include <Windows.h>
+
+typedef BOOL (WINAPI *TryEnterCriticalSection_t)(LPCRITICAL_SECTION criticalSection);
+extern TryEnterCriticalSection_t gTryEnterCriticalSection;
 
 struct CriticalSectionPlatformData
 {
 public:
-	CRITICAL_SECTION criticalSection;
-	uint32_t lockCount;
+	CriticalSectionPlatformData();
+
+public:
+	CRITICAL_SECTION mCriticalSection;
+	uint32_t mLockCount;
 };

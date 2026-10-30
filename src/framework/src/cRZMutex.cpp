@@ -19,46 +19,57 @@
 #include "cIGZString.h"
 #include "cRZMutex.h"
 
-cRZMutex::cRZMutex(cIGZString const& mutexName)
+cRZMutex::cRZMutex(cIGZString const& mutexName) :
+	mMutex(NULL)
 {
-	mutex = CreateMutex(NULL, false, mutexName.ToChar());
+	MutexPlatformData* data = new MutexPlatformData();
+	mMutex = data;
+
+	data->mName = mutexName;
+	data->mHandle = CreateMutex(NULL, FALSE, mutexName.ToChar());
+	data->mValid = data->mHandle != NULL;
 }
 
 cRZMutex::~cRZMutex()
 {
-	CloseHandle(mutex);
+	MutexPlatformData* data = mMutex;
+	CloseHandle(data->mHandle);
+	delete data;
 }
 
-void cRZMutex::Release()
+uint32_t cRZMutex::Release()
 {
 	if (this)
 	{
 		delete this;
 	}
+
+	return 0;
 }
 
-bool cRZMutex::Lock()
+uint32_t cRZMutex::Lock()
 {
-	return WaitForSingleObject(mutex, -1) != WAIT_FAILED;
+	return WaitForSingleObject(mMutex->mHandle, INFINITE) != WAIT_FAILED;
 }
 
-bool cRZMutex::Unlock()
+uint32_t cRZMutex::Unlock()
 {
-	return ReleaseMutex(mutex) != 0;
+	return ReleaseMutex(mMutex->mHandle) != 0;
 }
 
-bool cRZMutex::TryLock()
+uint32_t cRZMutex::TryLock()
 {
-	DWORD result = WaitForSingleObject(mutex, 0);
+	DWORD result = WaitForSingleObject(mMutex->mHandle, 0);
 	return result != WAIT_FAILED && result != WAIT_TIMEOUT;
 }
 
-bool cRZMutex::IsValid()
+uint32_t cRZMutex::IsValid()
 {
-	return mutex != NULL;
+	return mMutex->mValid;
 }
 
-HANDLE cRZMutex::GetMutexHandle()
+uint32_t cRZMutex::GetMutexHandle(HANDLE* handleOut)
 {
-	return mutex;
+	*handleOut = mMutex->mHandle;
+	return 1;
 }

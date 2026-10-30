@@ -25,20 +25,23 @@ class cRZCriticalSection
 {
 public:
 	cRZCriticalSection();
-	virtual ~cRZCriticalSection();
 
 public:
+	virtual uint32_t Release();
 	virtual uint32_t Lock();
 	virtual uint32_t Unlock();
 	virtual uint32_t TryLock();
-	virtual bool IsValid();
-	virtual bool IsLocked();
+	virtual uint32_t IsValid();
+	virtual uint32_t IsLocked();
+
+public:
+	virtual ~cRZCriticalSection();
 
 protected:
-	virtual void GetCriticalSectionHandle(void* handleOut);
+	virtual uint32_t GetCriticalSectionHandle(void* handleOut);
 
 private:
-	CriticalSectionPlatformData* data;
+	CriticalSectionPlatformData* mPlatformData;
 };
 
 class cRZCriticalSectionHolder
