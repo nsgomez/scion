@@ -29,7 +29,7 @@ public:
 	cRZString(std::string const& src, uint32_t pos = 0, uint32_t count = -1);
 	cRZString(cIGZString const& src);
 	cRZString(cIGZString const* src);
-	virtual ~cRZString();
+	virtual ~cRZString() { }
 
 public:
 	virtual bool QueryInterface(GZIID iid, void** outPtr);
@@ -40,7 +40,7 @@ public:
 	virtual void FromChar(char const* otherStr);
 	virtual void FromChar(char const* otherStr, uint32_t length);
 
-	virtual char const* ToChar() const;
+	virtual char const* ToChar() const { return c_str(); }
 	virtual char const* Data() const;
 	virtual uint32_t Strlen() const;
 
@@ -53,7 +53,7 @@ public:
 	int CompareTo(cRZString const& other) const;
 
 	virtual cIGZString& operator=(cIGZString const& other);
-	virtual cRZString& operator=(cRZString const& other);
+	cRZString& operator=(cRZString const& other);
 	virtual void Copy(cIGZString const& src);
 
 	virtual void Resize(uint32_t newLength);
@@ -112,5 +112,5 @@ public:
 	bool operator== (char const* other) const;
 
 protected:
-	uint32_t refCount;
+	uint32_t mRefCount;
 };

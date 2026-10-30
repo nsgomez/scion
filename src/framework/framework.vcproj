@@ -254,6 +254,9 @@
 			<File
 				RelativePath=".\src\RZStatics.cpp">
 			</File>
+			<File
+				RelativePath=".\src\RZStringUtil.cpp">
+			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
@@ -510,6 +513,9 @@
 			</File>
 			<File
 				RelativePath=".\include\RZStatics.h">
+			</File>
+			<File
+				RelativePath=".\include\RZStringUtil.h">
 			</File>
 			<File
 				RelativePath=".\include\SignalPlatformData.h">

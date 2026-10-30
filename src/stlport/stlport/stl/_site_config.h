@@ -87,7 +87,7 @@
  * Uncomment _STLP_USE_NEWALLOC to force allocator<T> to use plain "new"
  * instead of STLport optimized node allocator engine.
  */
-// #define   _STLP_USE_NEWALLOC   1
+#define   _STLP_USE_NEWALLOC   1
 
 /* 
  * Uncomment _STLP_USE_MALLOC to force allocator<T> to use plain "malloc" 
