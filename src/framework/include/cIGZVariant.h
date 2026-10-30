@@ -114,9 +114,7 @@ public:
 	DECL_VARIANT_RETURN_AS(Char, char);
 	DECL_VARIANT_RETURN_AS(RZUnicodeChar, wchar_t);
 	DECL_VARIANT_RETURN_AS(RZChar, char);
-
-	virtual void* AsVoidPtr() = 0;
-	virtual void* AsVoidPtr() const = 0;
+	DECL_VARIANT_RETURN_AS(VoidPtr, void*);
 
 	DECL_VARIANT_RETURN_AS_REF(Bool, bool);
 	DECL_VARIANT_RETURN_AS_REF(Uint8, uint8_t);
@@ -138,8 +136,6 @@ public:
 	virtual cIGZUnknown* RefIGZUnknown() const = 0;
 	virtual bool RefIGZUnknown(GZIID iid, void** out) = 0;
 	virtual void RefIGZUnknown(cIGZUnknown* src) = 0;
-
-	virtual ~cIGZVariant();
 };
 
 #undef DECL_VARIANT_RETURN_AS

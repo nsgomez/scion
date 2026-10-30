@@ -19,6 +19,8 @@
 #pragma once
 #include "cIGZVariant.h"
 
+class cRZString;
+
 #define DECL_VARIANT_TYPE(name, type) \
 	virtual bool GetVal ## name ## (type& dest) const; \
 	virtual type GetVal ## name ## () const; \
@@ -31,6 +33,9 @@
 #define DECL_VARIANT_RETURN_AS_REF(name, type) \
 	virtual type* Ref ## name ## () const; \
 	virtual void Ref ## name ## (type const* values, uint32_t count)
+
+// Avoid excessive padding in the variant union
+#pragma pack(push, 4)
 
 class cRZVariant : public cIGZVariant
 {
@@ -54,7 +59,7 @@ public:
 	cRZVariant(cIGZUnknown* value);
 	cRZVariant(void* src, uint32_t size, uint32_t tag);
 
-	virtual ~cRZVariant();
+	virtual ~cRZVariant() { Destroy(); }
 
 	cRZVariant& operator= (cIGZVariant const& other);
 
@@ -114,9 +119,7 @@ public:
 	DECL_VARIANT_RETURN_AS(Char, char);
 	DECL_VARIANT_RETURN_AS(RZUnicodeChar, wchar_t);
 	DECL_VARIANT_RETURN_AS(RZChar, char);
-
-	virtual void* AsVoidPtr();
-	virtual void* AsVoidPtr() const;
+	DECL_VARIANT_RETURN_AS(VoidPtr, void*);
 
 	DECL_VARIANT_RETURN_AS_REF(Bool, bool);
 	DECL_VARIANT_RETURN_AS_REF(Uint8, uint8_t);
@@ -163,12 +166,14 @@ protected:
 		char RZChar;
 		void* VoidPtr;
 		cIGZUnknown* IGZUnknown;
-	} data;
+	} mData;
 
-	uint16_t refCount;
-	uint16_t typeTag;
-	uint32_t arrayCount;
+	uint16_t mRefCount;
+	uint16_t mTypeTag;
+	uint32_t mArrayCount;
 };
+
+#pragma pack(pop)
 
 #undef DECL_VARIANT_RETURN_AS
 #undef DECL_VARIANT_RETURN_AS_REF
