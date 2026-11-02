@@ -22,44 +22,6 @@
 #include "cRZString.h"
 #include "RZStringUtil.h"
 
-cRZString::cRZString() :
-	std::string(),
-	mRefCount(0)
-{
-}
-
-cRZString::cRZString(const char* src) :
-	std::string(src),
-	mRefCount(0)
-{
-}
-
-cRZString::cRZString(const char* src, uint32_t len) :
-	std::string(src, len),
-	mRefCount(0)
-{
-}
-
-cRZString::cRZString(std::string const& src, uint32_t pos, uint32_t count) :
-	std::string(src, pos, count),
-	mRefCount(0)
-{
-}
-
-cRZString::cRZString(cIGZString const& src) :
-	std::string(src.Data(), src.Strlen()),
-	mRefCount(0)
-{
-}
-
-cRZString::cRZString(cIGZString const* src)
-{
-	if (src != NULL)
-	{
-		assign(src->Data());
-	}
-}
-
 bool cRZString::QueryInterface(GZIID iid, void** outPtr)
 {
 	switch (iid)
@@ -259,12 +221,6 @@ int cRZString::CompareTo(cRZString const& other) const
 cIGZString& cRZString::operator=(cIGZString const& other)
 {
 	Copy(other);
-	return *this;
-}
-
-cRZString& cRZString::operator=(cRZString const& other)
-{
-	assign(other);
 	return *this;
 }
 

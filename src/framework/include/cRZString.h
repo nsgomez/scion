@@ -23,12 +23,48 @@
 class cRZString : public std::string, public cIGZString
 {
 public:
-	cRZString();
-	cRZString(const char* src);
-	cRZString(const char* src, uint32_t len);
-	cRZString(std::string const& src, uint32_t pos = 0, uint32_t count = -1);
-	cRZString(cIGZString const& src);
-	cRZString(cIGZString const* src);
+	cRZString() :
+		std::string(),
+		mRefCount(0)
+	{
+	}
+
+	cRZString(const char* src) :
+		std::string(src),
+		mRefCount(0)
+	{
+	}
+
+	cRZString(const char* src, uint32_t len) :
+		std::string(src),
+		mRefCount(0)
+	{
+	}
+
+	cRZString(std::string const& src, uint32_t pos = 0, uint32_t count = -1) :
+		std::string(src, pos, count),
+		mRefCount(0)
+	{
+	}
+
+	cRZString(cIGZString const& src) :
+		std::string(src.Data(), src.Strlen()),
+		mRefCount(0)
+	{
+	}
+
+	cRZString(cIGZString const* src) :
+		std::string(src->Data(), src->Strlen()),
+		mRefCount(0)
+	{
+	}
+
+	cRZString(char c, uint32_t count) :
+		std::string(count, c),
+		mRefCount(0)
+	{
+	}
+
 	virtual ~cRZString() { }
 
 public:
@@ -53,7 +89,12 @@ public:
 	int CompareTo(cRZString const& other) const;
 
 	virtual cIGZString& operator=(cIGZString const& other);
-	cRZString& operator=(cRZString const& other);
+	cRZString& operator=(cRZString const& other)
+	{
+		std::string::operator=(other);
+		return *this;
+	}
+
 	virtual void Copy(cIGZString const& src);
 
 	virtual void Resize(uint32_t newLength);
