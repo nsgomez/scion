@@ -319,6 +319,12 @@
 				RelativePath=".\src\cRZTime.cpp">
 			</File>
 			<File
+				RelativePath=".\src\cRZTimer.cpp">
+			</File>
+			<File
+				RelativePath=".\src\cRZTimerConstants.cpp">
+			</File>
+			<File
 				RelativePath=".\src\cRZUnknown.cpp">
 			</File>
 			<File
@@ -727,6 +733,12 @@
 			</File>
 			<File
 				RelativePath=".\include\cRZTime.h">
+			</File>
+			<File
+				RelativePath=".\include\cRZTimer.h">
+			</File>
+			<File
+				RelativePath=".\include\cRZTimerConstants.h">
 			</File>
 			<File
 				RelativePath=".\include\cRZUnknown.h">
