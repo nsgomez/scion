@@ -20,33 +20,33 @@
 
 uint32_t cRZRefCount::Release()
 {
-	if (refCount < 2)
+	if (mRefCount > 1)
 	{
-		delete this;
-		return 0;
+		return --mRefCount;
 	}
 	else
 	{
-		return --refCount;
+		delete this;
+		return 0;
 	}
 }
 
 uint32_t cRZRefCount::AddRef()
 {
-	return ++refCount;
+	return ++mRefCount;
 }
 
 uint32_t cRZRefCount::RemoveRef()
 {
-	if (refCount != 0)
+	if (mRefCount > 0)
 	{
-		return --refCount;
+		mRefCount--;
 	}
 
-	return 0;
+	return mRefCount;
 }
 
 uint32_t cRZRefCount::RefCount()
 {
-	return refCount;
+	return mRefCount;
 }

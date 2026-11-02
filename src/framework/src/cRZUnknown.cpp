@@ -18,6 +18,11 @@
 
 #include "cRZUnknown.h"
 
+cRZUnknown::cRZUnknown(void) :
+	mRefCount(0)
+{
+}
+
 bool cRZUnknown::QueryInterface(GZIID iid, void** outPtr)
 {
 	if (iid == GZIID_cIGZUnknown)
@@ -34,31 +39,35 @@ bool cRZUnknown::QueryInterface(GZIID iid, void** outPtr)
 
 uint32_t cRZUnknown::AddRef(void)
 {
-	return ++refCount;
+	return ++mRefCount;
 }
 
 uint32_t cRZUnknown::Release(void)
 {
-	assert(refCount > 0);
-	if (refCount > 0)
+	if (mRefCount > 1)
 	{
-		--refCount;
+		return --mRefCount;
 	}
 
-	return refCount;
+	delete this;
+	return 0;
+}
+
+cRZUnknown::~cRZUnknown(void)
+{
 }
 
 uint32_t cRZUnknown::RemoveRef(void)
 {
-	if (refCount != 0)
+	if (mRefCount > 0)
 	{
-		return --refCount;
+		--mRefCount;
 	}
 
-	return 0;
+	return mRefCount;
 }
 
 uint32_t cRZUnknown::RefCount(void) const
 {
-	return refCount;
+	return mRefCount;
 }

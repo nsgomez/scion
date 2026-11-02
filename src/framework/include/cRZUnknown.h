@@ -16,13 +16,12 @@
  *  License along with this library; if not, see <https://www.gnu.org/licenses/>.
  */
 
-#include <cassert>
 #include "cIGZUnknown.h"
 
 class cRZUnknown : public cIGZUnknown
 {
 public:
-	cRZUnknown() : refCount(0) { }
+	cRZUnknown(void);
 
 public:
 	virtual bool QueryInterface(GZIID iid, void** outPtr);
@@ -30,12 +29,12 @@ public:
 	virtual uint32_t Release(void);
 
 public:
-	virtual ~cRZUnknown() { }
+	virtual ~cRZUnknown(void);
 
 public:
 	virtual uint32_t RemoveRef(void);
 	virtual uint32_t RefCount(void) const;
 
 protected:
-	uint32_t refCount;
+	uint32_t mRefCount;
 };

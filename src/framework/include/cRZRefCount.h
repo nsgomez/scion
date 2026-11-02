@@ -22,7 +22,7 @@
 class cRZRefCount
 {
 public:
-	cRZRefCount() { }
+	cRZRefCount() : mRefCount(0) { }
 	virtual ~cRZRefCount() { }
 
 	virtual uint32_t Release();
@@ -31,5 +31,5 @@ public:
 	virtual uint32_t RefCount();
 
 protected:
-	uint32_t refCount;
+	uint32_t mRefCount;
 };
