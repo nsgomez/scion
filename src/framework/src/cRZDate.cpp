@@ -21,6 +21,7 @@
 #include "cGZDate.h"
 #include "cRZDate.h"
 #include "cRZString.h"
+#include "cRZTime.h"
 
 cRZDate cRZDate::mRefDate = cRZDate(0, 0);
 cRZDate cRZDate::MaxDate = cRZDate(49709, 0);
@@ -30,51 +31,22 @@ cRZDate::cRZDate()
 	time_t currentTimestamp = time(NULL);
 	struct tm* localTime = localtime(&currentTimestamp);
 
-	dateCode = Jday(localTime->tm_mon + 1, localTime->tm_mday, localTime->tm_year + 1900);
+	mDateCode = Jday(localTime->tm_mon + 1, localTime->tm_mday, localTime->tm_year + 1900);
 }
 
 cRZDate::cRZDate(cIGZDate const& date) :
-	dateCode(date.DayNumber())
+	mDateCode(date.DayNumber())
 {
 }
 
 cRZDate::cRZDate(cGZDate const& date) :
-	dateCode(date.DayNumber())
+	mDateCode(date.DayNumber())
 {
-}
-
-cRZDate::cRZDate(cRZDate const& date) :
-	dateCode(date.dateCode)
-{
-}
-
-cRZDate::cRZDate(uint32_t dayNumber) :
-	dateCode(dayNumber)
-{
-}
-
-cRZDate::cRZDate(uint32_t day, uint32_t year)
-{
-	static const uint32_t kStartOfYear1901 = 2415386;
-
-	if (year == 0)
-	{
-		dateCode = kStartOfYear1901 + day;
-	}
-	else
-	{
-		dateCode = Jday(12, 31, year - 1) + day;
-	}
 }
 
 cRZDate::cRZDate(uint32_t month, uint32_t day, uint32_t year)
 {
-	dateCode = Jday(month, day, year);
-}
-
-uint32_t cRZDate::DateCode(void) const
-{
-	return dateCode;
+	mDateCode = Jday(month, day, year);
 }
 
 uint32_t cRZDate::DayOfMonth(void) const
@@ -86,39 +58,25 @@ uint32_t cRZDate::DayOfMonth(void) const
 
 uint32_t cRZDate::DayOfYear(void) const
 {
-	uint32_t month, day, year;
-	uint32_t date = dateCode;
-
-	Mdy(month, day, year);
-	uint32_t endOfPrevYear = Jday(12, 31, year - 1);
-
-	return date - endOfPrevYear;
+	return mDateCode - Jday(12, 31, Year() - 1);
 }
 
 uint32_t cRZDate::FirstDayOfMonth(uint32_t month) const
 {
-	static uint32_t kFirstDayOfEachMonth[] =
+	static const uint32_t kFirstDayOfEachMonth[] =
 	{
 		-1, 1, 32, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335,
 	};
 
-	uint32_t result = 0;
-	if (month < 13 && month != 0 && (result = kFirstDayOfEachMonth[month]) && month > 2)
+	if (!MonthIsValid(month))
 	{
-		uint32_t month, day, year;
-		Mdy(month, day, year);
+		return 0;
+	}
 
-		bool notLeapYear;
-		if (year % 4 == 0 && year != ((year / 100) * 100))
-		{
-			notLeapYear = false;
-		}
-		else
-		{
-			notLeapYear = (year != ((year / 400) * 400));
-		}
-
-		result += !notLeapYear;
+	uint32_t result = kFirstDayOfEachMonth[month];
+	if (month > 2 && IsLeapYear(Year()))
+	{
+		result++;
 	}
 
 	return result;
@@ -126,19 +84,29 @@ uint32_t cRZDate::FirstDayOfMonth(uint32_t month) const
 
 void cRZDate::Mdy(uint32_t& month, uint32_t& day, uint32_t& year) const
 {
-	uint32_t x, y, z;
-	x = (dateCode * 4 - 6884477) / 146097;
-	year = x;
+	// Convert our Julian date code to a Gregorian month/day/year format
+	// See "algorithm 199" by Robert G. Tantzen in ACM Communications, Vol. 6., Issue 8
 
-	x = (-146097 * x) + 6884477 + ((dateCode * 4) + 3);
-	z = x / 1461;
-	y = (z * -1461) + 4 + (x / 4);
-	x = ((y * 5) - 3) / 153;
+	// 
+	const uint32_t kDaysFromJulianToGregorianBase = 1721119;
+	uint32_t gregorianDateCode = mDateCode - kDaysFromJulianToGregorianBase;
 
-	month = x;
-	day = ((x * -153) + 2 + (y * 5)) / 5;
-	year = year * 100 + z;
-	
+	const uint32_t kDaysInGregorianCycle = 146097;
+	year = ((gregorianDateCode * 4) - 1) / kDaysInGregorianCycle;
+
+	const uint32_t kDaysPerShortLeapCycle = (365 * 4) + 1;
+
+	uint32_t x = ((((gregorianDateCode * 4) - 1) - (year * kDaysInGregorianCycle)) / 4) * 4;
+	uint32_t y = (x + 3) / kDaysPerShortLeapCycle;
+	uint32_t z = ((x - (y * kDaysPerShortLeapCycle)) + 7) / 4;
+
+	const uint32_t kDaysPerFiveMonths = 153;
+	uint32_t m = ((z * 5) - 3) / kDaysPerFiveMonths;
+
+	month = m;
+	day = ((z * 5) - (m * kDaysPerFiveMonths) + 2) / 5;
+	year = year * 100 + y;
+
 	if (month < 10)
 	{
 		month += 3;
@@ -164,11 +132,27 @@ uint32_t cRZDate::Year(void) const
 	return year;
 }
 
+void cRZDate::Set(uint32_t month, uint32_t day, uint32_t year)
+{
+	mDateCode = Jday(month, day, year);
+}
+
+void cRZDate::Set(uint32_t day, uint32_t year)
+{
+	if (year != 0)
+	{
+		mDateCode = Jday(12, 31, year - 1) + day;
+	}
+	else
+	{
+		mDateCode = kStartOfYear1901 + day;
+	}
+}
+
 void cRZDate::Set(char const* monthAbbr, uint32_t day, uint32_t year)
 {
 	static char const* kMonthAbbrs[] =
 	{
-		NULL,
 		"Jan", "Feb", "Mar", "Apr", "May", "Jun",
 		"Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
 	};
@@ -176,73 +160,102 @@ void cRZDate::Set(char const* monthAbbr, uint32_t day, uint32_t year)
 	uint32_t i = 1;
 	uint32_t month = 1;
 
-	do
+	for (int i = 0; i < 12; i++)
 	{
 		if (strnicmp(kMonthAbbrs[i], monthAbbr, 3) == 0)
 		{
-			month = i;
+			month = i + 1;
 		}
 	}
-	while (++i != 13);
 
-	dateCode = Jday(month, day, year);
+	mDateCode = Jday(month, day, year);
 }
 
-void cRZDate::Set(uint32_t month, uint32_t day, uint32_t year)
+void cRZDate::Set(cRZTime const& time)
 {
-	dateCode = Jday(month, day, year);
-}
-
-void cRZDate::Set(uint32_t newDateCode)
-{
-	dateCode = newDateCode;
-}
-
-bool cRZDate::DayWithinMonth(uint32_t month, uint32_t day, uint32_t year)
-{
-	static const uint32_t kDaysInMonth[] =
+	uint32_t newDateCode = 0;
+	if (time.Timestamp() > 0)
 	{
-		31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31,
-	};
-
-	bool result = false;
-	if (day != 0 && month < 13 && month != 0)
-	{
-		bool isLeapYear = false;
-		if (year % 4 == 0 && year != ((year / 100) * 100))
-		{
-			isLeapYear = true;
-		}
-		else
-		{
-			isLeapYear = (year == ((year / 400) * 400));
-		}
-
-		result = (day <= ((month == 2 && isLeapYear) + (uint8_t)kDaysInMonth[month]));
+		newDateCode = (time.GMT() / 86400) + kStartOfYear1901;
 	}
 
-	return result;
+	mDateCode = newDateCode;
 }
 
-uint32_t cRZDate::Jday(uint32_t month, uint32_t day, uint32_t year)
+bool cRZDate::Between(cRZDate const& left, cRZDate const& right) const
 {
-	uint32_t dateCode = 0;
-	if (DayWithinMonth(month, day, year))
+	if (left.DateCode() <= right.DateCode())
 	{
-		if (month < 3)
+		if (mDateCode >= left.DateCode() && mDateCode <= right.DateCode())
 		{
-			dateCode = month + 9;
-			year = year - 1;
+			return true;
 		}
-		else
+	}
+	else
+	{
+		if (mDateCode >= right.DateCode() && mDateCode <= left.DateCode())
 		{
-			dateCode = month - 3;
+			return true;
 		}
-
-		dateCode = (((year % 100) * 1461) / 4) + 1721119 + day + ((dateCode * 153) + 2) / 5 + (((year / 100) * 146097) / 4);
 	}
 
-	return dateCode;
+	return false;
+}
+
+int32_t cRZDate::CompareTo(cRZDate const& other) const
+{
+	if (mDateCode < other.DateCode())
+	{
+		return -1;
+	}
+	else if (mDateCode > other.DateCode())
+	{
+		return 1;
+	}
+	else
+	{
+		return 0;
+	}
+}
+
+cRZDate cRZDate::Max(cRZDate const& other) const
+{
+	cRZDate const* max = this;
+	if (other.DateCode() > mDateCode)
+	{
+		max = &other;
+	}
+
+	return *max;
+}
+
+cRZDate cRZDate::Min(cRZDate const& other) const
+{
+	cRZDate const* max = this;
+	if (other.DateCode() < mDateCode)
+	{
+		max = &other;
+	}
+
+	return *max;
+}
+
+cRZDate cRZDate::Previous(uint32_t dayOfWeek) const
+{
+	uint32_t target = dayOfWeek - 1;
+	uint32_t current = WeekDay() - 1;
+	uint32_t code = mDateCode;
+
+	if (target > current)
+	{
+		current = current + (7 - target);
+	}
+	else
+	{
+		current = current - target;
+	}
+
+	return cRZDate(code - current);
 }
 
 void cRZDate::NameOfDayString(cRZString& out, uint32_t format) const
@@ -257,7 +270,6 @@ void cRZDate::NameOfMonthString(cRZString& out, uint32_t format) const
 
 void cRZDate::DateString(cRZString& out, uint32_t format) const
 {
-	uint32_t month, day, year;
 	if (format == 0)
 	{
 		format = 1;
@@ -268,46 +280,39 @@ void cRZDate::DateString(cRZString& out, uint32_t format) const
 	case -1:
 	case 0:
 	case 1:
-		Mdy(month, day, year);
-		out.Sprintf("%u/%u/%4u", month, day, year);
+		out.Sprintf("%u/%u/%4u", Month(), DayOfMonth(), Year());
 		break;
 
 	case 2:
 	case 5:
 	case 6:
 	case 13:
-		Mdy(month, day, year);
-		out.Sprintf("%u/%u/%4u", day, month, year);
+		out.Sprintf("%u/%u/%4u", DayOfMonth(), Month(), Year());
 		break;
 
 	case 3:
 	case 4:
 	case 10:
 	case 11:
-		Mdy(month, day, year);
-		out.Sprintf("%u.%u.%4u", day, month, year);
+		out.Sprintf("%u.%u.%4u", DayOfMonth(), Month(), Year());
 		break;
 
 	case 7:
 	case 8:
 	case 14:
-		Mdy(month, day, year);
-		out.Sprintf("%u-%u-%4u", day, month, year);
+		out.Sprintf("%u-%u-%4u", DayOfMonth(), Month(), Year());
 		break;
 
 	case 9:
-		Mdy(month, day, year);
-		out.Sprintf("%4u.%u.%u", year, month, day);
+		out.Sprintf("%4u.%u.%u", Year(), Month(), DayOfMonth());
 		break;
 
 	case 15:
-		Mdy(month, day, year);
-		out.Sprintf("%4u/%u/%u", year, month, day);
+		out.Sprintf("%4u/%u/%u", Year(), Month(), DayOfMonth());
 		break;
 
 	default:
-		Mdy(month, day, year);
-		out.Sprintf("%u/%u/%4u", day, month, year);
+		out.Sprintf("%u/%u/%4u", DayOfMonth(), Month(), Year());
 		break;
 	}
 }

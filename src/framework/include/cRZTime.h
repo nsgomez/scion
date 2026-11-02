@@ -26,8 +26,9 @@ public:
 	cRZTime(uint32_t unixTime);
 
 public:
-	uint32_t Timestamp() const;
+	uint32_t Timestamp() const { return mTimestamp; }
+	uint32_t GMT() const;
 
 protected:
-	uint32_t timestamp;
+	uint32_t mTimestamp;
 };

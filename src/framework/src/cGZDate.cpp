@@ -35,7 +35,7 @@ cGZDate::cGZDate(cGZDate const& date) :
 }
 
 cGZDate::cGZDate(cRZDate const& date) :
-	cRZDate(date.dateCode)
+	cRZDate(date.mDateCode)
 {
 }
 
@@ -46,10 +46,6 @@ cGZDate::cGZDate(uint32_t month, uint32_t day, uint32_t year) :
 
 cGZDate::cGZDate(uint32_t dayNumber) :
 	cRZDate(dayNumber)
-{
-}
-
-cGZDate::~cGZDate()
 {
 }
 
@@ -73,62 +69,20 @@ bool cGZDate::QueryInterface(GZIID iid, void** outPtr)
 
 uint32_t cGZDate::AddRef(void)
 {
-	return ++refCount;
+	return ++mRefCount;
 }
 
 uint32_t cGZDate::Release(void)
 {
-	if (refCount < 2)
+	if (mRefCount < 2)
 	{
 		delete this;
 		return 0;
 	}
 	else
 	{
-		return --refCount;
+		return --mRefCount;
 	}
-}
-
-void cGZDate::Set(uint32_t day, uint32_t year)
-{
-	static const uint32_t kStartOfYear1901 = 2415386;
-
-	if (year == 0)
-	{
-		dateCode = kStartOfYear1901 + day;
-	}
-	else
-	{
-		dateCode = cRZDate::Jday(12, 31, year - 1) + day;
-	}
-}
-
-void cGZDate::Set(uint32_t month, uint32_t day, uint32_t year)
-{
-	dateCode = cRZDate::Jday(month, day, year);
-}
-
-void cGZDate::Set(cRZTime const& time)
-{
-	uint32_t timestamp = time.Timestamp();
-	uint32_t julianDate = 0;
-
-	if (timestamp != 0)
-	{
-		julianDate = ((timestamp * -1037155065) / 86400) + 2415386;
-	}
-
-	dateCode = julianDate;
-}
-
-void cGZDate::Set(uint32_t dateCode)
-{
-	this->dateCode = dateCode;
-}
-
-void cGZDate::Set(char const* monthAbbr, uint32_t day, uint32_t year)
-{
-	cRZDate::Set(monthAbbr, day, year);
 }
 
 void cGZDate::Copy(cIGZDate const& src)
@@ -140,63 +94,18 @@ void cGZDate::Clone(cIGZDate** out)
 {
 	cGZDate* newDate = new cGZDate(*this);
 	*out = newDate;
-	newDate->refCount = 1;
+	newDate->mRefCount = 1;
 }
 
-bool cGZDate::Between(cIGZDate const& lower, cIGZDate const& upper) const
+uint32_t cGZDate::Between(cIGZDate const& left, cIGZDate const& right) const
 {
-	uint32_t min = lower.DayNumber();
-	uint32_t max = upper.DayNumber();
-
-	if (max < min)
-	{
-		uint32_t tmp = min;
-		min = max;
-		max = tmp;
-	}
-
-	return min <= dateCode && dateCode <= max;
+	return cRZDate::Between(left, right);
 }
 
-int cGZDate::CompareTo(cIGZDate const& other) const
+int32_t cGZDate::CompareTo(cIGZDate const& other) const
 {
-	uint32_t otherCode = other.DayNumber();
-	if (otherCode < dateCode)
-	{
-		return -1;
-	}
-	else if (otherCode == dateCode)
-	{
-		return 0;
-	}
-	else
-	{
-		return 1;
-	}
-}
-
-uint32_t cGZDate::WeekDay() const
-{
-	return ((((dateCode + 1) % 7) + 6) % 7) + 1;
-}
-
-uint32_t cGZDate::Year() const
-{
-	uint32_t month, day, year;
-	Mdy(month, day, year);
-	return year;
-}
-
-uint32_t cGZDate::DayOfYear() const
-{
-	return cRZDate::DayOfYear();
-}
-
-uint32_t cGZDate::DayOfMonth() const
-{
-	uint32_t month, day, year;
-	Mdy(month, day, year);
-	return day;
+	cRZDate otherDate(other);
+	return cRZDate::CompareTo(otherDate);
 }
 
 uint32_t cGZDate::FirstDayOfMonth() const
@@ -206,42 +115,27 @@ uint32_t cGZDate::FirstDayOfMonth() const
 	return cRZDate::FirstDayOfMonth(month);
 }
 
-uint32_t cGZDate::FirstDayOfMonth(uint32_t month) const
-{
-	return cRZDate::FirstDayOfMonth(month);
-}
-
 uint32_t cGZDate::Hash() const
 {
-	return dateCode;
+	return mDateCode;
 }
 	
 bool cGZDate::IsValid() const
 {
-	return dateCode != 0;
+	return mDateCode != 0;
 }
 
-bool cGZDate::Leap() const
+uint32_t cGZDate::Leap() const
 {
-	uint32_t month, day, year;
-	Mdy(month, day, year);
-
-	if (year % 4 == 0 && year != ((year / 100) * 100))
-	{
-		return true;
-	}
-	else
-	{
-		return year == ((year / 400) * 400);
-	}
+	return cRZDate::IsLeapYear(Year());
 }
 
 void cGZDate::MaxDate(cIGZDate const& other, cIGZDate& result) const
 {
 	uint32_t maxDateCode = other.DayNumber();
-	if (maxDateCode <= dateCode)
+	if (maxDateCode <= mDateCode)
 	{
-		maxDateCode = dateCode;
+		maxDateCode = mDateCode;
 	}
 
 	cGZDate maxDate(maxDateCode);
@@ -251,25 +145,18 @@ void cGZDate::MaxDate(cIGZDate const& other, cIGZDate& result) const
 void cGZDate::MinDate(cIGZDate const& other, cIGZDate& result) const
 {
 	uint32_t minDateCode = other.DayNumber();
-	if (dateCode <= minDateCode)
+	if (mDateCode <= minDateCode)
 	{
-		minDateCode = dateCode;
+		minDateCode = mDateCode;
 	}
 
 	cGZDate minDate(minDateCode);
 	result.Copy(minDate);
 }
 
-uint32_t cGZDate::Month() const
-{
-	uint32_t month, day, year;
-	Mdy(month, day, year);
-	return month;
-}
-
 void cGZDate::Previous(uint32_t dayOfWeek, cIGZDate& result) const
 {
-	uint32_t currentDayOfWeek = (((dateCode + 1) % 7) + 6) % 7;
+	uint32_t currentDayOfWeek = (((mDateCode + 1) % 7) + 6) % 7;
 	int32_t offset = -(dayOfWeek - 1);
 
 	if (currentDayOfWeek < dayOfWeek - 1)
@@ -277,7 +164,7 @@ void cGZDate::Previous(uint32_t dayOfWeek, cIGZDate& result) const
 		offset = 8 - dayOfWeek;
 	}
 
-	result.Copy(cGZDate(this->dateCode - (currentDayOfWeek + offset)));
+	result.Copy(cGZDate(this->mDateCode - (currentDayOfWeek + offset)));
 }
 
 uint32_t cGZDate::YearLastTwoDigits() const
@@ -289,90 +176,90 @@ uint32_t cGZDate::YearLastTwoDigits() const
 
 uint32_t cGZDate::DayNumber() const
 {
-	return dateCode;
+	return mDateCode;
 }
 
 bool cGZDate::operator<  (cIGZDate const& other) const
 {
-	return dateCode < other.DayNumber();
+	return mDateCode < other.DayNumber();
 }
 
 bool cGZDate::operator<= (cIGZDate const& other) const
 {
-	return dateCode <= other.DayNumber();
+	return mDateCode <= other.DayNumber();
 }
 
 bool cGZDate::operator>  (cIGZDate const& other) const
 {
-	return dateCode > other.DayNumber();
+	return mDateCode > other.DayNumber();
 }
 
 bool cGZDate::operator>= (cIGZDate const& other) const
 {
-	return dateCode >= other.DayNumber();
+	return mDateCode >= other.DayNumber();
 }
 
 bool cGZDate::operator== (cIGZDate const& other) const
 {
-	return dateCode == other.DayNumber();
+	return mDateCode == other.DayNumber();
 }
 
 bool cGZDate::operator!= (cIGZDate const& other) const
 {
-	return dateCode != other.DayNumber();
+	return mDateCode != other.DayNumber();
 }
 
 int32_t cGZDate::operator- (cIGZDate const& other) const
 {
-	return dateCode - other.DayNumber();
+	return mDateCode - other.DayNumber();
 }
 
 int32_t cGZDate::operator+ (cIGZDate const& other) const
 {
-	return dateCode + other.DayNumber();
+	return mDateCode + other.DayNumber();
 }
 
 int32_t cGZDate::operator- (int32_t days) const
 {
-	return dateCode - days;
+	return mDateCode - days;
 }
 
 int32_t cGZDate::operator+ (int32_t days) const
 {
-	return dateCode + days;
+	return mDateCode + days;
 }
 
 cIGZDate& cGZDate::operator++ ()
 {
-	++dateCode;
+	++mDateCode;
 	return *this;
 }
 
 cIGZDate& cGZDate::operator-- ()
 {
-	--dateCode;
+	--mDateCode;
 	return *this;
 }
 
 cGZDate cGZDate::operator++ (int)
 {
-	return cGZDate(dateCode + 1);
+	return cGZDate(mDateCode + 1);
 }
 
 cGZDate cGZDate::operator-- (int)
 {
-	return cGZDate(dateCode - 1);
+	return cGZDate(mDateCode - 1);
 }
 
 cIGZDate& cGZDate::operator+= (int32_t days)
 {
-	dateCode += days;
+	mDateCode += days;
 	return *this;
 }
 
 cIGZDate& cGZDate::operator-= (int32_t days)
 {
-	dateCode -= days;
+	mDateCode -= days;
 	return *this;
 }
 
@@ -383,14 +270,14 @@ void cGZDate::DateString(cIGZString& out, uint32_t format) const
 	out.Copy(tmp);
 }
 
-bool cGZDate::DayWithinMonth(uint32_t month, uint32_t day, uint32_t year)
+uint32_t cGZDate::DayWithinMonth(uint32_t month, uint32_t day, uint32_t year)
 {
 	return cRZDate::DayWithinMonth(month, day, year);
 }
 
 uint32_t cGZDate::DaysInYear(uint32_t year)
 {
-	return 365 + LeapYear(year);
+	return cRZDate::DaysInYear(year);
 }
 
 uint32_t cGZDate::Jday(uint32_t month, uint32_t day, uint32_t year)
@@ -398,14 +285,7 @@ uint32_t cGZDate::Jday(uint32_t month, uint32_t day, uint32_t year)
 	return cRZDate::Jday(month, day, year);
 }
 
-bool cGZDate::LeapYear(uint32_t year)
+uint32_t cGZDate::LeapYear(uint32_t year)
 {
-	if (year % 4 == 0 && year != ((year / 100) * 100))
-	{
-		return true;
-	}
-	else
-	{
-		return (year == ((year / 400) * 400));
-	}
+	return cRZDate::IsLeapYear(year);
 }

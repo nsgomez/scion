@@ -30,36 +30,40 @@ public:
 	cGZDate(cRZDate const& date);
 	cGZDate(uint32_t month, uint32_t day, uint32_t year);
 	cGZDate(uint32_t dateCode);
-	virtual ~cGZDate();
+	virtual ~cGZDate() { }
 
 public:
-	virtual void Set(uint32_t day, uint32_t year);
-	virtual void Set(uint32_t month, uint32_t day, uint32_t year);
-	virtual void Set(cRZTime const& time);
-	virtual void Set(uint32_t dateCode);
-	virtual void Set(char const* monthAbbr, uint32_t day, uint32_t year);
+	virtual cGZDate operator++ (int); // post-increment
+	virtual cGZDate operator-- (int); // post-increment
+
+public:
+	virtual void Set(uint32_t day, uint32_t year) { cRZDate::Set(day, year); }
+	virtual void Set(uint32_t month, uint32_t day, uint32_t year) { cRZDate::Set(month, day, year); }
+	virtual void Set(cRZTime const& time) { cRZDate::Set(time); }
+	virtual void Set(uint32_t dateCode) { cRZDate::Set(dateCode); }
+	virtual void Set(char const* monthAbbr, uint32_t day, uint32_t year) { cRZDate::Set(monthAbbr, day, year); }
 
 	virtual void Copy(cIGZDate const& src);
 	virtual void Clone(cIGZDate** out);
 
-	virtual bool Between(cIGZDate const& lower, cIGZDate const& upper) const;
+	virtual uint32_t Between(cIGZDate const& lower, cIGZDate const& upper) const;
 	virtual int CompareTo(cIGZDate const& other) const;
 
-	virtual uint32_t WeekDay() const;
-	virtual uint32_t Year() const;
-	virtual uint32_t DayOfYear() const;
-	virtual uint32_t DayOfMonth() const;
+	virtual uint32_t WeekDay() const { return cRZDate::WeekDay(); }
+	virtual uint32_t Year() const { return cRZDate::Year(); }
+	virtual uint32_t DayOfYear() const { return cRZDate::DayOfYear(); }
+	virtual uint32_t DayOfMonth() const { return cRZDate::DayOfMonth(); }
 	virtual uint32_t FirstDayOfMonth() const;
-	virtual uint32_t FirstDayOfMonth(uint32_t month) const;
+	virtual uint32_t FirstDayOfMonth(uint32_t month) const { return cRZDate::FirstDayOfMonth(month); }
 	virtual uint32_t Hash() const;
 	
 	virtual bool IsValid() const;
-	virtual bool Leap() const;
+	virtual uint32_t Leap() const;
 
 	virtual void MaxDate(cIGZDate const& other, cIGZDate& result) const;
 	virtual void MinDate(cIGZDate const& other, cIGZDate& result) const;
 
-	virtual uint32_t Month() const;
+	virtual uint32_t Month() const { return cRZDate::Month(); }
 
 	virtual void Previous(uint32_t dayOfWeek, cIGZDate& result) const;
 
@@ -75,26 +79,23 @@ public:
 	virtual bool operator!= (cIGZDate const& other) const;
 
 	virtual int32_t operator- (cIGZDate const& other) const;
-	virtual int32_t operator+ (cIGZDate const& other) const;
-
 	virtual int32_t operator- (int32_t days) const;
+
+	virtual int32_t operator+ (cIGZDate const& other) const;
 	virtual int32_t operator+ (int32_t days) const;
 
-	virtual cIGZDate& operator++ ();
-	virtual cIGZDate& operator-- ();
-
-	virtual cGZDate operator++ (int);
-	virtual cGZDate operator-- (int);
+	virtual cIGZDate& operator++ (); // pre-increment
+	virtual cIGZDate& operator-- (); // pre-increment
 
 	virtual cIGZDate& operator+= (int32_t days);
 	virtual cIGZDate& operator-= (int32_t days);
 
 public:
 	virtual void DateString(cIGZString& out, uint32_t format) const;
-	virtual bool DayWithinMonth(uint32_t month, uint32_t day, uint32_t year);
+	virtual uint32_t DayWithinMonth(uint32_t month, uint32_t day, uint32_t year);
 	virtual uint32_t DaysInYear(uint32_t year);
 	virtual uint32_t Jday(uint32_t month, uint32_t day, uint32_t year);
-	virtual bool LeapYear(uint32_t year);
+	virtual uint32_t LeapYear(uint32_t year);
 
 public:
 	virtual bool QueryInterface(GZIID iid, void** outPtr);
@@ -102,5 +103,5 @@ public:
 	virtual uint32_t Release(void);
 
 protected:
-	uint32_t refCount;
+	uint32_t mRefCount;
 };

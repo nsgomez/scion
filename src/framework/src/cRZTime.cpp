@@ -20,16 +20,17 @@
 #include "cRZTime.h"
 
 cRZTime::cRZTime() :
-	timestamp(time(NULL))
+	mTimestamp(time(NULL))
 {
 }
 
 cRZTime::cRZTime(uint32_t unixTime) :
-	timestamp(unixTime)
+	mTimestamp(unixTime)
 {
 }
 
-uint32_t cRZTime::Timestamp() const
+uint32_t cRZTime::GMT() const
 {
-	return timestamp;
+	// TODO
+	return mTimestamp;
 }

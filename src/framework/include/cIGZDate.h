@@ -36,7 +36,7 @@ public:
 	virtual void Copy(cIGZDate const& src) = 0;
 	virtual void Clone(cIGZDate** out) = 0;
 
-	virtual bool Between(cIGZDate const& lower, cIGZDate const& upper) const = 0;
+	virtual uint32_t Between(cIGZDate const& lower, cIGZDate const& upper) const = 0;
 	virtual int CompareTo(cIGZDate const& other) const = 0;
 
 	virtual uint32_t WeekDay() const = 0;
@@ -48,7 +48,7 @@ public:
 	virtual uint32_t Hash() const = 0;
 	
 	virtual bool IsValid() const = 0;
-	virtual bool Leap() const = 0;
+	virtual uint32_t Leap() const = 0;
 
 	virtual void MaxDate(cIGZDate const& other, cIGZDate& result) const = 0;
 	virtual void MinDate(cIGZDate const& other, cIGZDate& result) const = 0;
@@ -69,9 +69,9 @@ public:
 	virtual bool operator!= (cIGZDate const& other) const = 0;
 
 	virtual int32_t operator- (cIGZDate const& other) const = 0;
-	virtual int32_t operator+ (cIGZDate const& other) const = 0;
-
 	virtual int32_t operator- (int32_t days) const = 0;
+
+	virtual int32_t operator+ (cIGZDate const& other) const = 0;
 	virtual int32_t operator+ (int32_t days) const = 0;
 
 	virtual cIGZDate& operator++ () = 0;
@@ -82,8 +82,8 @@ public:
 
 public:
 	virtual void DateString(cIGZString& out, uint32_t format) const = 0;
-	virtual bool DayWithinMonth(uint32_t month, uint32_t day, uint32_t year) = 0;
+	virtual uint32_t DayWithinMonth(uint32_t month, uint32_t day, uint32_t year) = 0;
 	virtual uint32_t DaysInYear(uint32_t year) = 0;
 	virtual uint32_t Jday(uint32_t month, uint32_t day, uint32_t year) = 0;
-	virtual bool LeapYear(uint32_t year) = 0;
+	virtual uint32_t LeapYear(uint32_t year) = 0;
 };

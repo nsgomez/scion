@@ -22,6 +22,9 @@
 class cGZDate;
 class cIGZDate;
 class cRZString;
+class cRZTime;
+
+const uint32_t kStartOfYear1901 = 2415386;
 
 class cRZDate
 {
@@ -29,13 +32,26 @@ public:
 	cRZDate();
 	cRZDate(cIGZDate const& date);
 	cRZDate(cGZDate const& date);
-	cRZDate(cRZDate const& date);
-	cRZDate(uint32_t dayNumber);
-	cRZDate(uint32_t day, uint32_t year);
+
+	cRZDate(cRZDate const& date) :
+		mDateCode(date.mDateCode)
+	{
+	}
+
+	cRZDate(uint32_t dayNumber) :
+		mDateCode(dayNumber)
+	{
+	}
+
+	cRZDate(uint32_t day, uint32_t year)
+	{
+		Set(day, year);
+	}
+
 	cRZDate(uint32_t month, uint32_t day, uint32_t year);
 
 public:
-	uint32_t DateCode(void) const;
+	uint32_t DateCode(void) const { return mDateCode; }
 	uint32_t DayOfMonth(void) const;
 	uint32_t DayOfYear(void) const;
 	uint32_t FirstDayOfMonth(uint32_t month) const;
@@ -43,12 +59,24 @@ public:
 	uint32_t Month(void) const;
 	uint32_t Year(void) const;
 
-	void Set(char const* monthAbbr, uint32_t day, uint32_t year);
+	void Set(uint32_t dateCode) { mDateCode = dateCode; }
 	void Set(uint32_t month, uint32_t day, uint32_t year);
-	void Set(uint32_t newDateCode);
+	void Set(uint32_t day, uint32_t year);
+	void Set(char const* monthAbbr, uint32_t day, uint32_t year);
+	void Set(cRZTime const& time);
+
+	bool Between(cRZDate const& left, cRZDate const& right) const;
+	int32_t CompareTo(cRZDate const& other) const;
+	cRZDate Max(cRZDate const& other) const;
+	cRZDate Min(cRZDate const& other) const;
+	cRZDate Previous(uint32_t dayOfWeek) const;
+	uint32_t WeekDay() const;
 
 public:
-	static bool DayWithinMonth(uint32_t month, uint32_t day, uint32_t year);
+	static uint32_t MonthIsValid(uint32_t month);
+	static uint32_t IsLeapYear(uint32_t year);
+	static uint32_t DayWithinMonth(uint32_t month, uint32_t day, uint32_t year);
+	static uint32_t DaysInYear(uint32_t year);
 	static uint32_t Jday(uint32_t month, uint32_t day, uint32_t year);
 
 public:
@@ -61,6 +89,6 @@ public:
 	static cRZDate MaxDate;
 
 protected:
-	uint32_t dateCode;
+	uint32_t mDateCode;
 	friend class cGZDate;
 };

@@ -253,6 +253,9 @@
 				RelativePath=".\src\cRZDate.cpp">
 			</File>
 			<File
+				RelativePath=".\src\cRZDateUtil.cpp">
+			</File>
+			<File
 				RelativePath=".\src\cRZDirectory.cpp">
 			</File>
 			<File
