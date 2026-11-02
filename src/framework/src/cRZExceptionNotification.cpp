@@ -16,6 +16,8 @@
  *  License along with this library; if not, see <https://www.gnu.org/licenses/>.
  */
 
+#include <stdio.h>
+#include <Windows.h>
 #include "cRZExceptionNotification.h"
 
 cRZExceptionNotification::cRZExceptionNotification()
@@ -28,42 +30,55 @@ cRZExceptionNotification::~cRZExceptionNotification()
 
 bool cRZExceptionNotification::QueryInterface(GZIID iid, void** outPtr)
 {
-	if (iid == GZIID_cIGZUnknown)
-	{
-		*outPtr = static_cast<cIGZUnknown*>(this);
-		AddRef();
-		return true;
-	}
-	else if (iid = GZIID_cIGZExceptionNotification)
+	if (iid == GZIID_cIGZExceptionNotification)
 	{
 		*outPtr = static_cast<cIGZExceptionNotification*>(this);
-		AddRef();
-		return true;
+	}
+	else if (iid == GZIID_cIGZUnknown)
+	{
+		*outPtr = static_cast<cIGZUnknown*>(this);
+	}
+	else
+	{
+		return false;
 	}
 
+	AddRef();
 	return false;
 }
 
 uint32_t cRZExceptionNotification::AddRef()
 {
-	return ++refCount;
+	return ++mRefCount;
 }
 
 uint32_t cRZExceptionNotification::Release()
 {
-	if (refCount == 1)
+	if (mRefCount == 1)
 	{
 		delete this;
 		return 0;
 	}
 	else
 	{
-		return --refCount;
+		return --mRefCount;
 	}
 }
 
 bool cRZExceptionNotification::Notify(char const* exceptionText, int address)
 {
-	// TODO: This probably does actual work on W32
-	return true;
+	char message[200];
+	int length = sizeof(message);
+
+	__try {
+		_snprintf(message, length, "Module: %s\nLine: %d",
+			(exceptionText != NULL) ? exceptionText : "not specified",
+			address);
+		message[length - 1] = '\0';
+
+		return MessageBox(NULL, message, "Exception about to be thrown, accept?", MB_YESNO | MB_ICONEXCLAMATION) == IDYES;
+	}
+	__except (EXCEPTION_EXECUTE_HANDLER) {
+		return true;
+	}
 }

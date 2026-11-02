@@ -33,5 +33,5 @@ public:
 	virtual bool Notify(char const* exceptionText, int address);
 
 protected:
-	uint32_t refCount;
+	uint32_t mRefCount;
 };
