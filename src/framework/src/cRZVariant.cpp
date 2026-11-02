@@ -188,6 +188,12 @@ cRZVariant::cRZVariant(void* src, uint32_t size, uint32_t tag)
 	mTypeTag = ((uint16_t)tag | tagRZVariant::Void);
 }
 
+cRZVariant& cRZVariant::operator= (cIGZVariant const& other)
+{
+	// TODO
+	return *this;
+}
+
 bool cRZVariant::QueryInterface(GZIID iid, void** outPtr)
 {
 	switch (iid)

@@ -16,8 +16,6 @@
  *  License along with this library; if not, see <https://www.gnu.org/licenses/>.
  */
 
-#include <algorithm>
-#include <ctype.h>
 #include <vector>
 #include "cRZString.h"
 #include "RZStringUtil.h"

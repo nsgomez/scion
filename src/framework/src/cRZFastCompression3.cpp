@@ -16,7 +16,6 @@
  *  License along with this library; if not, see <https://www.gnu.org/licenses/>.
  */
 
-#include <algorithm>
 #include <cstdlib>
 #include "cRZFastCompression3.h"
 #include "cRZString.h"

@@ -16,8 +16,6 @@
  *  License along with this library; if not, see <https://www.gnu.org/licenses/>.
  */
 
-#include <cstddef>
-#include <cstdlib>
 #include "cRZCriticalSection.h"
 
 cRZCriticalSection::cRZCriticalSection() :

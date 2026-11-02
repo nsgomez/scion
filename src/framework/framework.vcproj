@@ -36,7 +36,8 @@
 			<Tool
 				Name="VCCustomBuildTool"/>
 			<Tool
-				Name="VCLinkerTool"/>
+				Name="VCLinkerTool"
+				AdditionalDependencies="..\stlport\lib\stlport_vc7_static.lib"/>
 			<Tool
 				Name="VCMIDLTool"/>
 			<Tool
@@ -68,9 +69,11 @@
 			WholeProgramOptimization="FALSE">
 			<Tool
 				Name="VCCLCompilerTool"
-				Optimization="1"
+				Optimization="2"
 				GlobalOptimizations="TRUE"
+				OmitFramePointers="TRUE"
 				OptimizeForProcessor="2"
+				OptimizeForWindowsApplication="TRUE"
 				AdditionalIncludeDirectories="..\include;..\stlport\stlport;.\include"
 				PreprocessorDefinitions="WIN32;NDEBUG"
 				StringPooling="TRUE"
@@ -84,7 +87,11 @@
 			<Tool
 				Name="VCCustomBuildTool"/>
 			<Tool
-				Name="VCLinkerTool"/>
+				Name="VCLinkerTool"
+				AdditionalDependencies="..\stlport\lib\stlport_vc7_static.lib"
+				GenerateDebugInformation="TRUE"
+				OptimizeReferences="2"
+				EnableCOMDATFolding="2"/>
 			<Tool
 				Name="VCMIDLTool"/>
 			<Tool

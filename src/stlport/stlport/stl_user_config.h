@@ -87,7 +87,7 @@
  *  on per-project basis.
  *
  */
-//#define _STLP_NO_CUSTOM_IO
+#define _STLP_NO_CUSTOM_IO
 
 
 /* 
@@ -166,7 +166,7 @@
  *  Define this macro to disable STLport extensions (for example, to make sure your code will 
  *  compile with some other implementation )
  */
-#define _STLP_NO_EXTENSIONS   1
+// #define _STLP_NO_EXTENSIONS   1
 
 
 /* 
