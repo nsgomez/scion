@@ -298,6 +298,9 @@
 				RelativePath=".\src\cRZRandom.cpp">
 			</File>
 			<File
+				RelativePath=".\src\cRZRandomSuper.cpp">
+			</File>
+			<File
 				RelativePath=".\src\cRZRefCount.cpp">
 			</File>
 			<File
@@ -709,6 +712,9 @@
 			</File>
 			<File
 				RelativePath=".\include\cRZRandom.h">
+			</File>
+			<File
+				RelativePath=".\include\cRZRandomSuper.h">
 			</File>
 			<File
 				RelativePath=".\include\cRZRefCount.h">

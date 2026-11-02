@@ -22,7 +22,12 @@
 class cRZRandom
 {
 public:
-	cRZRandom();
+	cRZRandom() :
+		mIntegerSeed(0),
+		mDoubleSeed(0)
+	{
+	}
+
 	cRZRandom(uint32_t startSeed);
 
 	void Seed(uint32_t newSeed);
@@ -40,8 +45,8 @@ public:
 	uint32_t RandomUint32Uniform();
 
 protected:
-	uint32_t integerSeed;
-	uint32_t doubleSeed;
-	bool hasSavedGaussianNoise;
-	double savedGaussianNoise;
+	uint32_t mIntegerSeed;
+	uint32_t mDoubleSeed;
+	bool mHasSavedGaussianNoise;
+	double mSavedGaussianNoise;
 };

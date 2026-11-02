@@ -20,16 +20,10 @@
 #include <ctime>
 #include "cRZRandom.h"
 
-cRZRandom::cRZRandom() :
-	integerSeed(0),
-	doubleSeed(0)
+cRZRandom::cRZRandom(uint32_t startSeed)
 {
-}
-
-cRZRandom::cRZRandom(uint32_t startSeed) :
-	integerSeed(startSeed),
-	doubleSeed(startSeed)
-{
+	Seed(startSeed);
+	mHasSavedGaussianNoise = false;
 }
 
 void cRZRandom::Seed(uint32_t newSeed)
@@ -42,8 +36,8 @@ void cRZRandom::Seed(uint32_t newSeed)
 		newSeed = (clockTime << 16 | clockTime) ^ wallTime;
 	}
 
-	integerSeed = newSeed;
-	doubleSeed = newSeed;
+	mIntegerSeed = newSeed;
+	mDoubleSeed = newSeed;
 }
 
 double cRZRandom::RandomDoubleGaussian()
@@ -52,7 +46,7 @@ double cRZRandom::RandomDoubleGaussian()
 	double w;
 	double output;
 
-	if (!hasSavedGaussianNoise)
+	if (!mHasSavedGaussianNoise)
 	{
 		do
 		{
@@ -60,26 +54,26 @@ double cRZRandom::RandomDoubleGaussian()
 			{
 				x1 = (RandomDoubleUniform() * 2.0) - 1.0;
 				x2 = (RandomDoubleUniform() * 2.0) - 1.0;
-				w = (x1 * x1) + (x2 * x2);
+				w = (x2 * x2) + (x1 * x1);
 			}
 			while (w >= 1.0);
 		}
 		while (w == 0.0);
 
-		w = sqrt((-2.0 * log(w)) / w);
+		w = sqrt((log(w) / w) * -2.0);
 
-		savedGaussianNoise = x1 * w;
-		hasSavedGaussianNoise = true;
+		mSavedGaussianNoise = x1 * w;
+		mHasSavedGaussianNoise = true;
 
-		output = x2 * w;
+		output = w * x2;
 	}
 	else
 	{
-		hasSavedGaussianNoise = false;
-		output = savedGaussianNoise;
+		mHasSavedGaussianNoise = false;
+		output = mSavedGaussianNoise;
 	}
 
-	return w;
+	return output;
 }
 
 double cRZRandom::RandomDoubleRangeGaussian(double lower, double upper)
@@ -97,7 +91,7 @@ double cRZRandom::RandomDoubleRangeGaussian(double lower, double upper)
 		multiplier = 0.0;
 	}
 
-	return multiplier * (1.0 / 6.0) * (upper - lower) + lower;
+	return (upper - lower) * (multiplier * (1.0 / 6.0)) + lower;
 }
 
 double cRZRandom::RandomDoubleRangeGaussianFast(double lower, double upper)
@@ -116,14 +110,15 @@ double cRZRandom::RandomDoubleRangeUniform(double lower, double upper)
 
 double cRZRandom::RandomDoubleUniform()
 {
-	uint32_t seed = doubleSeed;
-	if (seed == 0)
+	if (mDoubleSeed == 0)
 	{
-		doubleSeed = seed = clock();
+		mDoubleSeed = (uint32_t)clock();
 	}
 
-	doubleSeed = seed * 0x278dde6d;
-	return (double)(seed * 0x278dde6d) * 2.32830643653870E-10 + 0.5;
+	int32_t value = (int32_t)(mDoubleSeed * 0x278dde6d);
+	mDoubleSeed = (uint32_t)value;
+
+	return (double)value * 2.32830643653870E-10 + 0.5;
 }
 
 int32_t cRZRandom::RandomSint32RangeGaussianFast(int32_t lower, int32_t upper)
@@ -132,37 +127,30 @@ int32_t cRZRandom::RandomSint32RangeGaussianFast(int32_t lower, int32_t upper)
 	uint32_t t1 = RandomUint32Uniform();
 	uint32_t t2 = RandomUint32Uniform();
 	uint32_t t3 = RandomUint32Uniform();
-	uint64_t tcubic = ((((uint64_t)t0 + t1) + ((uint64_t)t2 + t3) + 2) >> 2);
+	uint64_t sum = ((uint64_t)t3 + t2 + t1 + t0 + 2) >> 2;
+	uint64_t product = (uint64_t)(sum * (uint32_t)(upper - lower));
 
-	return lower + (int32_t)((tcubic * (uint32_t)(upper - lower)) >> 32);
+	return (int32_t)(product >> 32) + lower;
 }
 
 int32_t cRZRandom::RandomSint32RangeUniform(int32_t lower, int32_t upper)
 {
-	int32_t result = 0;
-
-	if (upper - lower != 0)
-	{
-		result = (int32_t)RandomUint32Uniform((uint32_t)(upper - lower));
-	}
-
-	return result + lower;
+	return (int32_t)RandomUint32Uniform((uint32_t)(upper - lower)) + lower;
 }
 
 uint32_t cRZRandom::RandomUint32Uniform(uint32_t upper)
 {
-	uint32_t result = 0;
-	if (upper != 0)
+	if (upper == 0)
 	{
-		result = (uint32_t)(((uint64_t)RandomUint32Uniform() * (uint64_t)upper) >> 32);
+		return 0;
 	}
 
-	return result;
+	return (uint32_t)(((uint64_t)RandomUint32Uniform() * (uint64_t)upper) >> 32);
 }
 
 uint32_t cRZRandom::RandomUint32Uniform()
 {
-	uint64_t result64 = integerSeed * (uint64_t)1103515245 + 12345;
-	integerSeed = (uint32_t)result64;
+	uint64_t result64 = mIntegerSeed * (uint64_t)1103515245 + 12345;
+	mIntegerSeed = (uint32_t)result64;
 	return (uint32_t)(result64 >> 16);
 }
