@@ -23,16 +23,11 @@
 #include "cIGZVariant.h"
 #include "cRZOStream.h"
 
-cRZOStream::cRZOStream(bool useLittleEndian)
-{
-	this->useLittleEndian = useLittleEndian;
-}
-
 cRZOStream::~cRZOStream()
 {
-	if (userData != NULL)
+	if (mUserData != NULL)
 	{
-		userData->Release();
+		mUserData->Release();
 	}
 }
 
@@ -56,19 +51,19 @@ bool cRZOStream::QueryInterface(GZIID iid, void** outPtr)
 
 uint32_t cRZOStream::AddRef()
 {
-	return ++refCount;
+	return ++mRefCount;
 }
 
 uint32_t cRZOStream::Release()
 {
-	if (refCount < 2)
+	if (mRefCount < 2)
 	{
 		delete this;
 		return 0;
 	}
 	else
 	{
-		return --refCount;
+		return --mRefCount;
 	}
 }
 
@@ -87,7 +82,7 @@ bool cRZOStream::SetUint8(uint8_t value)
 bool cRZOStream::SetSint16(int16_t value)
 {
 	// FUTURE: See cRZIStream, this should change depending on compiler target
-	if (!useLittleEndian)
+	if (!mUseLittleEndian)
 	{
 		value = (int16_t)_byteswap_ushort((uint16_t)value);
 	}
@@ -98,7 +93,7 @@ bool cRZOStream::SetSint16(int16_t value)
 
 bool cRZOStream::SetUint16(uint16_t value)
 {
-	if (!useLittleEndian)
+	if (!mUseLittleEndian)
 	{
 		value = _byteswap_ushort(value);
 	}
@@ -109,7 +104,7 @@ bool cRZOStream::SetUint16(uint16_t value)
 
 bool cRZOStream::SetSint32(int32_t value)
 {
-	if (!useLittleEndian)
+	if (!mUseLittleEndian)
 	{
 		value = (int32_t)_byteswap_ulong((uint32_t)value);
 	}
@@ -120,7 +115,7 @@ bool cRZOStream::SetSint32(int32_t value)
 
 bool cRZOStream::SetUint32(uint32_t value)
 {
-	if (!useLittleEndian)
+	if (!mUseLittleEndian)
 	{
 		value = _byteswap_ulong(value);
 	}
@@ -131,7 +126,7 @@ bool cRZOStream::SetUint32(uint32_t value)
 
 bool cRZOStream::SetSint64(int64_t value)
 {
-	if (!useLittleEndian)
+	if (!mUseLittleEndian)
 	{
 		value = (int64_t)_byteswap_uint64((uint64_t)value);
 	}
@@ -142,7 +137,7 @@ bool cRZOStream::SetSint64(int64_t value)
 
 bool cRZOStream::SetUint64(uint64_t value)
 {
-	if (!useLittleEndian)
+	if (!mUseLittleEndian)
 	{
 		value = _byteswap_uint64(value);
 	}
@@ -156,7 +151,7 @@ bool cRZOStream::SetFloat32(float value)
 	double storedValue = value;
 	uint32_t dataAsInt = *reinterpret_cast<uint32_t*>(&storedValue);
 
-	if (!useLittleEndian)
+	if (!mUseLittleEndian)
 	{
 		dataAsInt = _byteswap_ulong(dataAsInt);
 	}
@@ -169,7 +164,7 @@ bool cRZOStream::SetFloat64(double value)
 	double storedValue = value;
 	uint64_t dataAsInt = *reinterpret_cast<uint64_t*>(&storedValue);
 
-	if (!useLittleEndian)
+	if (!mUseLittleEndian)
 	{
 		dataAsInt = _byteswap_uint64(dataAsInt);
 	}
@@ -212,31 +207,17 @@ bool cRZOStream::SetGZSerializable(cIGZSerializable const& data)
 
 void cRZOStream::SetUserData(cIGZVariant* data)
 {
-	cIGZVariant* savedData = this->userData;
-	if (savedData != data)
-	{
-		if (data != NULL)
-		{
-			data->AddRef();
-		}
-
-		this->userData = data;
-
-		if (savedData != NULL)
-		{
-			savedData->Release();
-		}
-	}
+	mUserData = data;
 }
 
 cIGZVariant* cRZOStream::GetUserData()
 {
-	return userData;
+	return mUserData;
 }
 
-bool cRZOStream::Init(bool useLittleEndian)
+bool cRZOStream::Init(bool mUseLittleEndian)
 {
-	this->useLittleEndian = useLittleEndian;
+	this->mUseLittleEndian = mUseLittleEndian;
 	return true;
 }
 

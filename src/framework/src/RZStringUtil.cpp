@@ -16,6 +16,7 @@
  *  License along with this library; if not, see <https://www.gnu.org/licenses/>.
  */
 
+#include "cIGZString.h"
 #include "RZStringUtil.h"
 
 void ConvertStringEncoding(cIGZString const& src, void* dest, uint32_t& destLength, int32_t codePage)
@@ -23,7 +24,38 @@ void ConvertStringEncoding(cIGZString const& src, void* dest, uint32_t& destLeng
 	// TODO
 }
 
+void ConvertStringEncoding(cIGZString const& src, cIGZString& dest, int32_t codePage)
+{
+	// TODO
+}
+
+void ConvertStringEncoding(cIGZString const& src, int32_t codePage, cIGZString& dest)
+{
+	// TODO
+}
+
 void ConvertStringEncoding(void const* src, uint32_t srcLength, int32_t codePage, cIGZString& dest)
 {
 	// TODO
+}
+
+std::vector<wchar_t> RZStringToUTF16(cIGZString const& src)
+{
+	std::vector<wchar_t> result;
+	uint32_t length = src.Strlen();
+
+	if (length > 256)
+	{
+		std::vector<wchar_t> temp(length);
+		ConvertStringEncoding(src, &temp[0], length, GZ_CODEPAGE_UTF16);
+		result.assign(temp.begin(), temp.begin() + length);
+	}
+	else
+	{
+		wchar_t buffer[256];
+		ConvertStringEncoding(src, buffer, length, GZ_CODEPAGE_UTF16);
+		result.assign(buffer, buffer + length);
+	}
+
+	return result;
 }

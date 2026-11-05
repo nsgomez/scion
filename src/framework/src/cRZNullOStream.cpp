@@ -19,7 +19,7 @@
 #include "cRZNullOStream.h"
 
 cRZNullOStream::cRZNullOStream() :
-	cRZOStream(false)
+	cRZOStream()
 {
 }
 

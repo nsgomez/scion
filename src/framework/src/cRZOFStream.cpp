@@ -19,105 +19,103 @@
 #include "cIGZString.h"
 #include "cRZOFStream.h"
 
-cRZOFStream::cRZOFStream(cIGZString const& path, bool binary, bool useLittleEndian, bool alwaysFlushStrings, bool append) : cRZTextOStream(useLittleEndian)
+cRZOFStream::cRZOFStream(cIGZString const& path, bool binary, bool useLittleEndian, bool alwaysFlushStrings, bool append) : cRZTextOStream(true)
 {
-	outFile = new std::ofstream(path.ToChar(), append ? (std::ios_base::out | std::ios_base::app) : (std::ios_base::out | std::ios_base::trunc));
-	this->binary = binary;
-	this->alwaysFlushStrings = alwaysFlushStrings;
+	mFile = new std::ofstream(path.ToChar(),
+		(append ? (std::ios_base::out | std::ios_base::app) : (std::ios_base::out | std::ios_base::trunc))
+		| (binary ? std::ios_base::binary : 0));
+
+	mBinary = binary;
+	mAlwaysFlushStrings = mAlwaysFlushStrings;
 }
 
-cRZOFStream::cRZOFStream(char const* path, bool binary, bool useLittleEndian, bool alwaysFlushStrings, bool append) : cRZTextOStream(useLittleEndian)
+cRZOFStream::cRZOFStream(char const* path, bool binary, bool useLittleEndian, bool alwaysFlushStrings, bool append) : cRZTextOStream(true)
 {
-	outFile = new std::ofstream(path, append ? (std::ios_base::out | std::ios_base::app) : (std::ios_base::out | std::ios_base::trunc));
-	this->binary = binary;
-	this->alwaysFlushStrings = alwaysFlushStrings;
+	mFile = new std::ofstream(path,
+		(append ? (std::ios_base::out | std::ios_base::app) : (std::ios_base::out | std::ios_base::trunc))
+		| (binary ? std::ios_base::binary : 0));
+
+	mBinary = binary;
+	mAlwaysFlushStrings = alwaysFlushStrings;
 }
 
 cRZOFStream::~cRZOFStream()
 {
-	if (outFile != NULL)
+	if (mFile != NULL)
 	{
-		delete outFile;
+		delete mFile;
 	}
 }
 
 void cRZOFStream::Flush(void)
 {
-	outFile->flush();
+	mFile->flush();
 }
 
 bool cRZOFStream::SetSint8(int8_t value)
 {
-	return !binary ? cRZTextOStream::SetSint8(value) : cRZOStream::SetSint8(value);
+	return mBinary ? cRZOStream::SetSint8(value) : cRZTextOStream::SetSint8(value);
 }
 
 bool cRZOFStream::SetUint8(uint8_t value)
 {
-	return !binary ? cRZTextOStream::SetUint8(value) : cRZOStream::SetUint8(value);
+	return mBinary ? cRZOStream::SetUint8(value) : cRZTextOStream::SetUint8(value);
 }
 
 bool cRZOFStream::SetSint16(int16_t value)
 {
-	return !binary ? cRZTextOStream::SetSint16(value) : cRZOStream::SetSint16(value);
+	return mBinary ? cRZOStream::SetSint16(value) : cRZTextOStream::SetSint16(value);
 }
 
 bool cRZOFStream::SetUint16(uint16_t value)
 {
-	return !binary ? cRZTextOStream::SetUint16(value) : cRZOStream::SetUint16(value);
+	return mBinary ? cRZOStream::SetUint16(value) : cRZTextOStream::SetUint16(value);
 }
 
 bool cRZOFStream::SetSint32(int32_t value)
 {
-	return !binary ? cRZTextOStream::SetSint32(value) : cRZOStream::SetSint32(value);
+	return mBinary ? cRZOStream::SetSint32(value) : cRZTextOStream::SetSint32(value);
 }
 
 bool cRZOFStream::SetUint32(uint32_t value)
 {
-	return !binary ? cRZTextOStream::SetUint32(value) : cRZOStream::SetUint32(value);
+	return mBinary ? cRZOStream::SetUint32(value) : cRZTextOStream::SetUint32(value);
 }
 
 bool cRZOFStream::SetSint64(int64_t value)
 {
-	return !binary ? cRZTextOStream::SetSint64(value) : cRZOStream::SetSint64(value);
+	return mBinary ? cRZOStream::SetSint64(value) : cRZTextOStream::SetSint64(value);
 }
 
 bool cRZOFStream::SetUint64(uint64_t value)
 {
-	return !binary ? cRZTextOStream::SetUint64(value) : cRZOStream::SetUint64(value);
+	return mBinary ? cRZOStream::SetUint64(value) : cRZTextOStream::SetUint64(value);
 }
 
 bool cRZOFStream::SetFloat32(float value)
 {
-	return !binary ? cRZTextOStream::SetFloat32(value) : cRZOStream::SetFloat32(value);
+	return mBinary ? cRZOStream::SetFloat32(value) : cRZTextOStream::SetFloat32(value);
 }
 
 bool cRZOFStream::SetFloat64(double value)
 {
-	return !binary ? cRZTextOStream::SetFloat64(value) : cRZOStream::SetFloat64(value);
+	return mBinary ? cRZOStream::SetFloat64(value) : cRZTextOStream::SetFloat64(value);
 }
 
 bool cRZOFStream::SetRZCharStr(char const* str)
 {
 	bool success;
-	if (!binary)
-	{
-		if (str == NULL)
-		{
-			outFile->clear();
-		}
-		else
-		{
-			(*outFile) << str;
-		}
-
-		success = outFile->good();
-	}
-	else
+	if (mBinary)
 	{
 		success = SetVoid(str, strlen(str));
 	}
+	else
+	{
+		(*mFile) << str;
+		success = mFile->good();
+	}
 
-	if (alwaysFlushStrings)
+	if (mAlwaysFlushStrings)
 	{
 		Flush();
 	}
@@ -127,11 +125,11 @@ bool cRZOFStream::SetRZCharStr(char const* str)
 
 bool cRZOFStream::SetVoid(void const* buffer, uint32_t size)
 {
-	outFile->write(static_cast<char const*>(buffer), size);
-	return outFile->good();
+	mFile->write(static_cast<char const*>(buffer), size);
+	return mFile->good();
 }
 
 bool cRZOFStream::GetError(void) const
 {
-	return outFile->good();
+	return mFile->good();
 }

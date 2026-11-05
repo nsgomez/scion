@@ -59,14 +59,14 @@ public:
 	virtual bool Remove(void);
 	virtual bool Rename(cIGZString const& newName);
 	virtual bool Exists(void);
-	virtual bool Copy(cIGZFile const& srcFile, bool overwrite);
 	virtual bool Copy(cIGZString const& srcName, bool overwrite);
+	virtual bool Copy(cIGZFile const& srcFile, bool overwrite);
 
 	virtual void GetPath(cIGZString& path) const;
 	virtual cIGZString const& GetPath(void) const;
 	virtual const char* GetPathCStr(void) const;
-	virtual void SetPath(cIGZString const& path);
 	virtual void SetPath(char const* path);
+	virtual void SetPath(cIGZString const& path);
 
 	virtual bool GetOpenModes(uint32_t& accessFlags, uint32_t& createMode, uint32_t& shareFlags);
 	virtual void GetBuffering(uint32_t& readBufferSize, uint32_t& writeBufferSize);
@@ -78,7 +78,11 @@ public:
 	static bool MakeTempPathName(cIGZString& name, cIGZString const* suffix);
 	static bool FileExists(cIGZString const& name);
 	static bool Remove(cIGZString const& name);
+	static bool Rename(cIGZString const& srcName, cIGZString const& destName);
 	static bool Copy(cIGZString const& srcName, cIGZString const& destName, bool overwrite);
+	static bool GetPathDirectory(cIGZString const& path, cIGZString& directory);
+	static bool GetPathName(cIGZString const& path, cIGZString& name, bool includeSeparator);
+	static bool GetVolumeName(cIGZString const& name, cIGZString& volume);
 
 protected:
 	void UpdateErrorCode(void);
@@ -87,22 +91,23 @@ protected:
 	bool FlushWriteBuffer(void);
 
 protected:
-	cRZString path;
-	bool isOpen;
-	void* fileHandle;
-	uint32_t accessFlags;
-	uint32_t createMode;
-	uint32_t shareFlags;
-	uint32_t refCount;
-	uint32_t lastError;
-	uint32_t position;
-	uint32_t filePointer;
-	uint32_t readBufferSize;
-	std::vector<uint8_t> readBuffer;
-	uint32_t bufferedReadFilePosition;
-	uint32_t readBytesBuffered;
-	uint32_t writeBufferSize;
-	std::vector<uint8_t> writeBuffer;
-	uint32_t bufferedWriteFilePosition;
-	uint32_t writeBytesBuffered;
+	cRZString mPath;
+	bool mOpen;
+	void* mFileHandle;
+	uint32_t mAccessFlags;
+	uint32_t mCreateMode;
+	uint32_t mShareFlags;
+	uint32_t mRefCount;
+	uint32_t mLastError;
+	cRZString mScratch;
+	uint32_t mPosition;
+	uint32_t mFilePointer;
+	uint32_t mReadBufferSize;
+	std::vector<uint8_t> mReadBuffer;
+	uint32_t mBufferedReadFilePosition;
+	uint32_t mReadBytesBuffered;
+	uint32_t mWriteBufferSize;
+	std::vector<uint8_t> mWriteBuffer;
+	uint32_t mBufferedWriteFilePosition;
+	uint32_t mWriteBytesBuffered;
 };

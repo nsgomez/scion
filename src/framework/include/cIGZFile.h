@@ -87,14 +87,14 @@ public:
 	virtual bool Remove(void) = 0;
 	virtual bool Rename(cIGZString const& newName) = 0;
 	virtual bool Exists(void) = 0;
-	virtual bool Copy(cIGZFile const& srcFile, bool overwrite) = 0;
 	virtual bool Copy(cIGZString const& srcName, bool overwrite) = 0;
+	virtual bool Copy(cIGZFile const& srcFile, bool overwrite) = 0;
 
 	virtual void GetPath(cIGZString& path) const = 0;
 	virtual cIGZString const& GetPath(void) const = 0;
 	virtual const char* GetPathCStr(void) const = 0;
-	virtual void SetPath(cIGZString const& path) = 0;
 	virtual void SetPath(char const* path) = 0;
+	virtual void SetPath(cIGZString const& path) = 0;
 
 	virtual bool GetOpenModes(uint32_t& accessFlags, uint32_t& createMode, uint32_t& shareFlags) = 0;
 	virtual void GetBuffering(uint32_t& readBufferSize, uint32_t& writeBufferSize) = 0;

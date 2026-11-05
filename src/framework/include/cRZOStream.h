@@ -18,11 +18,26 @@
 
 #pragma once
 #include "cIGZOStream.h"
+#include "cIGZVariant.h"
+#include "cRZAutoRefCount.h"
 
 class cRZOStream : public cIGZOStream
 {
 public:
-	cRZOStream(bool useLittleEndian);
+	cRZOStream() :
+		mRefCount(0),
+		mUseLittleEndian(false),
+		mUserData(NULL)
+	{
+	}
+
+	cRZOStream(bool useLittleEndian) :
+		mRefCount(0),
+		mUseLittleEndian(useLittleEndian),
+		mUserData(NULL)
+	{
+	}
+
 	virtual ~cRZOStream();
 
 public:
@@ -61,7 +76,7 @@ public:
 protected:
 	void EncodeStringLength(uint32_t length);
 
-	uint32_t refCount;
-	bool useLittleEndian;
-	cIGZVariant* userData;
+	uint32_t mRefCount;
+	bool mUseLittleEndian;
+	cRZAutoRefCount<cIGZVariant> mUserData;
 };

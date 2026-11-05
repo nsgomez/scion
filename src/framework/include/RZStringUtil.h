@@ -18,6 +18,7 @@
 
 #pragma once
 #include <stdint.h>
+#include <vector>
 
 class cIGZString;
 
@@ -27,4 +28,7 @@ class cIGZString;
 #define GZ_CODEPAGE_UTF16   16
 
 extern void ConvertStringEncoding(cIGZString const& src, void* dest, uint32_t& destLength, int32_t codePage);
+extern void ConvertStringEncoding(cIGZString const& src, cIGZString& dest, int32_t codePage);
+extern void ConvertStringEncoding(cIGZString const& src, int32_t codePage, cIGZString& dest);
 extern void ConvertStringEncoding(void const* src, uint32_t srcLength, int32_t codePage, cIGZString& dest);
+extern std::vector<wchar_t> RZStringToUTF16(cIGZString const& src);

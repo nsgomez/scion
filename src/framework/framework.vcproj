@@ -364,6 +364,9 @@
 			<File
 				RelativePath=".\src\RZStringUtil.cpp">
 			</File>
+			<File
+				RelativePath=".\src\W32FileHelpers.cpp">
+			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
@@ -788,6 +791,9 @@
 			</File>
 			<File
 				RelativePath=".\include\SignalPlatformData.h">
+			</File>
+			<File
+				RelativePath=".\include\W32FileHelpers.h">
 			</File>
 		</Filter>
 		<Filter

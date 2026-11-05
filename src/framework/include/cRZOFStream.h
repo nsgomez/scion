@@ -46,7 +46,7 @@ public:
 	virtual bool GetError(void) const;
 
 protected:
-	std::ofstream* outFile;
-	bool binary;
-	bool alwaysFlushStrings;
+	std::ofstream* mFile;
+	bool mBinary;
+	bool mAlwaysFlushStrings;
 };

@@ -23,6 +23,7 @@ class cRZTextOStream : public cRZOStream
 {
 public:
 	cRZTextOStream(bool useLittleEndian) : cRZOStream(useLittleEndian) { }
+	virtual ~cRZTextOStream() { }
 
 public:
 	virtual bool SetSint8(int8_t value);
@@ -36,4 +37,6 @@ public:
 	virtual bool SetFloat32(float value);
 	virtual bool SetFloat64(double value);
 	virtual bool SetGZStr(cIGZString const& str);
+	virtual bool SetVoid(void const* buffer, uint32_t size);
+	virtual bool GetError() const;
 };
