@@ -167,6 +167,9 @@
 				RelativePath=".\src\cGZKeyMessage.cpp">
 			</File>
 			<File
+				RelativePath=".\src\cGZMessage.cpp">
+			</File>
+			<File
 				RelativePath=".\src\cGZMessageQueue.cpp">
 			</File>
 			<File

@@ -33,5 +33,5 @@ public:
 	void RemoveAllNotifications(cIGZMessageTarget2* target, cIGZMessageServer2* server);
 
 protected:
-	std::set<GZGUID> msgTypes;
+	std::set<GZGUID> mMsgTypes;
 };

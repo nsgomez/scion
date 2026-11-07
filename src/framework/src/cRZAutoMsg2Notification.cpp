@@ -22,22 +22,26 @@
 
 bool cRZAutoMsg2Notification::AddMessageType(GZGUID type)
 {
-	std::pair<std::set<GZGUID>::iterator, bool> result = msgTypes.insert(type);
-	return result.second;
+	return mMsgTypes.insert(type).second;
 }
 
 bool cRZAutoMsg2Notification::AddMessageTypes(GZGUID const* typePtr, uint32_t count)
 {
 	bool insertedAll = true;
+	if (count <= 0)
+	{
+		return insertedAll;
+	}
+
+	GZGUID const* p = typePtr;
 	while (count > 0)
 	{
-		std::pair<std::set<GZGUID>::iterator, bool> result = this->msgTypes.insert(*typePtr);
-		if (!result.second)
+		if (!mMsgTypes.insert(*typePtr).second)
 		{
 			insertedAll = false;
 		}
 
-		++typePtr;
+		++p;
 		--count;
 	}
 
@@ -51,7 +55,8 @@ void cRZAutoMsg2Notification::AddAllNotifications(cIGZMessageTarget2* target, cI
 		server = cRZSysServPtr<cIGZMessageServer2, GZIID_cIGZMessageServer2, RZSRVID_cGZMessageServer2>();
 	}
 
-	for (std::set<GZGUID>::iterator it = msgTypes.begin(); it != msgTypes.end(); ++it)
+	std::set<GZGUID>::iterator end = mMsgTypes.end();
+	for (std::set<GZGUID>::iterator it = mMsgTypes.begin(); it != end; ++it)
 	{
 		server->AddNotification(target, *it);
 	}
@@ -64,7 +69,8 @@ void cRZAutoMsg2Notification::RemoveAllNotifications(cIGZMessageTarget2* target,
 		server = cRZSysServPtr<cIGZMessageServer2, GZIID_cIGZMessageServer2, RZSRVID_cGZMessageServer2>();
 	}
 
-	for (std::set<GZGUID>::iterator it = msgTypes.begin(); it != msgTypes.end(); ++it)
+	std::set<GZGUID>::iterator end = mMsgTypes.end();
+	for (std::set<GZGUID>::iterator it = mMsgTypes.begin(); it != end; ++it)
 	{
 		server->RemoveNotification(target, *it);
 	}

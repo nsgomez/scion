@@ -34,6 +34,9 @@ public:
 	{
 	}
 
+	bool operator==(cGZMessage const& other) const;
+	cGZMessage& operator=(cGZMessage const& other);
+
 public:
 	GZGUID messageType;
 	void* data1;

@@ -28,6 +28,7 @@
 #include "cRZSystemService.h"
 
 static const GZGUID RZSRVID_cGZMessageServer2 = 0x04FA845B;
+static const GZCLSID GZCLSID_cGZMessageServer2 = 0x252294E9;
 
 class cGZMessageServer2 : public cIGZMessageServer2, public cRZSystemService
 {
@@ -64,20 +65,34 @@ public:
 
 	virtual bool CreateMessage(GZCLSID clsid, GZIID iid, void** msgOut);
 
+	static cIGZSystemService* Create();
+	static GZCLSID GetGZCLSID();
+
 protected:
 	struct DelayedAddOrRemove
 	{
 	public:
-		DelayedAddOrRemove(bool isAddition, cIGZMessageTarget2* target, GZGUID msgType) :
+		struct TargetAndType
+		{
+		public:
+			TargetAndType(cIGZMessageTarget2* target, GZGUID msgType) :
+				target(target),
+				msgType(msgType)
+			{
+			}
+
+			cRZAutoRefCount<cIGZMessageTarget2> target;
+			GZGUID msgType;
+		};
+
+		DelayedAddOrRemove(bool isAddition, TargetAndType const& info) :
 			isAddition(isAddition),
-			target(target),
-			msgType(msgType)
+			info(info)
 		{
 		}
 
 		bool isAddition;
-		cRZAutoRefCount<cIGZMessageTarget2> target;
-		GZGUID msgType;
+		TargetAndType info;
 	};
 
 	struct GeneralMessageTargetInfo
@@ -105,19 +120,18 @@ protected:
 	typedef std::pair<GZGUID, MessageTargetList*> MessageTargetMapEntry;
 	typedef std::deque<GeneralMessageTargetInfo> GeneralMessageDeque;
 
-	cRZCriticalSection notificationLock;
-	cRZCriticalSection messageQueueLock;
-	cRZCriticalSection generalMessagePostLock;
+	cRZCriticalSection mNotificationLock;
+	cRZCriticalSection mMessageQueueLock;
+	cRZCriticalSection mGeneralMessagePostLock;
 
-	cGZMessageQueue2 messageQueue;
-	uint64_t totalMessagesDequeued;
+	cGZMessageQueue2 mMessageQueue;
+	uint64_t mTotalMessagesDequeued;
+	bool mAlwaysClearQueueOnTick;
+	int32_t mPendingNotificationOps;
 
-	int32_t pendingNotificationOps;
-	bool alwaysClearQueueOnTick;
+	DelayedNotificationList mDelayedNotificationChanges;
+	MessageTargetMap mNotificationTargets;
 
-	DelayedNotificationList delayedNotificationChanges;
-	MessageTargetMap notificationTargets;
-
-	int32_t pendingGeneralMessageCount;
-	GeneralMessageDeque generalMessages;
+	int32_t mPendingGeneralMessageCount;
+	GeneralMessageDeque mGeneralMessages;
 };

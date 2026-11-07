@@ -22,10 +22,10 @@
 static const uint32_t kBlockingCallWaitTimeInMicroseconds = 1000000;
 
 cGZMessageQueue2::cGZMessageQueue2() :
-	messages(),
-	criticalSection(),
-	threadSignal(false),
-	refCount(0)
+	mMessages(),
+	mCriticalSection(),
+	mThreadSignal(false),
+	mRefCount(0)
 {
 }
 
@@ -55,57 +55,57 @@ bool cGZMessageQueue2::QueryInterface(GZIID iid, void** outPtr)
 
 uint32_t cGZMessageQueue2::AddRef()
 {
-	return ++refCount;
+	return ++mRefCount;
 }
 
 uint32_t cGZMessageQueue2::Release()
 {
-	if (refCount < 2)
+	if (mRefCount > 1)
 	{
-		delete this;
-		return 0;
+		return --mRefCount;
 	}
 	else
 	{
-		return --refCount;
+		delete this;
+		return 0;
 	}
 }
 
 void cGZMessageQueue2::PushBack(cIGZMessage2* msg)
 {
-	cRZCriticalSectionHolder lock(criticalSection);
+	cRZCriticalSectionHolder lock(mCriticalSection);
 
-	Message2ListIterator it = messages.begin();
-	messages.push_back(msg);
+	bool wasEmpty = mMessages.empty();
+	mMessages.push_back(cRZAutoRefCount<cIGZMessage2>(msg));
 
-	if (it == messages.end())
+	if (wasEmpty)
 	{
-		threadSignal.Signal();
+		mThreadSignal.Signal();
 	}
 }
 
 void cGZMessageQueue2::PushFront(cIGZMessage2* msg)
 {
-	cRZCriticalSectionHolder lock(criticalSection);
+	cRZCriticalSectionHolder lock(mCriticalSection);
 
-	Message2ListIterator it = messages.begin();
-	messages.push_front(msg);
+	bool wasEmpty = mMessages.empty();
+	mMessages.push_front(cRZAutoRefCount<cIGZMessage2>(msg));
 
-	if (it == messages.end())
+	if (wasEmpty)
 	{
-		threadSignal.Signal();
+		mThreadSignal.Signal();
 	}
 }
 
 bool cGZMessageQueue2::RemoveFirstFound(cIGZMessage2 const& msg)
 {
-	cRZCriticalSectionHolder lock(criticalSection);
+	cRZCriticalSectionHolder lock(mCriticalSection);
 
-	for (Message2ListIterator it = messages.begin(); it != messages.end(); ++it)
+	for (Message2ListIterator it = mMessages.begin(); it != mMessages.end(); ++it)
 	{
 		if ((**it) == msg)
 		{
-			messages.erase(it);
+			mMessages.erase(it);
 			return true;
 		}
 	}
@@ -115,13 +115,15 @@ bool cGZMessageQueue2::RemoveFirstFound(cIGZMessage2 const& msg)
 
 bool cGZMessageQueue2::RemoveLastFound(cIGZMessage2 const& msg)
 {
-	cRZCriticalSectionHolder lock(criticalSection);
+	cRZCriticalSectionHolder lock(mCriticalSection);
 
-	for (Message2ListReverseIterator it = messages.rbegin(); it != messages.rend(); ++it)
+	Message2ListIterator it = mMessages.end();
+	while (it != mMessages.begin())
 	{
+		--it;
 		if ((**it) == msg)
 		{
-			messages.erase(it.base());
+			mMessages.erase(it);
 			return true;
 		}
 	}
@@ -131,20 +133,21 @@ bool cGZMessageQueue2::RemoveLastFound(cIGZMessage2 const& msg)
 
 int32_t cGZMessageQueue2::RemoveAllFound(cIGZMessage2 const& msg)
 {
-	cRZCriticalSectionHolder lock(criticalSection);
+	cRZCriticalSectionHolder lock(mCriticalSection);
+
+	Message2ListIterator it = mMessages.begin();
 	int removedCount = 0;
-	Message2ListIterator it = messages.begin();
 
-	while (it != messages.end())
+	while (it != mMessages.end())
 	{
-		Message2ListIterator tmp = it;
-		bool isMatch = (**tmp) == msg;
-		++it;
-
-		if (isMatch)
+		if ((**it) == msg)
 		{
-			messages.erase(tmp);
 			++removedCount;
+			mMessages.erase(it++);
+		}
+		else
+		{
+			++it;
 		}
 	}
 
@@ -153,13 +156,13 @@ int32_t cGZMessageQueue2::RemoveAllFound(cIGZMessage2 const& msg)
 
 bool cGZMessageQueue2::RemoveFirstFound(GZGUID msgType)
 {
-	cRZCriticalSectionHolder lock(criticalSection);
+	cRZCriticalSectionHolder lock(mCriticalSection);
 
-	for (Message2ListIterator it = messages.begin(); it != messages.end(); ++it)
+	for (Message2ListIterator it = mMessages.begin(); it != mMessages.end(); ++it)
 	{
 		if ((*it)->GetType() == msgType)
 		{
-			messages.erase(it);
+			mMessages.erase(it);
 			return true;
 		}
 	}
@@ -169,13 +172,15 @@ bool cGZMessageQueue2::RemoveFirstFound(GZGUID msgType)
 
 bool cGZMessageQueue2::RemoveLastFound(GZGUID msgType)
 {
-	cRZCriticalSectionHolder lock(criticalSection);
+	cRZCriticalSectionHolder lock(mCriticalSection);
 
-	for (Message2ListReverseIterator it = messages.rbegin(); it != messages.rend(); ++it)
+	Message2ListIterator it = mMessages.end();
+	while (it != mMessages.begin())
 	{
+		--it;
 		if ((*it)->GetType() == msgType)
 		{
-			messages.erase(it.base());
+			mMessages.erase(it);
 			return true;
 		}
 	}
@@ -185,20 +190,21 @@ bool cGZMessageQueue2::RemoveLastFound(GZGUID msgType)
 
 int32_t cGZMessageQueue2::RemoveAllFound(GZGUID msgType)
 {
-	cRZCriticalSectionHolder lock(criticalSection);
+	cRZCriticalSectionHolder lock(mCriticalSection);
+
+	Message2ListIterator it = mMessages.begin();
 	int removedCount = 0;
-	Message2ListIterator it = messages.begin();
 
-	while (it != messages.end())
+	while (it != mMessages.end())
 	{
-		Message2ListIterator tmp = it;
-		bool isMatch = (*it)->GetType() == msgType;
-		++it;
-
-		if (isMatch)
+		if ((*it)->GetType() == msgType)
 		{
-			messages.erase(tmp);
 			++removedCount;
+			mMessages.erase(it++);
+		}
+		else
+		{
+			++it;
 		}
 	}
 
@@ -207,22 +213,26 @@ int32_t cGZMessageQueue2::RemoveAllFound(GZGUID msgType)
 
 int32_t cGZMessageQueue2::RemoveAll()
 {
-	cRZCriticalSectionHolder lock(criticalSection);
-	int removedCount = messages.size();
+	cRZCriticalSectionHolder lock(mCriticalSection);
+	int removedCount = mMessages.size();
 
-	messages.clear();
+	mMessages.clear();
 
 	return removedCount;
 }
 
 GZGUID cGZMessageQueue2::PeekFrontType()
 {
-	cRZCriticalSectionHolder lock(criticalSection);
-	GZGUID type = 0;
+	cRZCriticalSectionHolder lock(mCriticalSection);
+	GZGUID type;
 
-	if (!messages.empty())
+	if (!mMessages.empty())
 	{
-		type = messages.front()->GetType();
+		type = mMessages.front()->GetType();
+	}
+	else
+	{
+		type = 0;
 	}
 
 	return type;
@@ -230,12 +240,12 @@ GZGUID cGZMessageQueue2::PeekFrontType()
 
 GZGUID cGZMessageQueue2::PeekBackType()
 {
-	cRZCriticalSectionHolder lock(criticalSection);
+	cRZCriticalSectionHolder lock(mCriticalSection);
 	GZGUID type = 0;
 
-	if (!messages.empty())
+	if (!mMessages.empty())
 	{
-		type = messages.back()->GetType();
+		type = mMessages.back()->GetType();
 	}
 
 	return type;
@@ -243,9 +253,9 @@ GZGUID cGZMessageQueue2::PeekBackType()
 
 bool cGZMessageQueue2::PeekAnywhereType(GZGUID msgType)
 {
-	cRZCriticalSectionHolder lock(criticalSection);
+	cRZCriticalSectionHolder lock(mCriticalSection);
 
-	for (Message2ListIterator it = messages.begin(); it != messages.end(); ++it)
+	for (Message2ListIterator it = mMessages.begin(); it != mMessages.end(); ++it)
 	{
 		if ((*it)->GetType() == msgType)
 		{
@@ -258,53 +268,61 @@ bool cGZMessageQueue2::PeekAnywhereType(GZGUID msgType)
 
 bool cGZMessageQueue2::PeekFrontMessage(cIGZMessage2** msgOut)
 {
-	cRZCriticalSectionHolder lock(criticalSection);
+	cRZCriticalSectionHolder lock(mCriticalSection);
+	bool found;
 
-	if (messages.empty())
+	if (!mMessages.empty())
 	{
-		*msgOut = NULL;
+		cIGZMessage2* msg = mMessages.front();
+		*msgOut = msg;
+		msg->AddRef();
+		found = true;
 	}
 	else
 	{
-		cIGZMessage2* msg = messages.front();
-		*msgOut = msg;
-		msg->AddRef();
+		*msgOut = NULL;
+		found = false;
 	}
 
-	return !messages.empty();
+	return found;
 }
 
 bool cGZMessageQueue2::PeekBackMessage(cIGZMessage2** msgOut)
 {
-	cRZCriticalSectionHolder lock(criticalSection);
+	cRZCriticalSectionHolder lock(mCriticalSection);
+	bool found;
 
-	if (messages.empty())
+	if (!mMessages.empty())
 	{
-		*msgOut = NULL;
+		cIGZMessage2* msg = mMessages.back();
+		*msgOut = msg;
+		msg->AddRef();
+		found = true;
 	}
 	else
 	{
-		cIGZMessage2* msg = messages.back();
-		*msgOut = msg;
-		msg->AddRef();
+		*msgOut = NULL;
+		found = false;
 	}
 
-	return !messages.empty();
+	return found;
 }
 
 bool cGZMessageQueue2::PeekAnywhereMessage(cIGZMessage2 const& msgIn, cIGZMessage2** msgOut)
 {
-	cRZCriticalSectionHolder lock(criticalSection);
+	cRZCriticalSectionHolder lock(mCriticalSection);
 
-	for (Message2ListIterator it = messages.begin(); it != messages.end(); ++it)
+	Message2ListIterator it = mMessages.begin();
+	while (it != mMessages.end())
 	{
-		cIGZMessage2* msg = *it;
-		if ((*msg) == msgIn)
+		if ((**it) == msgIn)
 		{
-			*msgOut = msg;
-			msg->AddRef();
+			*msgOut = *it;
+			(*msgOut)->AddRef();
 			return true;
 		}
+
+		++it;
 	}
 
 	*msgOut = NULL;
@@ -313,51 +331,55 @@ bool cGZMessageQueue2::PeekAnywhereMessage(cIGZMessage2 const& msgIn, cIGZMessag
 
 bool cGZMessageQueue2::GetFrontMessage(cIGZMessage2** msgOut)
 {
-	cRZCriticalSectionHolder lock(criticalSection);
+	cRZCriticalSectionHolder lock(mCriticalSection);
+	bool found;
 
-	if (messages.empty())
+	if (!mMessages.empty())
 	{
-		*msgOut = NULL;
-	}
-	else
-	{
-		cIGZMessage2* msg = messages.front();
+		cIGZMessage2* msg = mMessages.front();
 		*msgOut = msg;
 		msg->AddRef();
 
-		messages.pop_front();
-		return true;
+		mMessages.pop_front();
+		found = true;
+	}
+	else
+	{
+		*msgOut = NULL;
+		found = false;
 	}
 
-	return false;
+	return found;
 }
 
 bool cGZMessageQueue2::GetBackMessage(cIGZMessage2** msgOut)
 {
-	cRZCriticalSectionHolder lock(criticalSection);
+	cRZCriticalSectionHolder lock(mCriticalSection);
+	bool found;
 
-	if (messages.empty())
+	if (!mMessages.empty())
 	{
-		*msgOut = NULL;
-	}
-	else
-	{
-		cIGZMessage2* msg = messages.back();
+		cIGZMessage2* msg = mMessages.back();
 		*msgOut = msg;
 		msg->AddRef();
 
-		messages.pop_back();
-		return true;
+		mMessages.pop_back();
+		found = true;
+	}
+	else
+	{
+		*msgOut = NULL;
+		found = false;
 	}
 
-	return false;
+	return found;
 }
 
 bool cGZMessageQueue2::GetFrontMessageBlock(cIGZMessage2** msgOut)
 {
 	while (!GetFrontMessage(msgOut))
 	{
-		threadSignal.TimedWait(kBlockingCallWaitTimeInMicroseconds);
+		mThreadSignal.TimedWait(kBlockingCallWaitTimeInMicroseconds);
 	}
 
 	return true;
@@ -367,7 +389,7 @@ bool cGZMessageQueue2::GetBackMessageBlock(cIGZMessage2** msgOut)
 {
 	while (!GetBackMessage(msgOut))
 	{
-		threadSignal.TimedWait(kBlockingCallWaitTimeInMicroseconds);
+		mThreadSignal.TimedWait(kBlockingCallWaitTimeInMicroseconds);
 	}
 
 	return true;
@@ -375,25 +397,27 @@ bool cGZMessageQueue2::GetBackMessageBlock(cIGZMessage2** msgOut)
 
 int32_t cGZMessageQueue2::GetMessageCount()
 {
-	cRZCriticalSectionHolder lock(criticalSection);
-	return messages.size();
+	cRZCriticalSectionHolder lock(mCriticalSection);
+	return mMessages.size();
 }
 
 bool cGZMessageQueue2::GetAnywhereMessage(cIGZMessage2 const& msgIn, cIGZMessage2** msgOut)
 {
-	cRZCriticalSectionHolder lock(criticalSection);
+	cRZCriticalSectionHolder lock(mCriticalSection);
 
-	for (Message2ListIterator it = messages.begin(); it != messages.end(); ++it)
+	Message2ListIterator it = mMessages.begin();
+	while (it != mMessages.end())
 	{
-		cIGZMessage2* msg = *it;
-		if ((*msg) == msgIn)
+		if ((**it) == msgIn)
 		{
-			*msgOut = msg;
-			msg->AddRef();
+			*msgOut = *it;
+			(*msgOut)->AddRef();
 
-			messages.erase(it);
+			mMessages.erase(it);
 			return true;
 		}
+
+		++it;
 	}
 
 	*msgOut = NULL;

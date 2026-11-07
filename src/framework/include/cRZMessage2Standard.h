@@ -18,6 +18,8 @@
 
 #pragma once
 #include "cIGZMessage2Standard.h"
+#include "cIGZSerializable.h"
+#include "cRZAutoRefCount.h"
 
 const GZCLSID GZCLSID_cRZMessage2Standard = 0x46DF45E7;
 
@@ -25,7 +27,7 @@ class cRZMessage2Standard : public cIGZMessage2Standard
 {
 public:
 	cRZMessage2Standard();
-	virtual ~cRZMessage2Standard();
+	virtual ~cRZMessage2Standard() { }
 
 public:
 	virtual bool QueryInterface(GZIID iid, void** outPtr);
@@ -91,23 +93,23 @@ protected:
 		kMessageHasUnknown = (1 << 7),
 	};
 
-	uint32_t refCount;
+	uint32_t mRefCount;
 
-	uint8_t hasType    : 1;
-	uint8_t hasData1   : 1;
-	uint8_t hasData2   : 1;
-	uint8_t hasData3   : 1;
-	uint8_t hasData4   : 1;
-	uint8_t hasExtra   : 1;
-	uint8_t hasString  : 1;
-	uint8_t hasUnknown : 1;
+	uint8_t mHasType    : 1;
+	uint8_t mHasData1   : 1;
+	uint8_t mHasData2   : 1;
+	uint8_t mHasData3   : 1;
+	uint8_t mHasData4   : 1;
+	uint8_t mHasExtra   : 1;
+	uint8_t mHasString  : 1;
+	uint8_t mHasUnknown : 1;
 
-	GZGUID type;
-	void* data1;
-	void* data2;
-	void* data3;
-	void* data4;
-	cIGZString* str;
-	cIGZUnknown* unknown;
-	cIGZSerializable* extra;
+	GZGUID mType;
+	void* mData1;
+	void* mData2;
+	void* mData3;
+	void* mData4;
+	cRZAutoRefCount<cIGZString> mStr;
+	cRZAutoRefCount<cIGZUnknown> mUnknown;
+	cRZAutoRefCount<cIGZSerializable> mExtra;
 };

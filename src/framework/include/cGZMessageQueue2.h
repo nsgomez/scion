@@ -38,13 +38,14 @@ public:
 	virtual void PushBack(cIGZMessage2* msg);
 	virtual void PushFront(cIGZMessage2* msg);
 
-	virtual bool RemoveFirstFound(cIGZMessage2 const& msg);
-	virtual bool RemoveLastFound(cIGZMessage2 const& msg);
-	virtual int32_t RemoveAllFound(cIGZMessage2 const& msg);
-
 	virtual bool RemoveFirstFound(GZGUID msgType);
+	virtual bool RemoveFirstFound(cIGZMessage2 const& msg);
+
 	virtual bool RemoveLastFound(GZGUID msgType);
+	virtual bool RemoveLastFound(cIGZMessage2 const& msg);
+
 	virtual int32_t RemoveAllFound(GZGUID msgType);
+	virtual int32_t RemoveAllFound(cIGZMessage2 const& msg);
 
 	virtual int32_t RemoveAll();
 
@@ -71,8 +72,8 @@ protected:
 	typedef std::list< cRZAutoRefCount<cIGZMessage2> >::iterator Message2ListIterator;
 	typedef std::list< cRZAutoRefCount<cIGZMessage2> >::reverse_iterator Message2ListReverseIterator;
 
-	std::list< cRZAutoRefCount<cIGZMessage2> > messages;
-	cRZCriticalSection criticalSection;
-	cRZThreadSignal threadSignal;
-	uint32_t refCount;
+	std::list< cRZAutoRefCount<cIGZMessage2> > mMessages;
+	cRZCriticalSection mCriticalSection;
+	cRZThreadSignal mThreadSignal;
+	uint32_t mRefCount;
 };

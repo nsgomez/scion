@@ -76,8 +76,8 @@ protected:
 	typedef std::list<cGZMessage>::iterator MessageListIterator;
 	typedef std::list<cGZMessage>::reverse_iterator MessageListReverseIterator;
 
-	std::list<cGZMessage> messages;
-	cRZCriticalSection criticalSection;
-	cRZThreadSignal threadSignal;
-	uint32_t refCount;
+	std::list<cGZMessage> mMessages;
+	cRZCriticalSection mCriticalSection;
+	cRZThreadSignal mThreadSignal;
+	uint32_t mRefCount;
 };

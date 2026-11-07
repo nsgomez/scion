@@ -29,13 +29,14 @@ public:
 	virtual void PushBack(cIGZMessage2* msg) = 0;
 	virtual void PushFront(cIGZMessage2* msg) = 0;
 
-	virtual bool RemoveFirstFound(cIGZMessage2 const& msg) = 0;
-	virtual bool RemoveLastFound(cIGZMessage2 const& msg) = 0;
-	virtual int32_t RemoveAllFound(cIGZMessage2 const& msg) = 0;
-
 	virtual bool RemoveFirstFound(GZGUID msgType) = 0;
+	virtual bool RemoveFirstFound(cIGZMessage2 const& msg) = 0;
+
 	virtual bool RemoveLastFound(GZGUID msgType) = 0;
+	virtual bool RemoveLastFound(cIGZMessage2 const& msg) = 0;
+
 	virtual int32_t RemoveAllFound(GZGUID msgType) = 0;
+	virtual int32_t RemoveAllFound(cIGZMessage2 const& msg) = 0;
 
 	virtual int32_t RemoveAll() = 0;
 

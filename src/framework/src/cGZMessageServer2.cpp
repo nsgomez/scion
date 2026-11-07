@@ -32,13 +32,41 @@ cGZMessageServer2::GeneralMessageTargetInfo::GeneralMessageTargetInfo(GeneralMes
 
 cGZMessageServer2::cGZMessageServer2() :
 	cRZSystemService(RZSRVID_cGZMessageServer2, 5000000),
-	alwaysClearQueueOnTick(true)
+	mTotalMessagesDequeued(0),
+	mAlwaysClearQueueOnTick(true),
+	mPendingNotificationOps(0),
+	mPendingGeneralMessageCount(0)
 {
 }
 
 cGZMessageServer2::~cGZMessageServer2()
 {
-	// TODO
+	mNotificationLock.Lock();
+
+	mPendingNotificationOps = 0;
+	while (!mNotificationTargets.empty())
+	{
+		MessageTargetMap::iterator it = mNotificationTargets.begin();
+		MessageTargetList* list = it->second;
+		mNotificationTargets.erase(it);
+
+		if (list != NULL)
+		{
+			while (!list->empty())
+			{
+				__try
+				{
+					cRZAutoRefCount<cIGZMessageTarget2> target = list->front();
+					list->pop_front();
+				}
+				__finally { }
+			}
+		}
+
+		delete list;
+	}
+
+	mNotificationLock.Unlock();
 }
 
 bool cGZMessageServer2::QueryInterface(GZIID iid, void** outPtr)
@@ -79,16 +107,16 @@ bool cGZMessageServer2::MessageSend(cIGZMessage2* msg)
 {
 	std::vector<cRZAutoRefCount<cIGZMessageTarget2> > targetsToNotify;
 
-	notificationLock.Lock();
+	mNotificationLock.Lock();
 	DoDelayedNotificationAdditionsAndRemovalsImmediately();
 
-	++pendingNotificationOps;
+	++mPendingNotificationOps;
 	GZGUID msgType = msg->GetType();
 
 	while (true)
 	{
-		MessageTargetMap::iterator targetMapIt = notificationTargets.find(msgType);
-		if (targetMapIt != notificationTargets.end())
+		MessageTargetMap::iterator targetMapIt = mNotificationTargets.find(msgType);
+		if (targetMapIt != mNotificationTargets.end())
 		{
 			const MessageTargetList* targetList = targetMapIt->second;
 
@@ -116,8 +144,8 @@ bool cGZMessageServer2::MessageSend(cIGZMessage2* msg)
 		msgType = 0;
 	}
 
-	--pendingNotificationOps;
-	notificationLock.Unlock();
+	--mPendingNotificationOps;
+	mNotificationLock.Unlock();
 
 	std::vector<cRZAutoRefCount<cIGZMessageTarget2> >::iterator it;
 	for (it = targetsToNotify.begin(); it != targetsToNotify.end(); ++it)
@@ -130,43 +158,52 @@ bool cGZMessageServer2::MessageSend(cIGZMessage2* msg)
 
 bool cGZMessageServer2::MessagePost(cIGZMessage2* msg, bool pushFront)
 {
-	cRZCriticalSectionHolder lock(messageQueueLock);
-	pushFront ? messageQueue.PushFront(msg) : messageQueue.PushBack(msg);
+	cRZCriticalSectionHolder lock(mMessageQueueLock);
+	pushFront ? mMessageQueue.PushFront(msg) : mMessageQueue.PushBack(msg);
 	return true;
 }
 
 bool cGZMessageServer2::AddNotification(cIGZMessageTarget2* target, GZGUID msgType)
 {
-	cRZCriticalSectionHolder lock(notificationLock);
-	if (pendingNotificationOps != 0)
+	cRZCriticalSectionHolder lock(mNotificationLock);
+	if (mPendingNotificationOps != 0)
 	{
-		delayedNotificationChanges.push_back(DelayedAddOrRemove(true, target, msgType));
-		target->AddRef();
+		mDelayedNotificationChanges.push_back(DelayedAddOrRemove(true, DelayedAddOrRemove::TargetAndType(target, msgType)));
 		return true;
 	}
 
-	pendingNotificationOps = 1;
+	mPendingNotificationOps = 1;
 
-	MessageTargetMap::iterator targetMapIt = notificationTargets.find(msgType);
-	if (targetMapIt == notificationTargets.end())
+	MessageTargetList* list;
+	MessageTargetList::iterator targetListIt;
+	MessageTargetMap::iterator targetMapIt = mNotificationTargets.find(msgType);
+
+	if (targetMapIt == mNotificationTargets.end())
 	{
-		MessageTargetList* list = new MessageTargetList();
-		notificationTargets.insert(MessageTargetMapEntry(msgType, list));
-
-		list->push_back(target);
+		list = new MessageTargetList();
+		mNotificationTargets.insert(MessageTargetMapEntry(msgType, list));
 	}
 	else
 	{
-		MessageTargetList* list = targetMapIt->second;
-		MessageTargetList::iterator targetListIt = std::find(list->begin(), list->end(), target);
+		list = targetMapIt->second;
+		targetListIt = list->begin();
 
-		if (targetListIt == list->end())
+		while (targetListIt != list->end())
 		{
-			list->push_back(target);
+			if (target == *targetListIt)
+			{
+				goto found;
+			}
+
+			++targetListIt;
 		}
 	}
 
-	--pendingNotificationOps;
+	list->push_back(NULL);
+	list->back() = target;
+
+found:
+	--mPendingNotificationOps;
 	DoDelayedNotificationAdditionsAndRemovals();
 
 	return true;
@@ -174,20 +211,30 @@ bool cGZMessageServer2::AddNotification(cIGZMessageTarget2* target, GZGUID msgTy
 
 bool cGZMessageServer2::RemoveNotification(cIGZMessageTarget2* target, GZGUID msgType)
 {
-	cRZCriticalSectionHolder lock(notificationLock);
-	if (pendingNotificationOps != 0)
+	cRZCriticalSectionHolder lock(mNotificationLock);
+	if (mPendingNotificationOps != 0)
 	{
-		delayedNotificationChanges.push_back(DelayedAddOrRemove(false, target, msgType));
+		mDelayedNotificationChanges.push_back(DelayedAddOrRemove(false, DelayedAddOrRemove::TargetAndType(target, msgType)));
 		return true;
 	}
 
-	pendingNotificationOps = 1;
+	mPendingNotificationOps = 1;
 
-	MessageTargetMap::iterator targetMapIt = notificationTargets.find(msgType);
-	if (targetMapIt != notificationTargets.end())
+	MessageTargetMap::iterator targetMapIt = mNotificationTargets.find(msgType);
+	if (targetMapIt != mNotificationTargets.end())
 	{
 		MessageTargetList* list = targetMapIt->second;
-		MessageTargetList::iterator targetListIt = std::find(list->begin(), list->end(), target);
+		MessageTargetList::iterator targetListIt = list->begin();
+
+		while (targetListIt != list->end())
+		{
+			if (target == *targetListIt)
+			{
+				break;
+			}
+
+			++targetListIt;
+		}
 
 		if (targetListIt != list->end())
 		{
@@ -195,12 +242,12 @@ bool cGZMessageServer2::RemoveNotification(cIGZMessageTarget2* target, GZGUID ms
 			if (list->empty())
 			{
 				delete list;
-				notificationTargets.erase(msgType);
+				mNotificationTargets.erase(msgType);
 			}
 		}
 	}
 
-	--pendingNotificationOps;
+	--mPendingNotificationOps;
 	DoDelayedNotificationAdditionsAndRemovals();
 
 	return true;
@@ -208,25 +255,22 @@ bool cGZMessageServer2::RemoveNotification(cIGZMessageTarget2* target, GZGUID ms
 
 void cGZMessageServer2::GeneralMessagePostToTarget(cIGZMessage2* msg, cIGZMessageTarget2* target)
 {
-	cRZCriticalSectionHolder lock(generalMessagePostLock);
-	generalMessages.push_back(GeneralMessageTargetInfo(target, msg));
+	cRZCriticalSectionHolder lock(mGeneralMessagePostLock);
+	mGeneralMessages.push_back(GeneralMessageTargetInfo(target, msg));
 }
 
 void cGZMessageServer2::CancelGeneralMessagePostsToTarget(cIGZMessageTarget2* target)
 {
-	cRZCriticalSectionHolder lock(generalMessagePostLock);
-	GeneralMessageDeque::iterator it = generalMessages.begin();
+	cRZCriticalSectionHolder lock(mGeneralMessagePostLock);
+	GeneralMessageDeque::iterator it = mGeneralMessages.begin();
 
-	while (true)
+	while (it != mGeneralMessages.end())
 	{
-		if (generalMessages.empty())
-		{
-			break;
-		}
-
 		if (it->target == target)
 		{
-			it = generalMessages.erase(it);
+			GeneralMessageDeque::iterator original = it;
+			++it;
+			mGeneralMessages.erase(original);
 		}
 		else
 		{
@@ -237,46 +281,49 @@ void cGZMessageServer2::CancelGeneralMessagePostsToTarget(cIGZMessageTarget2* ta
 
 bool cGZMessageServer2::OnTick(uint32_t tickCount)
 {
-	messageQueueLock.Lock();
-	int32_t pendingMessageCount = messageQueue.GetMessageCount();
-	uint64_t targetMessageCount = pendingMessageCount + totalMessagesDequeued;
-	messageQueueLock.Unlock();
+	cIGZMessage2* msg = NULL;
+
+	mMessageQueueLock.Lock();
+	uint32_t pendingMessageCount = mMessageQueue.GetMessageCount();
+	uint64_t targetMessageCount = pendingMessageCount + mTotalMessagesDequeued;
+	mMessageQueueLock.Unlock();
 
 	do
 	{
 		do
 		{
-			messageQueueLock.Lock();
+			mMessageQueueLock.Lock();
 
 			cIGZMessage2* msg;
-			bool haveMessage = messageQueue.GetFrontMessage(&msg);
+			bool haveMessage = mMessageQueue.GetFrontMessage(&msg);
 			if (haveMessage)
 			{
-				++totalMessagesDequeued;
+				++mTotalMessagesDequeued;
 			}
 
-			messageQueueLock.Unlock();
+			mMessageQueueLock.Unlock();
 			if (!haveMessage)
 			{
 				goto processGeneralMessages;
 			}
 
 			MessageSend(msg);
+			msg->Release();
 		}
-		while (alwaysClearQueueOnTick);
+		while (mAlwaysClearQueueOnTick);
 	}
-	while (totalMessagesDequeued < targetMessageCount);
+	while (mTotalMessagesDequeued < targetMessageCount);
 
 processGeneralMessages:
-	generalMessagePostLock.Lock();
-	if (generalMessages.empty())
+	mGeneralMessagePostLock.Lock();
+	if (!mGeneralMessages.empty())
 	{
-		generalMessagePostLock.Unlock();
+		mGeneralMessagePostLock.Unlock();
+		SendGeneralMessages();
 	}
 	else
 	{
-		generalMessagePostLock.Unlock();
-		SendGeneralMessages();
+		mGeneralMessagePostLock.Unlock();
 	}
 
 	return true;
@@ -284,59 +331,67 @@ processGeneralMessages:
 
 int32_t cGZMessageServer2::GetMessageQueueSize()
 {
-	cRZCriticalSectionHolder lock(messageQueueLock);
-	return messageQueue.GetMessageCount();
+	cRZCriticalSectionHolder lock(mMessageQueueLock);
+	return mMessageQueue.GetMessageCount();
 }
 
 void cGZMessageServer2::SetAlwaysClearQueueOnTick(bool clearOnTick)
 {
-	this->alwaysClearQueueOnTick = clearOnTick;
+	this->mAlwaysClearQueueOnTick = clearOnTick;
 }
 
 uint32_t cGZMessageServer2::GetRefCount() const
 {
-	return cRZUnknown::RefCount();
+	return RefCount();
 }
 
 bool cGZMessageServer2::CreateMessage(GZCLSID clsid, GZIID iid, void** msgOut)
 {
-	if (clsid == GZCLSID_cRZMessage2Standard)
-	{
-		cRZAutoRefCount<cIGZMessage2> msg = new cRZMessage2Standard();
-		return msg->QueryInterface(iid, msgOut);
-	}
-	else
+	if (clsid != GZCLSID_cRZMessage2Standard)
 	{
 		return false;
 	}
+	
+	cRZAutoRefCount<cIGZMessage2> msg = new cRZMessage2Standard();
+	return msg->QueryInterface(iid, msgOut);
+}
+
+cIGZSystemService* cGZMessageServer2::Create()
+{
+	return new cGZMessageServer2();
+}
+
+GZCLSID cGZMessageServer2::GetGZCLSID()
+{
+	return GZCLSID_cGZMessageServer2;
 }
 
 void cGZMessageServer2::DoDelayedNotificationAdditionsAndRemovals()
 {
 	static bool bAlreadyHere = false;
 
-	cRZCriticalSectionHolder lock(notificationLock);
+	cRZCriticalSectionHolder lock(mNotificationLock);
 	if (!bAlreadyHere)
 	{
 		bAlreadyHere = true;
-		if (pendingNotificationOps == 0)
+		if (mPendingNotificationOps == 0)
 		{
-			DelayedNotificationList::iterator it = delayedNotificationChanges.begin();
-			DelayedNotificationList::iterator itEnd = delayedNotificationChanges.end();
+			DelayedNotificationList::iterator it = mDelayedNotificationChanges.begin();
+			DelayedNotificationList::iterator itEnd = mDelayedNotificationChanges.end();
 
 			while (it != itEnd)
 			{
 				if (!it->isAddition)
 				{
-					RemoveNotification(it->target, it->msgType);
+					RemoveNotification(it->info.target, it->info.msgType);
 				}
 				else
 				{
-					AddNotification(it->target, it->msgType);
-					it->target->Release();
+					AddNotification(it->info.target, it->info.msgType);
+					it->info.target->Release();
 				}
 
-				it = delayedNotificationChanges.erase(it);
+				it = mDelayedNotificationChanges.erase(it);
 			}
 		}
 
@@ -346,19 +401,19 @@ void cGZMessageServer2::DoDelayedNotificationAdditionsAndRemovals()
 
 void cGZMessageServer2::DoDelayedNotificationAdditionsAndRemovalsImmediately()
 {
-	for (DelayedNotificationList::iterator it = delayedNotificationChanges.begin(); it != delayedNotificationChanges.end(); ++it)
+	for (DelayedNotificationList::iterator it = mDelayedNotificationChanges.begin(); it != mDelayedNotificationChanges.end(); ++it)
 	{
 		bool isAddition = it->isAddition;
-		cIGZMessageTarget2* target = it->target;
-		GZGUID msgType = it->msgType;
+		cIGZMessageTarget2* target = it->info.target;
+		GZGUID msgType = it->info.msgType;
 
-		MessageTargetMap::iterator targetMapIt = notificationTargets.find(it->msgType);
+		MessageTargetMap::iterator targetMapIt = mNotificationTargets.find(it->info.msgType);
 
 		// FUTURE: These inner blocks are just copied from the AddNotification and RemoveNotification implementations.
 		// It would be nice to refactor these and make them inline methods.
 		if (!isAddition)
 		{
-			if (targetMapIt != notificationTargets.end())
+			if (targetMapIt != mNotificationTargets.end())
 			{
 				MessageTargetList* list = targetMapIt->second;
 				MessageTargetList::iterator targetListIt = std::find(list->begin(), list->end(), target);
@@ -369,17 +424,17 @@ void cGZMessageServer2::DoDelayedNotificationAdditionsAndRemovalsImmediately()
 					if (list->empty())
 					{
 						delete list;
-						notificationTargets.erase(msgType);
+						mNotificationTargets.erase(msgType);
 					}
 				}
 			}
 		}
 		else
 		{
-			if (targetMapIt == notificationTargets.end())
+			if (targetMapIt == mNotificationTargets.end())
 			{
 				MessageTargetList* list = new MessageTargetList();
-				notificationTargets.insert(MessageTargetMapEntry(msgType, list));
+				mNotificationTargets.insert(MessageTargetMapEntry(msgType, list));
 				list->push_back(target);
 			}
 			else
@@ -395,16 +450,16 @@ void cGZMessageServer2::DoDelayedNotificationAdditionsAndRemovalsImmediately()
 		}
 	}
 
-	delayedNotificationChanges.clear();
+	mDelayedNotificationChanges.clear();
 }
 
 void cGZMessageServer2::SendGeneralMessages()
 {
-	generalMessagePostLock.Lock();
-	if (pendingGeneralMessageCount < 1)
+	mGeneralMessagePostLock.Lock();
+	if (mPendingGeneralMessageCount < 1)
 	{
-		int32_t size = generalMessages.size();
-		pendingGeneralMessageCount = size;
+		int32_t size = mGeneralMessages.size();
+		mPendingGeneralMessageCount = size;
 
 		if (size < 1)
 		{
@@ -414,20 +469,20 @@ void cGZMessageServer2::SendGeneralMessages()
 
 	do
 	{
-		--pendingGeneralMessageCount;
-		if (!generalMessages.empty())
+		--mPendingGeneralMessageCount;
+		if (!mGeneralMessages.empty())
 		{
-			GeneralMessageTargetInfo info(generalMessages.front());
-			generalMessages.pop_front();
+			GeneralMessageTargetInfo info(mGeneralMessages.front());
+			mGeneralMessages.pop_front();
 
-			generalMessagePostLock.Unlock();
+			mGeneralMessagePostLock.Unlock();
 			info.target->DoMessage(info.msg);
-			generalMessagePostLock.Lock();
+			mGeneralMessagePostLock.Lock();
 		}
 	}
-	while (pendingGeneralMessageCount > 0);
+	while (mPendingGeneralMessageCount > 0);
 
 end:
-	--pendingGeneralMessageCount; // FUTURE: This accounting just feels wrong
-	generalMessagePostLock.Unlock();
+	--mPendingGeneralMessageCount; // FUTURE: This accounting just feels wrong
+	mGeneralMessagePostLock.Unlock();
 }
