@@ -17,18 +17,39 @@
  */
 
 #pragma once
+#include <ctime>
 #include <stdint.h>
 
 class cRZTime
 {
 public:
 	cRZTime();
-	cRZTime(uint32_t unixTime);
+	cRZTime(uint32_t unixTime) :
+		mTimestamp(unixTime)
+	{
+	}
 
 public:
 	uint32_t Timestamp() const { return mTimestamp; }
-	uint32_t GMT() const;
+	uint32_t GMT() const
+	{
+		uint32_t result = mTimestamp - _timezone;
+		if (cRZTime(result).IsDST())
+		{
+			result += (60 * 60);
+		}
+
+		return result;
+	}
+
+	uint32_t Hour() const;
+	uint32_t Minute() const;
+
+	bool IsDST() const;
 
 protected:
+	static cRZTime DaylightSavingStart(uint32_t year);
+	static cRZTime DaylightSavingEnd(uint32_t year);
+
 	uint32_t mTimestamp;
 };

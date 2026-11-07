@@ -18,19 +18,29 @@
 
 #include "cRZThreadSignal.h"
 
-cRZThreadSignal::cRZThreadSignal(bool manualReset)
+cRZThreadSignal::cRZThreadSignal(bool manualReset) :
+	mSignal(NULL)
 {
 	SignalPlatformData* newSignal = new SignalPlatformData();
-	this->signal = newSignal;
+	mSignal = newSignal;
 
 	newSignal->isManualReset = manualReset;
-	newSignal->event = CreateEvent(NULL, manualReset, FALSE, NULL);
+
+	if (!manualReset)
+	{
+		newSignal->event = CreateEvent(NULL, FALSE, FALSE, NULL);
+	}
+	else
+	{
+		newSignal->event = CreateEvent(NULL, TRUE, FALSE, NULL);
+	}
 }
 
 cRZThreadSignal::~cRZThreadSignal()
 {
-	CloseHandle(signal->event);
-	delete signal;
+	SignalPlatformData* platformData = mSignal;
+	CloseHandle(platformData->event);
+	delete platformData;
 }
 
 uint32_t cRZThreadSignal::Release()
@@ -43,18 +53,16 @@ uint32_t cRZThreadSignal::Release()
 	return 0;
 }
 
-bool cRZThreadSignal::Signal()
+int32_t cRZThreadSignal::Signal()
 {
-	HANDLE hEvent = signal->event;
-	bool result = false;
-
-	if (!signal->isManualReset)
+	int32_t result = FALSE;
+	if (!mSignal->isManualReset)
 	{
-		result = PulseEvent(hEvent) != FALSE;
+		result = PulseEvent(mSignal->event) != FALSE;
 	}
 	else
 	{
-		SetEvent(hEvent);
+		SetEvent(mSignal->event);
 	}
 
 	return result;
@@ -62,23 +70,18 @@ bool cRZThreadSignal::Signal()
 
 bool cRZThreadSignal::Broadcast()
 {
-	return PulseEvent(signal->event) != FALSE;
+	return PulseEvent(mSignal->event) != FALSE;
 }
 
 cIGZThreadSignal::TimedWaitResult cRZThreadSignal::TimedWait(uint32_t waitTimeInMicroseconds)
 {
-	HANDLE hEvent = signal->event;
+	SignalPlatformData* platformData = mSignal;
+	cRZCriticalSectionHolder lock(mSignal->criticalSection);
 
-	cRZCriticalSectionHolder lock(signal->criticalSection);
 	cIGZThreadSignal::TimedWaitResult operationResult = cIGZThreadSignal::TimedWaitResult::Success;
+	uint32_t waitTimeInMilliseconds = (waitTimeInMicroseconds == -1) ? waitTimeInMicroseconds : (waitTimeInMicroseconds / 1000);
 
-	if (waitTimeInMicroseconds != -1)
-	{
-		waitTimeInMicroseconds /= 1000;
-	}
-
-	DWORD waitResult = WaitForSingleObject(hEvent, waitTimeInMicroseconds /* converted to milliseconds */);
-
+	DWORD waitResult = WaitForSingleObject(mSignal->event, waitTimeInMilliseconds);
 	if (waitResult == WAIT_FAILED)
 	{
 		operationResult = cIGZThreadSignal::TimedWaitResult::Failure;
@@ -91,18 +94,18 @@ cIGZThreadSignal::TimedWaitResult cRZThreadSignal::TimedWait(uint32_t waitTimeIn
 	return operationResult;
 }
 
-bool cRZThreadSignal::IsValid()
+int32_t cRZThreadSignal::IsValid()
 {
-	return signal->event != NULL;
+	return mSignal->event != NULL;
 }
 
 bool cRZThreadSignal::Unsignal()
 {
-	return ResetEvent(signal->event) != FALSE;
+	return ResetEvent(mSignal->event) != FALSE;
 }
 
-bool cRZThreadSignal::GetEventHandle(void* eventOut)
+int32_t cRZThreadSignal::GetEventHandle(void* eventOut)
 {
-	*reinterpret_cast<HANDLE*>(eventOut) = signal->event;
+	*reinterpret_cast<HANDLE*>(eventOut) = mSignal->event;
 	return true;
 }

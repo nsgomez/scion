@@ -20,6 +20,9 @@
 #include <Windows.h>
 #include "cIGZString.h"
 #include "RZPlatform.h"
+#include "RZStringUtil.h"
+
+typedef DWORD (WINAPI *pfnGetModuleFileNameW)(HMODULE hModule, LPWSTR lpFilename, DWORD nSize);
 
 bool RZIsKeyDownNow(uint32_t key)
 {
@@ -38,15 +41,39 @@ int32_t RZThreadSafeAdd(int32_t volatile* addend, int32_t value)
 
 uint32_t RZGetCurrentAppPath(cIGZString& out)
 {
-	// TODO: use GetModuleFileNameW instead if supported
+	static bool sTriedWideFunction;
+	static pfnGetModuleFileNameW sGetModuleFileNameW;
+
+	if (!sTriedWideFunction)
+	{
+		HMODULE module = GetModuleHandle("Kernel32.dll");
+		if (module != NULL)
+		{
+			sGetModuleFileNameW = reinterpret_cast<pfnGetModuleFileNameW>(GetProcAddress(module, "GetModuleFileNameW"));
+		}
+
+		sTriedWideFunction = true;
+	}
+
+	if (sGetModuleFileNameW != NULL)
+	{
+		wchar_t widePath[MAX_PATH + 1];
+		DWORD pathLen = sGetModuleFileNameW(NULL, widePath, MAX_PATH);
+
+		if (pathLen != 0)
+		{
+			ConvertStringEncoding(widePath, pathLen, GZ_CODEPAGE_UTF16, out);
+		}
+	}
+
 	if (out.Strlen() == 0)
 	{
-		char path[MAX_PATH];
+		char path[MAX_PATH + 1];
 		DWORD pathLen = GetModuleFileName(NULL, path, MAX_PATH);
 
 		if (pathLen != 0)
 		{
-			out.FromChar(path, pathLen);
+			ConvertStringEncoding(path, pathLen, GZ_CODEPAGE_SYSTEM, out);
 		}
 	}
 

@@ -17,7 +17,7 @@
  */
 
 #pragma once
-#include <map>
+#include <hash_map>
 #include <vector>
 #include "cIGZCOMDirector.h"
 #include "cIGZFrameworkHooks.h"
@@ -84,12 +84,13 @@ protected:
 
 	typedef std::vector<cRZCOMDllDirector*> ChildDirectorArray;
 	typedef std::pair<DummyFunctionPtr, FactoryFunctionType> FactoryFuncRecord;
-	typedef std::map<GZCLSID, FactoryFuncRecord> ClassObjectMap;
+	typedef std::hash_map<GZCLSID, FactoryFuncRecord> ClassObjectMap;
 
-	uint32_t refCount;
-	cRZString libraryPath;
-	cIGZFramework* framework;
-	cIGZCOM* com;
-	ChildDirectorArray childDirectors;
-	ClassObjectMap classObjectMap;
+	uint32_t mRefCount;
+	uint32_t mUnused;
+	cRZString mLibraryPath;
+	cIGZCOM* mCom;
+	cIGZFramework* mFramework;
+	ChildDirectorArray mChildDirectors;
+	ClassObjectMap mClassObjectMap;
 };

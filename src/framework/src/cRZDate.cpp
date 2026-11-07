@@ -44,6 +44,11 @@ cRZDate::cRZDate(cGZDate const& date) :
 {
 }
 
+cRZDate::cRZDate(uint32_t day, uint32_t year)
+{
+	Set(day, year);
+}
+
 cRZDate::cRZDate(uint32_t month, uint32_t day, uint32_t year)
 {
 	mDateCode = Jday(month, day, year);

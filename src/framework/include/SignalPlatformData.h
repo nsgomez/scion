@@ -34,7 +34,7 @@ public:
 
 public:
 	HANDLE event; // FUTURE: it might be nice to replace this with the Win7 ConditionVariable API
-	bool isManualReset;
+	int32_t isManualReset;
 	cRZString unusedStr;
 	cRZCriticalSection criticalSection;
 };

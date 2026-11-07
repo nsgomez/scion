@@ -22,7 +22,7 @@
 
 cGZApp::cGZApp(char const* moduleName) :
 	cRZSystemService(RZSRVID_cGZApp, -2000000),
-	moduleName(moduleName)
+	mModuleName(moduleName)
 {
 }
 
@@ -51,7 +51,7 @@ uint32_t cGZApp::AddRef(void)
 
 uint32_t cGZApp::Release(void)
 {
-	return cRZSystemService::Release();
+	return RemoveRef();
 }
 
 cIGZSystemService* cGZApp::AsIGZSystemService(void)
@@ -61,7 +61,7 @@ cIGZSystemService* cGZApp::AsIGZSystemService(void)
 
 char const* cGZApp::ModuleName(void)
 {
-	return moduleName.c_str();
+	return mModuleName.c_str();
 }
 
 cIGZFramework* cGZApp::Framework(void)

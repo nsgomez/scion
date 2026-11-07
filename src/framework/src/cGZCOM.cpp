@@ -22,15 +22,23 @@
 #include "cRZCOMDllDirector.h"
 #include "cRZDate.h"
 #include "cRZThread.h"
+#include "cRZTime.h"
 #include "RZPlatform.h"
 #include "RZStatics.h"
 
 static const GZGUID RZSRVID_cGZCOM = 0xA3CD8DB3;
 
 cGZCOM::cGZCOM() :
-	cRZSystemService(RZSRVID_cGZCOM, 10000000)
+	cRZSystemService(RZSRVID_cGZCOM, 10000000),
+	mCriticalSectionPtr(&mCriticalSection),
+	mRng(0xFFFFFFFF),
+	mInitialized(false),
+	mUnused(0),
+	mCurrentLibrary(NULL),
+	mFramework(NULL),
+	mComDirector(NULL),
+	mNextGuidGenTime(0)
 {
-	nextGuidGenTime = 0;
 }
 
 cGZCOM::~cGZCOM()
@@ -39,14 +47,14 @@ cGZCOM::~cGZCOM()
 
 bool cGZCOM::QueryInterface(GZIID iid, void** outPtr)
 {
-	if (iid == GZIID_cIGZCOM)
+	if (iid != GZIID_cIGZCOM)
 	{
-		*outPtr = static_cast<cIGZCOM*>(this);
-		AddRef();
-		return true;
+		return cRZSystemService::QueryInterface(iid, outPtr);
 	}
 	
-	return cRZSystemService::QueryInterface(iid, outPtr);
+	*outPtr = static_cast<cIGZCOM*>(this);
+	AddRef();
+	return true;
 }
 
 uint32_t cGZCOM::AddRef()
@@ -56,52 +64,52 @@ uint32_t cGZCOM::AddRef()
 
 uint32_t cGZCOM::Release()
 {
-	return cRZSystemService::Release();
+	return RemoveRef();
 }
 
 bool cGZCOM::GetClassObject(GZCLSID clsid, GZIID iid, void** outPtr)
 {
-	criticalSection.Lock();
+	mCriticalSection.Lock();
 
-	tIdMap::iterator it = clsidMap.find(clsid);
-	if (it == clsidMap.end())
+	tIdMap::iterator it = mClsidMap.find(clsid);
+	if (it == mClsidMap.end())
 	{
-		criticalSection.Unlock();
+		mCriticalSection.Unlock();
 
 		if (clsid == GZCLSID_cGZFramework)
 		{
-			return framework->QueryInterface(iid, outPtr);
+			return mFramework->QueryInterface(iid, outPtr);
 		}
 
-		return comDirector->GetClassObject(clsid, iid, outPtr);
+		return mComDirector->GetClassObject(clsid, iid, outPtr);
 	}
 
-	cGZCOMLibrary* const comLibrary = (*it).second.second;
-	criticalSection.Unlock();
+	cGZCOMLibrary* const mComLibrary = (*it).second.second;
+	mCriticalSection.Unlock();
 
-	return GetLibObject(*comLibrary, clsid, iid, outPtr);
+	return GetLibObject(*mComLibrary, clsid, iid, outPtr);
 }
 
 cIGZFramework* cGZCOM::Framework()
 {
-	return framework;
+	return mFramework;
 }
 
 bool cGZCOM::AddLibrary(const cIGZString& path)
 {
 	cGZCOMLibrary lib(path);
 
-	criticalSection.Lock();
-	tLibraries::iterator it(libraries.find(lib));
+	mCriticalSection.Lock();
+	tLibraries::iterator it(mLibraries.find(lib));
 
-	if (it != libraries.end())
+	if (it != mLibraries.end())
 	{
-		criticalSection.Unlock();
+		mCriticalSection.Unlock();
 		return true;
 	}
 
-	it = libraries.insert(lib).first;
-	criticalSection.Unlock();
+	it = mLibraries.insert(lib).first;
+	mCriticalSection.Unlock();
 
 	cGZCOMLibrary& insertedLib = const_cast<cGZCOMLibrary&>(*it);
 	if (UpdateClassRegistry(insertedLib))
@@ -120,9 +128,9 @@ bool cGZCOM::AddLibrary(const cIGZString& path)
 
 void cGZCOM::FreeUnusedLibraries(void)
 {
-	cRZCriticalSectionHolder lock(criticalSection);
+	mCriticalSection.Lock();
 
-	for (tLibraries::iterator it = libraries.begin(); it != libraries.end(); ++it)
+	for (tLibraries::iterator it = mLibraries.begin(); it != mLibraries.end(); ++it)
 	{
 		cGZCOMLibrary& library = const_cast<cGZCOMLibrary&>(*it);
 		if (library.IsLoaded() && CanUnloadLibrary(library))
@@ -130,60 +138,47 @@ void cGZCOM::FreeUnusedLibraries(void)
 			library.Free();
 		}
 	}
+
+	mCriticalSection.Unlock();
 }
 
 static int32_t GetGuidGenSeconds(void)
 {
 	cRZDate referenceDate(2, 2, 1997);
-	cRZDate nowDate1;
+	cRZDate nowDate;
+	cRZTime nowTime;
 
-	time_t rawTime;
-	time(&rawTime);
+	uint32_t days = nowDate.DateCode();
+	days -= referenceDate.DateCode();
 
-	tm* localTime = localtime(&rawTime);
-	cRZDate nowDate2(localTime->tm_mon + 1, localTime->tm_mday, localTime->tm_year + 1900);
+	uint32_t hours = days * 24 + nowTime.Hour();
+	uint32_t minutes = hours * 60;
+	minutes += nowTime.Minute();
 
-	uint32_t timestamp;
-	if (nowDate2.DateCode() == 0)
-	{
-		timestamp = 0;
-	}
-	else
-	{
-		timestamp = localTime->tm_sec
-			+ (localTime->tm_min * 60)
-			+ ((localTime->tm_hour - 1) * 60 * 60)
-			+ ((nowDate2.DateCode() - cRZDate::mRefDate.DateCode()) * 60 * 60 * 24)
-			+ (60 * 60);
-	}
-
-	return ((nowDate1.DateCode() - referenceDate.DateCode()) * 60 * 60 * 24)
-		+ (((timestamp % (60 * 60 * 24)) / (60 * 60)) * (60 * 60))
-		+ (((timestamp % (60 * 60)) / 60) * 60)
-		+ (timestamp % 60);
+	return (int32_t)(minutes * 60 + nowTime.Timestamp() % 60);
 }
 
 bool cGZCOM::CreateGuid(GZGUID* outGuid)
 {
-	cRZCriticalSectionHolder lock(criticalSection);
-	while (time(NULL) < nextGuidGenTime)
+	cRZCriticalSectionHolder lock(mCriticalSection);
+	while (time(NULL) < mNextGuidGenTime)
 	{
 		cRZThread::SleepCurrentThread(250000);
 	}
 
-	uint32_t rand = rng.RandomUint32Uniform(8);
-	*outGuid = (GetGuidGenSeconds() & 0x1FFFFFFF) | (rand << 29);
+	uint32_t rand = mRng.RandomUint32Uniform(8) << 29;;
+	*outGuid = rand | (GetGuidGenSeconds() & 0x1FFFFFFF);
 	
-	nextGuidGenTime = time(NULL) + 1;
+	mNextGuidGenTime = time(NULL) + 1;
 	return true;
 }
 
 bool cGZCOM::CreateGuids(uint32_t guids[], uint32_t count)
 {
-	cRZCriticalSectionHolder lock(criticalSection);
+	cRZCriticalSectionHolder lock(mCriticalSection);
 	if (count != 0)
 	{
-		while (time(NULL) < nextGuidGenTime)
+		while (time(NULL) < mNextGuidGenTime)
 		{
 			cRZThread::SleepCurrentThread(250000);
 		}
@@ -191,12 +186,12 @@ bool cGZCOM::CreateGuids(uint32_t guids[], uint32_t count)
 		int32_t guidGenTime = GetGuidGenSeconds();
 		uint32_t prefix = 0;
 
-		for (uint32_t i = 0; i < count; i++, prefix += 0x20000000)
+		for (uint32_t i = 0; i < count; i++)
 		{
-			guids[i] = (((i / 8) + guidGenTime) & 0x1FFFFFFF) | prefix;
+			guids[i] = (((i / 8) + guidGenTime) & 0x1FFFFFFF) | (i << 29);
 		}
 
-		nextGuidGenTime = time(NULL) + ((count + 7) / 8);
+		mNextGuidGenTime = time(NULL) + ((count + 7) / 8);
 	}
 
 	return true;
@@ -204,17 +199,17 @@ bool cGZCOM::CreateGuids(uint32_t guids[], uint32_t count)
 
 bool cGZCOM::RealInit()
 {
-	if (!initialized)
+	if (!mInitialized)
 	{
-		framework = RZGetFramework();
-		comDirector = RZGetCOMDllDirector();
+		mFramework = RZGetFramework();
+		mComDirector = RZGetCOMDllDirector();
 
 		cRZString appPath;
 		RZGetCurrentAppPath(appPath);
 
-		if (comDirector->InitializeCOM(this, appPath))
+		if (mComDirector->InitializeCOM(this, appPath))
 		{
-			initialized = true;
+			mInitialized = true;
 			return true;
 		}
 
@@ -226,26 +221,26 @@ bool cGZCOM::RealInit()
 
 void cGZCOM::RealShutdown()
 {
-	if (initialized)
+	if (mInitialized)
 	{
 		FreeAllLibraries();
-		framework = NULL;
-		initialized = false;
+		mFramework = NULL;
+		mInitialized = false;
 	}
 }
 
 void cGZCOM::SetServiceRunning(bool running)
 {
-	cRZSystemService::SetServiceRunning(true);
+	cRZSystemService::SetServiceRunning(running);
 }
 
-uint32_t cGZCOM::EnumerateLibraries(cIGZCOMLibrary* libraries[], uint32_t& count)
+uint32_t cGZCOM::EnumerateLibraries(cIGZCOMLibrary* mLibraries[], uint32_t& count)
 {
-	uint32_t actualLibraryCount(this->libraries.size());
+	uint32_t actualLibraryCount(this->mLibraries.size());
 
-	if (libraries != NULL)
+	if (mLibraries != NULL)
 	{
-		tLibraries::iterator it(this->libraries.begin());
+		tLibraries::iterator it(this->mLibraries.begin());
 		uint32_t i = 0;
 
 		if (count > actualLibraryCount)
@@ -256,8 +251,8 @@ uint32_t cGZCOM::EnumerateLibraries(cIGZCOMLibrary* libraries[], uint32_t& count
 		while (i < count)
 		{
 			cGZCOMLibrary* const currentLib = const_cast<cGZCOMLibrary*>(&(*it));
-			libraries[i] = currentLib;
-			libraries[i]->AddRef();
+			mLibraries[i] = currentLib;
+			mLibraries[i]->AddRef();
 
 			++i;
 			++it;
@@ -275,8 +270,8 @@ void cGZCOM::EnumerateLibraries(GZCOMLibraryIterationFunction iterator, void* co
 {
 	if (iterator != NULL)
 	{
-		tLibraries::iterator it(libraries.begin());
-		tLibraries::iterator itEnd(libraries.end());
+		tLibraries::iterator it(mLibraries.begin());
+		tLibraries::iterator itEnd(mLibraries.end());
 
 		while (it != itEnd)
 		{
@@ -305,13 +300,13 @@ void cGZCOM::AddEntryCallback(GZCLSID clsid, uint32_t version, void* context)
 {
 	cGZCOM* const com = reinterpret_cast<cGZCOM*>(context);
 
-	tIdMap::iterator it(com->clsidMap.find(clsid));
-	if ((it != com->clsidMap.end()) && ((*it).second.first < version))
+	tIdMap::iterator it(com->mClsidMap.find(clsid));
+	if ((it != com->mClsidMap.end()) && ((*it).second.first < version))
 	{
-		com->clsidMap.erase(it);
+		com->mClsidMap.erase(it);
 	}
 
-	com->clsidMap.insert(std::pair<const GZCLSID, tClassObjectData>(clsid, tClassObjectData(version, com->currentLibrary)));
+	com->mClsidMap.insert(std::pair<const GZCLSID, tClassObjectData>(clsid, tClassObjectData(version, com->mCurrentLibrary)));
 }
 
 bool cGZCOM::CanUnloadLibrary(cGZCOMLibrary& lib)
@@ -327,9 +322,9 @@ bool cGZCOM::CanUnloadLibrary(cGZCOMLibrary& lib)
 
 void cGZCOM::FreeAllLibraries()
 {
-	cRZCriticalSectionHolder lock(criticalSection);
+	mCriticalSection.Lock();
 
-	for (tLibraries::iterator it = libraries.begin(); it != libraries.end(); ++it)
+	for (tLibraries::iterator it = mLibraries.begin(); it != mLibraries.end(); ++it)
 	{
 		cGZCOMLibrary& library = const_cast<cGZCOMLibrary&>(*it);
 		if (library.IsLoaded())
@@ -337,6 +332,8 @@ void cGZCOM::FreeAllLibraries()
 			library.Free();
 		}
 	}
+
+	mCriticalSection.Unlock();
 }
 
 bool cGZCOM::GetLibObject(cGZCOMLibrary& lib, GZCLSID clsid, GZIID iid, void** outPtr)
@@ -356,9 +353,12 @@ bool cGZCOM::UpdateClassRegistry(cGZCOMLibrary& lib)
 	{
 		cIGZCOMDirector* const libDirector = lib.GetDirector();
 
-		cRZCriticalSectionHolder lock(criticalSection);
-		currentLibrary = &lib;
-		libDirector->EnumClassObjects(cGZCOM::AddEntryCallback, static_cast<cGZCOM*>(this));
+		mCriticalSection.Lock();
+		mCurrentLibrary = &lib;
+		libDirector->EnumClassObjects(cGZCOM::AddEntryCallback, this);
+		mCriticalSection.Unlock();
+
+		return true;
 	}
 
 	return false;

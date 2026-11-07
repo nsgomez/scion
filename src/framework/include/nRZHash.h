@@ -21,8 +21,8 @@
 
 namespace nRZHash
 {
-	static uint32_t CRC24(char const* data, bool caseInsensitive);
-	static uint32_t CRC32(char const* data, uint32_t length);
+	uint32_t CRC24(char const* data, bool caseInsensitive);
+	uint32_t CRC32(uint8_t const* data, uint32_t length);
 
 	extern bool gbInitialized;
 	extern uint32_t gCRC24Table[256];

@@ -17,17 +17,21 @@
  */
 
 #define WIN32_LEAN_AND_MEAN
+#include <vector>
 #include <Windows.h>
 #include "cGZCOMLibrary.h"
 #include "cIGZCOMDirector.h"
 #include "RZPlatform.h"
 #include "RZStatics.h"
+#include "RZStringUtil.h"
 
-static bool GZCOMLibrary(HINSTANCE& handle, const char* path)
+typedef cIGZCOMDirector* (*GZCOMDirectorFactory)();
+
+static bool GZCOMLibrary(HINSTANCE& mHandle, const char* path)
 {
 	__try
 	{
-		handle = LoadLibrary(path);
+		mHandle = LoadLibrary(path);
 	}
 	__except (EXCEPTION_EXECUTE_HANDLER)
 	{
@@ -37,11 +41,11 @@ static bool GZCOMLibrary(HINSTANCE& handle, const char* path)
 	return true;
 }
 
-static bool GZCOMLibraryW(HINSTANCE& handle, const wchar_t* path)
+static bool GZCOMLibraryW(HINSTANCE& mHandle, const wchar_t* path)
 {
 	__try
 	{
-		handle = LoadLibraryW(path);
+		mHandle = LoadLibraryW(path);
 	}
 	__except (EXCEPTION_EXECUTE_HANDLER)
 	{
@@ -51,11 +55,11 @@ static bool GZCOMLibraryW(HINSTANCE& handle, const wchar_t* path)
 	return true;
 }
 
-static void GZCOMFreeLibrary(HINSTANCE handle, const char* path)
+static void GZCOMFreeLibrary(HINSTANCE mHandle, const char* path)
 {
 	__try
 	{
-		FreeLibrary(handle);
+		FreeLibrary(mHandle);
 	}
 	__except (EXCEPTION_EXECUTE_HANDLER)
 	{
@@ -80,12 +84,12 @@ cGZCOMLibrary::cGZCOMLibrary()
 {
 }
 
-cGZCOMLibrary::cGZCOMLibrary(const cIGZString& libraryPath)
-	: libraryPath(libraryPath)
-{
-}
-
-cGZCOMLibrary::~cGZCOMLibrary()
+cGZCOMLibrary::cGZCOMLibrary(const cIGZString& libraryPath) :
+	mLoaded(false),
+	mRefCount(0),
+	mDirector(NULL),
+	mLibraryPath(libraryPath),
+	mHandle(NULL)
 {
 }
 
@@ -109,94 +113,106 @@ bool cGZCOMLibrary::QueryInterface(GZIID iid, void** outPtr)
 
 uint32_t cGZCOMLibrary::AddRef()
 {
-	return ++refCount;
+	return ++mRefCount;
 }
 
 uint32_t cGZCOMLibrary::Release()
 {
-	return --refCount;
+	return --mRefCount;
 }
 
 bool cGZCOMLibrary::Load()
 {
-	if (loaded)
+	if (!mLoaded)
 	{
-		return true;
-	}
+		cRZString nativePath;
+		ConvertStringEncoding(mLibraryPath, nativePath, GZ_CODEPAGE_SYSTEM);
 
-	// TODO: call ConvertStringEncoding, use Unicode if available
-	char const* path = libraryPath.ToChar();
-	RZLoadLibraryA(reinterpret_cast<void**>(&handle), path);
-
-	if (handle == NULL)
-	{
-		LPSTR buffer = NULL;
-		va_list args = NULL;
-
-		FormatMessage(
-			FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS | FORMAT_MESSAGE_ALLOCATE_BUFFER,
-			NULL,
-			GetLastError(),
-			LANG_USER_DEFAULT,
-			reinterpret_cast<LPSTR>(&buffer),
-			0,
-			&args);
-
-		cRZString formattedMessage;
-		if (buffer != NULL)
+		if (GetVersion() & 0x80000000)
 		{
-			formattedMessage.Sprintf(
-				"Failed to load the requested dll \"%s\"\nWindows error message - \"%s\"",
-				path,
-				buffer);
+			GZCOMLibrary(mHandle, nativePath.ToChar());
+		}
+		else
+		{
+			uint32_t length = mLibraryPath.Strlen();
+			std::vector<wchar_t> buffer(length + 1);
+			ConvertStringEncoding(mLibraryPath, &buffer[0], length, GZ_CODEPAGE_UTF16);
+			buffer[length] = 0;
 
-			LocalFree(reinterpret_cast<HLOCAL>(buffer));
+			GZCOMLibraryW(mHandle, &buffer[0]);
+		}
+
+		if (mHandle == NULL)
+		{
+			cRZString message;
+			LPVOID systemMessage = NULL;
+
+			FormatMessageW(
+				FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_IGNORE_INSERTS | FORMAT_MESSAGE_FROM_SYSTEM,
+				NULL,
+				GetLastError(),
+				MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+				reinterpret_cast<LPWSTR>(&systemMessage),
+				0,
+				NULL);
+
+			if (systemMessage != NULL)
+			{
+				Sprintf(message, "Failed to load the requested dll \"%s\"\nWindows error message - \"%s\"", nativePath.ToChar(), systemMessage);
+				LocalFree(systemMessage);
+			}
+
+			return false;
+		}
+		else
+		{
+			GZCOMDirectorFactory getDirector = NULL;
+			mLoaded = true;
+
+			HINSTANCE module = mHandle;
+			RZGetProcAddress(reinterpret_cast<void**>(&getDirector), reinterpret_cast<void**>(&module), "GZDllGetGZCOMDirector");
+
+			if (getDirector == NULL)
+			{
+				Free();
+				return false;
+			}
+
+			cIGZCOMDirector* newDirector = getDirector();
+			if (newDirector == NULL)
+			{
+				cRZString message;
+				Sprintf(message, "cGZCOMLibrary::Load: Failed to acquire GZCOM director from library: \"%s\"\n", mLibraryPath.ToChar());
+				Free();
+				return false;
+			}
+
+			mDirector = newDirector;
+			if (!newDirector->InitializeCOM(GZCOM(), mLibraryPath))
+			{
+				cRZString message;
+				Sprintf(message, "cGZCOMLibrary::Load: GZCOM Director failed initialization in library: \"%s\"\n", mLibraryPath.ToChar());
+				Free();
+				return false;
+			}
 		}
 	}
-	else
-	{
-		loaded = true;
 
-		cIGZCOMDirector*(*getDirectorFn)(void) = NULL;
-		RZGetProcAddress(reinterpret_cast<void**>(&getDirectorFn), reinterpret_cast<void**>(&handle), "GZDllGetGZCOMDirector");
-
-		if (getDirectorFn != NULL)
-		{
-			cIGZCOMDirector* director = getDirectorFn();
-			if (director == NULL)
-			{
-				cRZString formattedMessage;
-				formattedMessage.Sprintf("cGZCOMLibrary::Load: Failed to acquire GZCOM director from library: \"%s\"\n", libraryPath.ToChar());
-			}
-			else
-			{
-				this->director = director;
-				if (this->director->InitializeCOM(GZCOM(), cRZString(libraryPath)))
-				{
-					return true;
-				}
-
-				cRZString formattedMessage;
-				formattedMessage.Sprintf("cGZCOMLibrary::Load: GZCOM Director failed initialization in library: \"%s\"\n", libraryPath.ToChar());
-			}
-		}
-	}
-
-	return false;
+	return true;
 }
 
 bool cGZCOMLibrary::Free()
 {
-	if (loaded)
+	if (mLoaded)
 	{
-		if (director)
+		if (mDirector)
 		{
-			director = NULL;
+			mDirector = NULL;
 		}
 
-		GZCOMFreeLibrary(handle, libraryPath.ToChar());
-		handle = NULL;
-		loaded = false;
+		GZCOMFreeLibrary(mHandle, mLibraryPath.ToChar());
+		mHandle = NULL;
+		mLoaded = false;
 	}
 
 	return true;
@@ -204,14 +220,14 @@ bool cGZCOMLibrary::Free()
 
 void cGZCOMLibrary::GetPath(cIGZString& path) const
 {
-	path.Copy(this->libraryPath);
+	path.Copy(this->mLibraryPath);
 }
 
 bool cGZCOMLibrary::SetPath(const cIGZString& path)
 {
-	if (!loaded)
+	if (!mLoaded)
 	{
-		this->libraryPath.Copy(path);
+		this->mLibraryPath.Copy(path);
 		return true;
 	}
 
@@ -220,64 +236,64 @@ bool cGZCOMLibrary::SetPath(const cIGZString& path)
 
 HINSTANCE cGZCOMLibrary::GetHandle() const
 {
-	return handle;
+	return mHandle;
 }
 
-void cGZCOMLibrary::SetHandle(HINSTANCE handle)
+void cGZCOMLibrary::SetHandle(HINSTANCE mHandle)
 {
-	this->handle = handle;
+	this->mHandle = mHandle;
 }
 
 cIGZCOMDirector* cGZCOMLibrary::GetDirector() const
 {
-	return director;
+	return mDirector;
 }
 
-void cGZCOMLibrary::SetDirector(cIGZCOMDirector* director)
+void cGZCOMLibrary::SetDirector(cIGZCOMDirector* mDirector)
 {
-	if (this->director != director)
+	if (this->mDirector != mDirector)
 	{
-		if (director)
+		if (mDirector)
 		{
-			director->AddRef();
+			mDirector->AddRef();
 		}
 
-		if (this->director)
+		if (this->mDirector)
 		{
-			this->director->Release();
+			this->mDirector->Release();
 		}
 
-		this->director = director;
+		this->mDirector = mDirector;
 	}
 }
 
 bool cGZCOMLibrary::IsLoaded() const
 {
-	return loaded;
+	return mLoaded;
 }
 
-void cGZCOMLibrary::SetLoaded(bool loaded)
+void cGZCOMLibrary::SetLoaded(bool mLoaded)
 {
-	this->loaded = loaded;
+	this->mLoaded = mLoaded;
 }
 
 bool cGZCOMLibrary::operator< (const cGZCOMLibrary& other) const
 {
 	cRZString comparand;
 	other.GetPath(comparand);
-	return libraryPath < comparand;
+	return mLibraryPath < comparand;
 }
 
 bool cGZCOMLibrary::operator> (const cGZCOMLibrary& other) const
 {
 	cRZString comparand;
 	other.GetPath(comparand);
-	return libraryPath > comparand;
+	return mLibraryPath > comparand;
 }
 
 bool cGZCOMLibrary::operator== (const cGZCOMLibrary& other) const
 {
 	cRZString comparand;
 	other.GetPath(comparand);
-	return libraryPath == comparand;
+	return mLibraryPath == comparand;
 }

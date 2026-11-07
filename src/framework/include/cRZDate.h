@@ -43,11 +43,7 @@ public:
 	{
 	}
 
-	cRZDate(uint32_t day, uint32_t year)
-	{
-		Set(day, year);
-	}
-
+	cRZDate(uint32_t day, uint32_t year);
 	cRZDate(uint32_t month, uint32_t day, uint32_t year);
 
 public:

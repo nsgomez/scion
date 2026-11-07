@@ -75,14 +75,15 @@ protected:
 	typedef std::map<GZCLSID, tClassObjectData> tIdMap;
 	typedef std::set<cGZCOMLibrary> tLibraries;
 
-	cRZCriticalSection criticalSection;
-	bool initialized;
-	uint32_t unused;
-	tIdMap clsidMap;
-	tLibraries libraries;
-	cGZCOMLibrary* currentLibrary;
-	cIGZFramework* framework;
-	cRZCOMDllDirector* comDirector;
-	cRZRandom rng;
-	int nextGuidGenTime;
+	cRZCriticalSection* mCriticalSectionPtr;
+	cRZCriticalSection mCriticalSection;
+	bool mInitialized;
+	uint32_t mUnused;
+	tIdMap mClsidMap;
+	tLibraries mLibraries;
+	cGZCOMLibrary* mCurrentLibrary;
+	cIGZFramework* mFramework;
+	cRZCOMDllDirector* mComDirector;
+	cRZRandom mRng;
+	int32_t mNextGuidGenTime;
 };

@@ -17,8 +17,8 @@
  */
 
 #pragma once
-#include <string>
 #include "cIGZApp.h"
+#include "cRZString.h"
 #include "cRZSystemService.h"
 
 static const GZGUID RZSRVID_cGZApp = 0x00000066;
@@ -54,5 +54,5 @@ public:
 	virtual void AddApplicationServicesHere();
 
 protected:
-	std::string moduleName;
+	cRZString mModuleName;
 };

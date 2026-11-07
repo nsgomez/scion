@@ -39,6 +39,11 @@ void ConvertStringEncoding(void const* src, uint32_t srcLength, int32_t codePage
 	// TODO
 }
 
+void Sprintf(cRZString& output, const char* format, ...)
+{
+	// TODO
+}
+
 std::vector<wchar_t> RZStringToUTF16(cIGZString const& src)
 {
 	std::vector<wchar_t> result;

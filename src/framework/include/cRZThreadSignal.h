@@ -30,15 +30,15 @@ public:
 
 public:
 	virtual uint32_t Release();
-	virtual bool Signal();
+	virtual int32_t Signal();
 	virtual bool Broadcast();
 	virtual TimedWaitResult TimedWait(uint32_t waitTimeInMicroseconds);
-	virtual bool IsValid();
+	virtual int32_t IsValid();
 
 public:
 	virtual bool Unsignal();
-	virtual bool GetEventHandle(void* eventOut);
+	virtual int32_t GetEventHandle(void* eventOut);
 
 protected:
-	SignalPlatformData* signal;
+	SignalPlatformData* mSignal;
 };

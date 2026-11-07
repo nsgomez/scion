@@ -31,8 +31,8 @@ public:
 
 public:
 	virtual uint32_t Release() = 0;
-	virtual bool Signal() = 0;
+	virtual int32_t Signal() = 0;
 	virtual bool Broadcast() = 0;
 	virtual TimedWaitResult TimedWait(uint32_t waitTimeInMicroseconds) = 0;
-	virtual bool IsValid() = 0;
+	virtual int32_t IsValid() = 0;
 };

@@ -16,12 +16,15 @@
  *  License along with this library; if not, see <https://www.gnu.org/licenses/>.
  */
 
-#include <cassert>
 #include "cIGZCOM.h"
 #include "cIGZString.h"
 #include "cRZCOMDllDirector.h"
 
-cRZCOMDllDirector::cRZCOMDllDirector()
+cRZCOMDllDirector::cRZCOMDllDirector() :
+	mRefCount(0),
+	mUnused(0),
+	mCom(NULL),
+	mFramework(NULL)
 {
 }
 
@@ -54,7 +57,7 @@ bool cRZCOMDllDirector::QueryInterface(GZIID iid, void** outPtr)
 
 uint32_t cRZCOMDllDirector::AddRef()
 {
-	return ++refCount;
+	return ++mRefCount;
 }
 
 uint32_t cRZCOMDllDirector::Release()
@@ -62,19 +65,20 @@ uint32_t cRZCOMDllDirector::Release()
 	return RemoveRef();
 }
 
-bool cRZCOMDllDirector::InitializeCOM(cIGZCOM* com, const cIGZString& libraryPath)
+bool cRZCOMDllDirector::InitializeCOM(cIGZCOM* mCom, const cIGZString& mLibraryPath)
 {
-	if (com != NULL)
+	if (mCom != NULL)
 	{
-		this->com = com;
-		this->framework = com->Framework();
-		this->libraryPath = libraryPath;
+		this->mCom = mCom;
+		this->mFramework = mCom->Framework();
+		this->mLibraryPath = mLibraryPath;
 
-		for (ChildDirectorArray::iterator it = childDirectors.begin(); it != childDirectors.end(); ++it)
+		for (ChildDirectorArray::iterator it = mChildDirectors.begin(); it != mChildDirectors.end(); ++it)
 		{
-			cRZCOMDllDirector* const director = *it;
-			director->InitializeCOM(com, libraryPath);
+			(*it)->InitializeCOM(mCom, mLibraryPath);
 		}
+
+		return true;
 	}
 
 	return false;
@@ -87,13 +91,13 @@ bool cRZCOMDllDirector::OnStart(cIGZCOM* pCOM)
 
 void cRZCOMDllDirector::EnumClassObjects(ClassObjectEnumerationCallback callback, void* context)
 {
-	for (ChildDirectorArray::iterator it = childDirectors.begin(); it != childDirectors.end(); ++it)
+	for (ChildDirectorArray::iterator it = mChildDirectors.begin(); it != mChildDirectors.end(); ++it)
 	{
 		cRZCOMDllDirector* const director = *it;
 		director->EnumClassObjects(callback, context);
 	}
 
-	for (ClassObjectMap::iterator it2 = classObjectMap.begin(); it2 != classObjectMap.end(); ++it2)
+	for (ClassObjectMap::iterator it2 = mClassObjectMap.begin(); it2 != mClassObjectMap.end(); ++it2)
 	{
 		uint32_t clsid = (*it2).first;
 		callback(clsid, 0, context);
@@ -102,7 +106,7 @@ void cRZCOMDllDirector::EnumClassObjects(ClassObjectEnumerationCallback callback
 
 bool cRZCOMDllDirector::GetClassObject(GZGUID clsid, GZIID iid, void** outPtr)
 {
-	for (ChildDirectorArray::iterator it = childDirectors.begin(); it != childDirectors.end(); ++it)
+	for (ChildDirectorArray::iterator it = mChildDirectors.begin(); it != mChildDirectors.end(); ++it)
 	{
 		cRZCOMDllDirector* const director = *it;
 		if (director->GetClassObject(clsid, iid, outPtr))
@@ -111,30 +115,33 @@ bool cRZCOMDllDirector::GetClassObject(GZGUID clsid, GZIID iid, void** outPtr)
 		}
 	}
 
-	ClassObjectMap::iterator it2 = classObjectMap.find(clsid);
-	if (it2 != classObjectMap.end())
+	ClassObjectMap::iterator it2 = mClassObjectMap.find(clsid);
+	if (it2 != mClassObjectMap.end())
 	{
 		FactoryFuncRecord& ffr = (*it2).second;
-		if (ffr.second == kFactoryFunctionType1)
+		switch (ffr.second)
 		{
-			FactoryFunctionPtr1 const ffp1 = reinterpret_cast<FactoryFunctionPtr1>(ffr.first);
-			cIGZUnknown* const newObj = ffp1();
-
-			if (newObj->QueryInterface(iid, outPtr))
+		case kFactoryFunctionType2:
 			{
-				return true;
+				FactoryFunctionPtr2 ffp2 = reinterpret_cast<FactoryFunctionPtr2>(ffr.first);
+				return ffp2(iid, outPtr);
 			}
 
-			newObj->Release();
-		}
-		else if (ffr.second == kFactoryFunctionType2)
-		{
-			FactoryFunctionPtr2 ffp2 = reinterpret_cast<FactoryFunctionPtr2>(ffr.first);
-			return ffp2(iid, outPtr);
-		}
-		else
-		{
-			assert(false);
+		case kFactoryFunctionType1:
+			{
+				cIGZUnknown* const newObj = reinterpret_cast<FactoryFunctionPtr1>(ffr.first)();
+				if (newObj->QueryInterface(iid, outPtr))
+				{
+					return true;
+				}
+
+				newObj->AddRef();
+				newObj->Release();
+				break;
+			}
+
+		default:
+			break;
 		}
 	}
 
@@ -143,9 +150,9 @@ bool cRZCOMDllDirector::GetClassObject(GZGUID clsid, GZIID iid, void** outPtr)
 
 bool cRZCOMDllDirector::CanUnloadNow(void)
 {
-	if (refCount == 0)
+	if (mRefCount == 0)
 	{
-		for (ChildDirectorArray::iterator it = childDirectors.begin(); it != childDirectors.end(); ++it)
+		for (ChildDirectorArray::iterator it = mChildDirectors.begin(); it != mChildDirectors.end(); ++it)
 		{
 			cRZCOMDllDirector* const director = *it;
 			if (!director->CanUnloadNow())
@@ -165,32 +172,32 @@ bool cRZCOMDllDirector::OnUnload(void)
 
 uint32_t cRZCOMDllDirector::RefCount(void)
 {
-	return refCount;
+	return mRefCount;
 }
 
 uint32_t cRZCOMDllDirector::RemoveRef(void)
 {
-	if (refCount > 0)
+	if (mRefCount > 0)
 	{
-		--refCount;
+		--mRefCount;
 	}
 
-	return refCount;
+	return mRefCount;
 }
 
 cIGZFramework* cRZCOMDllDirector::FrameWork(void)
 {
-	return framework;
+	return mFramework;
 }
 
 cIGZCOM* cRZCOMDllDirector::GZCOM(void)
 {
-	return com;
+	return mCom;
 }
 
 bool cRZCOMDllDirector::GetLibraryPath(cIGZString& path)
 {
-	path = this->libraryPath;
+	path.FromChar(mLibraryPath.ToChar(), mLibraryPath.Strlen());
 	return true;
 }
 
@@ -204,7 +211,7 @@ void cRZCOMDllDirector::AddCls(GZCLSID clsid, FactoryFunctionPtr1 ffp1)
 	DummyFunctionPtr ffp = reinterpret_cast<DummyFunctionPtr>(ffp1);
 	FactoryFuncRecord ffr(ffp, kFactoryFunctionType1);
 
-	classObjectMap.insert(std::pair<GZCLSID, FactoryFuncRecord>(clsid, ffr));
+	mClassObjectMap.insert(std::pair<GZCLSID, FactoryFuncRecord>(clsid, ffr));
 }
 
 void cRZCOMDllDirector::AddCls(GZCLSID clsid, FactoryFunctionPtr2 ffp2)
@@ -212,20 +219,20 @@ void cRZCOMDllDirector::AddCls(GZCLSID clsid, FactoryFunctionPtr2 ffp2)
 	DummyFunctionPtr ffp = reinterpret_cast<DummyFunctionPtr>(ffp2);
 	FactoryFuncRecord ffr(ffp, kFactoryFunctionType2);
 
-	classObjectMap.insert(std::pair<GZCLSID, FactoryFuncRecord>(clsid, ffr));
+	mClassObjectMap.insert(std::pair<GZCLSID, FactoryFuncRecord>(clsid, ffr));
 }
 
 void cRZCOMDllDirector::AddDirector(cRZCOMDllDirector* director)
 {
-	director->InitializeCOM(GZCOM(), libraryPath);
+	director->InitializeCOM(GZCOM(), mLibraryPath);
 
-	for (ChildDirectorArray::iterator it = director->childDirectors.begin(); it != director->childDirectors.end(); ++it)
+	for (ChildDirectorArray::iterator it = director->mChildDirectors.begin(); it != director->mChildDirectors.end(); ++it)
 	{
 		cRZCOMDllDirector* const childDirector = *it;
 		AddDirector(childDirector);
 	}
 
-	childDirectors.push_back(director);
+	mChildDirectors.push_back(director);
 }
 
 bool cRZCOMDllDirector::PreFrameworkInit(void)

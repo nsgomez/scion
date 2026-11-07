@@ -26,7 +26,6 @@ class cGZCOMLibrary : public cIGZCOMLibrary
 public:
 	cGZCOMLibrary();
 	cGZCOMLibrary(const cIGZString& libraryPath);
-	virtual ~cGZCOMLibrary();
 
 public:
 	virtual bool QueryInterface(GZIID iid, void** outPtr);
@@ -34,20 +33,21 @@ public:
 	virtual uint32_t Release();
 
 public:
-	virtual bool Load();
-	virtual bool Free();
-
 	virtual void GetPath(cIGZString& output) const;
-	virtual bool SetPath(const cIGZString& path);
-
-	virtual HINSTANCE GetHandle() const;
-	virtual void SetHandle(HINSTANCE handle);
-
 	virtual cIGZCOMDirector* GetDirector() const;
-	virtual void SetDirector(cIGZCOMDirector* director);
-
+	virtual HINSTANCE GetHandle() const;
 	virtual bool IsLoaded() const;
-	virtual void SetLoaded(bool loaded);
+
+	virtual ~cGZCOMLibrary() { }
+
+public:
+	bool Load();
+	bool Free();
+
+	bool SetPath(const cIGZString& path);
+	void SetHandle(HINSTANCE handle);
+	void SetDirector(cIGZCOMDirector* director);
+	void SetLoaded(bool loaded);
 
 public:
 	bool operator<  (const cGZCOMLibrary& other) const;
@@ -55,9 +55,9 @@ public:
 	bool operator== (const cGZCOMLibrary& other) const;
 
 protected:
-	bool loaded;
-	uint32_t refCount;
-	cIGZCOMDirector* director;
-	cRZString libraryPath;
-	HINSTANCE handle;
+	bool mLoaded;
+	uint32_t mRefCount;
+	cIGZCOMDirector* mDirector;
+	cRZString mLibraryPath;
+	HINSTANCE mHandle;
 };

@@ -21,6 +21,7 @@
 #include <vector>
 
 class cIGZString;
+class cRZString;
 
 #define GZ_CODEPAGE_SYSTEM  -1
 #define GZ_CODEPAGE_NATIVE  -2
@@ -31,4 +32,5 @@ extern void ConvertStringEncoding(cIGZString const& src, void* dest, uint32_t& d
 extern void ConvertStringEncoding(cIGZString const& src, cIGZString& dest, int32_t codePage);
 extern void ConvertStringEncoding(cIGZString const& src, int32_t codePage, cIGZString& dest);
 extern void ConvertStringEncoding(void const* src, uint32_t srcLength, int32_t codePage, cIGZString& dest);
+extern void Sprintf(cRZString& output, const char* format, ...);
 extern std::vector<wchar_t> RZStringToUTF16(cIGZString const& src);

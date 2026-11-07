@@ -24,7 +24,7 @@ cGZCOMDirector::cGZCOMDirector()
 {
 	if (GZCOM() == NULL)
 	{
-		this->com = RZGetFramework()->GetCOMObject();
+		mCom = RZGetFramework()->GetCOMObject();
 	}
 }
 
@@ -36,7 +36,7 @@ GZGUID cGZCOMDirector::GetDirectorID() const
 bool cGZCOMDirector::InitializeFramework()
 {
 	cIGZFramework* framework = RZGetFramework();
-	this->framework = framework;
+	mFramework = framework;
 
 	return framework != NULL;
 }

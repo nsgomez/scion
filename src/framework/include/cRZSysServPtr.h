@@ -26,25 +26,27 @@ class cRZSysServPtr
 public:
 	cRZSysServPtr()
 	{
+		mServer = NULL;
+
 		cIGZFramework* framework = RZGetFramework();
 		if (framework != NULL)
 		{
-			framework->GetSystemService(srvid, iid, reinterpret_cast<void**>(&srv));
+			framework->GetSystemService(srvid, iid, reinterpret_cast<void**>(&mServer));
 		}
 	}
 
-	~cRZSysServPtr()
+	__declspec(noinline) ~cRZSysServPtr()
 	{
-		if (srv != NULL)
+		if (mServer != NULL)
 		{
-			srv->Release();
+			mServer->Release();
 		}
 	}
 
-	T* operator->() const { return srv; }
-	T& operator*() const { return srv; }
-	operator T*() const { return srv; }
+	T* operator->() const { return mServer; }
+	T& operator*() const { return mServer; }
+	operator T*() const { return mServer; }
 
 protected:
-	T* srv;
+	T* mServer;
 };

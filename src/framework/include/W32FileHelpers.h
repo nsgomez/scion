@@ -19,7 +19,7 @@
 #pragma once
 #include <Windows.h>
 
-typedef HANDLE (*pfnCreateFileW)(
+typedef HANDLE (WINAPI *pfnCreateFileW)(
 		LPCWSTR lpFileName,
 		DWORD dwDesiredAccess,
 		DWORD dwShareMode,
@@ -28,23 +28,23 @@ typedef HANDLE (*pfnCreateFileW)(
 		DWORD dwFlagsAndAttributes,
 		HANDLE hTemplateFile);
 
-typedef BOOL (*pfnCopyFileW)(LPCWSTR lpExistingFileName, LPCWSTR lpNewFileName, BOOL bFailIfExists);
-typedef BOOL (*pfnMoveFileExW)(LPCWSTR lpExistingFileName, LPCWSTR lpNewFileName, DWORD dwFlags);
-typedef HANDLE (*pfnFindFirstFileW)(LPCWSTR lpFileName, LPWIN32_FIND_DATAW lpFindFileData);
-typedef BOOL (*pfnDeleteFileW)(LPCWSTR lpFileName);
-typedef DWORD (*pfnGetFileAttributesW)(LPCWSTR lpFileName);
-typedef BOOL (*pfnSetFileAttributesW)(LPCWSTR lpFileName, DWORD dwFileAttributes);
-typedef DWORD (*pfnGetLongPathNameA)(LPCSTR lpszShortPath, LPSTR lpszLongPath, DWORD cchBuffer);
-typedef DWORD (*pfnGetLongPathNameW)(LPCWSTR lpszShortPath, LPWSTR lpszLongPath, DWORD cchBuffer);
-typedef DWORD (*pfnGetTempPathW)(DWORD nBufferLength, LPWSTR lpBuffer);
+typedef BOOL (WINAPI *pfnCopyFileW)(LPCWSTR lpExistingFileName, LPCWSTR lpNewFileName, BOOL bFailIfExists);
+typedef BOOL (WINAPI *pfnMoveFileExW)(LPCWSTR lpExistingFileName, LPCWSTR lpNewFileName, DWORD dwFlags);
+typedef HANDLE (WINAPI *pfnFindFirstFileW)(LPCWSTR lpFileName, LPWIN32_FIND_DATAW lpFindFileData);
+typedef BOOL (WINAPI *pfnDeleteFileW)(LPCWSTR lpFileName);
+typedef DWORD (WINAPI *pfnGetFileAttributesW)(LPCWSTR lpFileName);
+typedef BOOL (WINAPI *pfnSetFileAttributesW)(LPCWSTR lpFileName, DWORD dwFileAttributes);
+typedef DWORD (WINAPI *pfnGetLongPathNameA)(LPCSTR lpszShortPath, LPSTR lpszLongPath, DWORD cchBuffer);
+typedef DWORD (WINAPI *pfnGetLongPathNameW)(LPCWSTR lpszShortPath, LPWSTR lpszLongPath, DWORD cchBuffer);
+typedef DWORD (WINAPI *pfnGetTempPathW)(DWORD nBufferLength, LPWSTR lpBuffer);
 
-typedef BOOL (*pfnGetDiskFreeSpaceExA)(
+typedef BOOL (WINAPI *pfnGetDiskFreeSpaceExA)(
 	LPCSTR lpDirectoryName,
 	PULARGE_INTEGER lpFreeBytesAvailableToCaller,
 	PULARGE_INTEGER lpTotalNumberOfBytes,
 	PULARGE_INTEGER lpTotalNumberOfFreeBytes);
 
-typedef BOOL (*pfnGetDiskFreeSpaceExW)(
+typedef BOOL (WINAPI *pfnGetDiskFreeSpaceExW)(
 	LPCWSTR lpDirectoryName,
 	PULARGE_INTEGER lpFreeBytesAvailableToCaller,
 	PULARGE_INTEGER lpTotalNumberOfBytes,

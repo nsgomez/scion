@@ -22,30 +22,32 @@
 
 namespace nRZHash
 {
-	static uint32_t CRC24(char const* data, bool caseInsensitive)
+	uint32_t CRC24(char const* data, bool caseInsensitive)
 	{
 		if (!gbInitialized)
 		{
 			cRZHashStringCRCInitializer init;
 		}
-		
-		uint32_t crc = 0x00B704CE;
-		char c;
 
-		while ((c = *(data++)) != 0)
+		uint32_t crc = 0x00B704CE;
+		while (*data)
 		{
+			char c = *data;
+			int intChar = c;
+
 			if (caseInsensitive)
 			{
-				c = tolower(c);
+				intChar = tolower(intChar);
 			}
 
-			crc = gCRC24Table[((crc >> 16) ^ c) & 0xFF] ^ (crc << 8);
+			crc = gCRC24Table[((crc >> 16) ^ intChar) & 0xFF] ^ (crc << 8);
+			++data;
 		}
 
-		return crc;
+		return crc & 0xFFFFFF;
 	}
 
-	static uint32_t CRC32(char const* data, uint32_t length)
+	uint32_t CRC32(uint8_t const* data, uint32_t length)
 	{
 		if (!gbInitialized)
 		{
@@ -55,13 +57,13 @@ namespace nRZHash
 		uint32_t crc = -1;
 		while (length--)
 		{
-			crc = gCRC32Table[(crc ^ *(data++)) & 0xFF] ^ (crc >> 8);
+			crc = gCRC32Table[((crc >> 24) ^ *(data++)) & 0xFF] ^ (crc << 8);
 		}
 
 		return crc;
 	}
 
-	bool gbInitialized = false;
-	uint32_t gCRC24Table[256];
 	uint32_t gCRC32Table[256];
+	uint32_t gCRC24Table[256];
+	bool gbInitialized = false;
 };
