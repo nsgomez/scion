@@ -29,5 +29,5 @@ public:
 	virtual bool IsKeyIncluded(cGZPersistResourceKey const& key);
 
 protected:
-	uint32_t type;
+	uint32_t mType;
 };

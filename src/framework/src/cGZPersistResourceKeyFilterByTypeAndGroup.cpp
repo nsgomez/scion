@@ -21,12 +21,12 @@
 
 cGZPersistResourceKeyFilterByTypeAndGroup::cGZPersistResourceKeyFilterByTypeAndGroup(uint32_t type, uint32_t group) :
 	cGZPersistResourceKeyFilter(),
-	type(type),
-	group(group)
+	mType(type),
+	mGroup(group)
 {
 }
 
 bool cGZPersistResourceKeyFilterByTypeAndGroup::IsKeyIncluded(cGZPersistResourceKey const& key)
 {
-	return key.type == type && key.group == group;
+	return key.type == mType && key.group == mGroup;
 }

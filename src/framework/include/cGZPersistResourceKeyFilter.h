@@ -34,5 +34,5 @@ public:
 	virtual bool IsKeyIncluded(cGZPersistResourceKey const& key);
 
 protected:
-	uint32_t refCount;
+	uint32_t mRefCount;
 };

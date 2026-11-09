@@ -23,11 +23,10 @@ class cGZPersistResourceKeyFilterByGroup : public cGZPersistResourceKeyFilter
 {
 public:
 	cGZPersistResourceKeyFilterByGroup(uint32_t group);
-	virtual ~cGZPersistResourceKeyFilterByGroup(void) { }
 
 public:
 	virtual bool IsKeyIncluded(cGZPersistResourceKey const& key);
 
 protected:
-	uint32_t group;
+	uint32_t mGroup;
 };

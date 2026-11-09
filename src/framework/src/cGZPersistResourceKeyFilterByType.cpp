@@ -21,11 +21,11 @@
 
 cGZPersistResourceKeyFilterByType::cGZPersistResourceKeyFilterByType(uint32_t type) :
 	cGZPersistResourceKeyFilter(),
-	type(type)
+	mType(type)
 {
 }
 
 bool cGZPersistResourceKeyFilterByType::IsKeyIncluded(cGZPersistResourceKey const& key)
 {
-	return key.type == type;
+	return key.type == mType;
 }

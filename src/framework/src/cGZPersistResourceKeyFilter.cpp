@@ -20,45 +20,44 @@
 #include "cGZPersistResourceKeyFilter.h"
 
 cGZPersistResourceKeyFilter::cGZPersistResourceKeyFilter(void) :
-	refCount(0)
+	mRefCount(0)
 {
 }
 
 bool cGZPersistResourceKeyFilter::QueryInterface(GZIID iid, void** outPtr)
 {
-	if (iid == GZIID_cIGZPersistResourceKeyFilter)
+	switch (iid)
 	{
-		*outPtr = static_cast<cIGZPersistResourceKeyFilter*>(this);
-		AddRef();
-		return true;
-	}
-	else if (iid == GZIID_cIGZUnknown)
-	{
+	case GZIID_cIGZUnknown:
 		*outPtr = static_cast<cIGZUnknown*>(this);
 		AddRef();
 		return true;
-	}
-	else
-	{
+
+	case GZIID_cIGZPersistResourceKeyFilter:
+		*outPtr = static_cast<cIGZPersistResourceKeyFilter*>(this);
+		AddRef();
+		return true;
+
+	default:
 		return false;
 	}
 }
 
 uint32_t cGZPersistResourceKeyFilter::AddRef(void)
 {
-	return ++refCount;
+	return ++mRefCount;
 }
 
 uint32_t cGZPersistResourceKeyFilter::Release(void)
 {
-	if (refCount < 2)
+	if (mRefCount > 1)
 	{
-		delete this;
-		return 0;
+		return --mRefCount;
 	}
 	else
 	{
-		return --refCount;
+		delete this;
+		return 0;
 	}
 }
 
