@@ -18,40 +18,46 @@
 
 #include "cRZCmdLine.h"
 
-cRZCmdLine::cRZCmdLine()
+cRZCmdLine::cRZCmdLine() :
+	mRefCount(0),
+	mArguments(),
+	mFullText(),
+	mEmptyStr()
 {
 }
 
-cRZCmdLine::cRZCmdLine(cIGZCmdLine const& cmdLine)
-	: refCount(0), arguments(), fullText(), emptyStr()
+cRZCmdLine::cRZCmdLine(cIGZCmdLine const& cmdLine) :
+	mRefCount(0),
+	mArguments(),
+	mFullText(),
+	mEmptyStr()
 {
-	cmdLine.GetCommandLineText(fullText);
+	cmdLine.GetCommandLineText(mFullText);
 	for (int i = 0; i < cmdLine.argc(); i++)
 	{
-		arguments.push_back(cRZString(cmdLine.argv(i)));
+		mArguments.push_back(cRZString(cmdLine.argv(i)));
 	}
 }
 
-cRZCmdLine::cRZCmdLine(char const* cmdLine)
-	: refCount(0), arguments(), fullText(cmdLine), emptyStr()
+cRZCmdLine::cRZCmdLine(char const* cmdLine) :
+	mRefCount(0),
+	mArguments(0),
+	mFullText(cmdLine),
+	mEmptyStr()
 {
-	ConvertStringArrayToString(fullText, arguments);
-}
-
-cRZCmdLine::~cRZCmdLine()
-{
+	ConvertStringArrayToString(mFullText, mArguments);
 }
 
 bool cRZCmdLine::QueryInterface(GZIID iid, void** outPtr)
 {
-	if (iid == GZIID_cIGZUnknown)
+	switch (iid)
 	{
+	case GZIID_cIGZUnknown:
 		*outPtr = static_cast<cIGZUnknown*>(this);
 		AddRef();
 		return true;
-	}
-	else if (iid == GZIID_cIGZCmdLine)
-	{
+
+	case GZIID_cIGZCmdLine:
 		*outPtr = static_cast<cIGZCmdLine*>(this);
 		AddRef();
 		return true;
@@ -62,80 +68,74 @@ bool cRZCmdLine::QueryInterface(GZIID iid, void** outPtr)
 
 uint32_t cRZCmdLine::AddRef(void)
 {
-	return ++refCount;
+	return ++mRefCount;
 }
 
 uint32_t cRZCmdLine::Release(void)
 {
-	if (refCount < 2)
+	if (mRefCount > 1)
 	{
-		delete this;
-		return 0;
+		return --mRefCount;
 	}
 	else
 	{
-		return --refCount;
+		delete this;
+		return 0;
 	}
 }
 
 int cRZCmdLine::argc() const
 {
-	return arguments.size();
+	return mArguments.size();
 }
 
 char const* cRZCmdLine::argv(int index) const
 {
-	if (index >= arguments.size())
+	if (index < (int)mArguments.size())
 	{
-		return emptyStr.ToChar();
+		return mArguments[index].ToChar();
 	}
-	else
-	{
-		return arguments[index].ToChar();
-	}
+
+	return mEmptyStr.ToChar();
 }
 
 bool cRZCmdLine::GetCommandLineText(cIGZString& out) const
 {
-	out.Copy(fullText);
+	out.Copy(mFullText);
 	return true;
 }
 
 int cRZCmdLine::Find(cIGZString const& searchTerm, bool caseSensitive) const
 {
-	tArgList::const_iterator it = arguments.begin();
-	tArgList::const_iterator itEnd = arguments.end();
+	size_t count = mArguments.size();
 
 	cRZString needle(searchTerm);
-	cRZString tmpLower;
+	cRZString tmp;
 
 	if (!caseSensitive)
 	{
 		needle.MakeLower();
 	}
 
-	if (it != itEnd)
+	for (int i = 0; i < count; i++)
 	{
-		int index = 0;
-		do
+		if (caseSensitive)
 		{
-			cRZString const* haystack = it;
-			if (!caseSensitive)
+			if (needle == mArguments[i])
 			{
-				tmpLower = *haystack;
-				tmpLower.MakeLower();
-				haystack = &tmpLower;
+				return i;
 			}
-
-			if (needle.CompareTo(*haystack) == 0)
-			{
-				return index;
-			}
-
-			++index;
-			++it;
 		}
-		while (index < arguments.size());
+		else
+		{
+			tmp = mArguments[i];
+			tmp.MakeLower();
+
+			if (needle == tmp)
+			{
+				return i;
+			}
+		}
 	}
 
 	return -1;
@@ -143,47 +143,39 @@ int cRZCmdLine::Find(cIGZString const& searchTerm, bool caseSensitive) const
 
 int cRZCmdLine::FindSubString(cIGZString const& searchTerm, bool caseSensitive) const
 {
-	tArgList::const_iterator it = arguments.begin();
-	tArgList::const_iterator itEnd = arguments.end();
+	size_t count = mArguments.size();
 
 	cRZString needle(searchTerm);
-	cRZString tmpLower;
+	cRZString tmp;
 
 	if (!caseSensitive)
 	{
 		needle.MakeLower();
 	}
 
-	if (it != itEnd)
+	for (int i = 0; i < count; i++)
 	{
-		int index = 0;
-		do
+		int findResult;
+		size_t length;
+
+		if (caseSensitive)
 		{
-			cRZString const* haystack;
-			size_t findResult;
-
-			if (!caseSensitive)
-			{
-				tmpLower = *it;
-				tmpLower.MakeLower();
-				findResult = tmpLower.Find(needle);
-				haystack = &tmpLower;
-			}
-			else
-			{
-				findResult = it->Find(needle);
-				haystack = it;
-			}
-
-			if (findResult < haystack->Strlen())
-			{
-				return index;
-			}
-
-			++index;
-			++it;
+			findResult = (int)mArguments[i].find(needle.ToChar(), 0, needle.Strlen());
+			length = mArguments[i].Strlen();
 		}
-		while (index < arguments.size());
+		else
+		{
+			tmp = mArguments[i];
+			tmp.MakeLower();
+
+			findResult = (int)tmp.find(needle.ToChar(), 0, needle.Strlen());
+			length = tmp.Strlen();
+		}
+
+		if (findResult < length)
+		{
+			return i;
+		}
 	}
 
 	return -1;
@@ -197,46 +189,47 @@ bool cRZCmdLine::IsSwitchPresent(char option, cIGZString& valueOut, bool unknown
 
 int cRZCmdLine::GetIndexOfSwitch(char option, int startIndex) const
 {
-	size_t index = 0;
-	if (startIndex > -1)
+	int i = startIndex;
+	if (i < 0)
 	{
-		index = startIndex;
+		i = 0;
 	}
 
-	if (!arguments.empty())
+	if (i < (int)mArguments.size())
 	{
-		std::string delimiters("/-\\");
-		char upperFlag, lowerFlag;
+		cRZString delims("/-\\");
+		char upper, lower;
 
 		if (option >= 'A' && option <= 'Z')
 		{
-			upperFlag = option;
-			lowerFlag = option + ' ';
+			upper = option;
+			lower = option + 0x20;
+		}
+		else if (option >= 'a' && option <= 'z')
+		{
+			lower = option;
+			upper = option - 0x20;
 		}
 		else
 		{
-			upperFlag = option;
-			if (option >= 'a' && option <= 'z')
-			{
-				upperFlag = option - ' ';
-			}
-
-			lowerFlag = option;
+			upper = option;
+			lower = option;
 		}
 
-		for (; startIndex < arguments.size(); startIndex++)
+		size_t count = mArguments.size();
+		while (i < count)
 		{
-			cRZString const& arg = arguments[startIndex];
+			cRZString const& arg = mArguments[i];
 			if (arg.length() == 2)
 			{
-				char argFlag = arg[1];
-				size_t delimiterOffset = delimiters.find(arg[0]);
-
-				if (delimiterOffset < delimiters.length() && (argFlag == upperFlag || argFlag == lowerFlag))
+				char switchChar = arg[1];
+				if (delims.find(arg[0], 0) < delims.Strlen() && (switchChar == lower || switchChar == upper))
 				{
-					return index;
+					return i;
 				}
 			}
+
+			i++;
 		}
 	}
 
@@ -245,102 +238,302 @@ int cRZCmdLine::GetIndexOfSwitch(char option, int startIndex) const
 
 bool cRZCmdLine::IsSwitchPresent(cIGZString const& searchTerm) const
 {
-	// TODO
+	cRZString value;
+	return GetIndexOfSwitch(searchTerm, 0) >= 0 || IsSwitchPresent(searchTerm, value, true);
+}
+
+bool cRZCmdLine::IsSwitchPresent(cIGZString const& searchTerm, cIGZString& valueOut, bool trimValueQuotes) const
+{
+	if (searchTerm.Strlen() != 0)
+	{
+		cRZString needle(searchTerm);
+		needle.MakeLower();
+
+		cRZString delims("/-\\");
+		for (tArgList::const_iterator it = mArguments.begin(); it != mArguments.end(); ++it)
+		{
+			cRZString const& arg = *it;
+
+			// Check that the argument has a valid delimiter
+			size_t delimIndex = 0;
+			while (delimIndex < delims.length() && arg[0] != delims[delimIndex])
+			{
+				delimIndex++;
+			}
+
+			if (delimIndex == delims.Strlen())
+			{
+				continue;
+			}
+
+			// Check that the argument has the proper length to include the delimiter,
+			// needle string, ':' separator, and at least one character in the value.
+			size_t argLength = arg.Strlen();
+			if (argLength < needle.Strlen() + 3)
+			{
+				continue;
+			}
+
+			// Check that the ':' separator is in the right place
+			if (arg[needle.Strlen() + 1] != ':')
+			{
+				continue;
+			}
+
+			// Check that the name of the argument is what we're looking for
+			cRZString tmp(arg);
+			tmp.MakeLower();
+
+			size_t i = 0;
+			while (i < needle.Strlen() && needle[i] == tmp[i + 1])
+			{
+				i++;
+			}
+
+			if (i != needle.Strlen())
+			{
+				continue;
+			}
+
+			// Get the value from the arg string
+			cRZString value(arg, needle.Strlen() + 2);
+			if (trimValueQuotes)
+			{
+				char first = value[0];
+				if (first == '"' || first == '\'')
+				{
+					char last = value[value.Strlen() - 1];
+					if (last == '"' || last == '\'')
+					{
+						value.Erase(0, 1);
+						value.Erase(value.Strlen() - 1, 1);
+					}
+				}
+			}
+
+			valueOut.Copy(value);
+			return true;
+		}
+	}
+
 	return false;
 }
 
-bool cRZCmdLine::IsSwitchPresent(cIGZString const& searchTerm, cIGZString& valueOut, bool unknown) const
+int cRZCmdLine::GetIndexOfSwitch(cIGZString const& searchTerm, int startIndex) const
 {
-	// TODO
-	return false;
-}
+	if (startIndex < 0)
+	{
+		startIndex = 0;
+	}
 
-int cRZCmdLine::GetIndexOfSwitch(cIGZString const& searchTerm, int unknown) const
-{
-	// TODO
+	if (startIndex < (int)mArguments.size())
+	{
+		cRZString delims("/-\\");
+		size_t count = mArguments.size();
+
+		for (int i = 0; i < count; i++)
+		{
+			cRZString const& arg = mArguments[i];
+			if (arg.Strlen() < 2)
+			{
+				continue;
+			}
+
+			if (delims.find(arg[0], 0) >= delims.Strlen())
+			{
+				continue;
+			}
+
+			if (searchTerm.Strlen() != arg.Strlen() - 1)
+			{
+				continue;
+			}
+
+			cRZString needle(searchTerm);
+			needle.MakeLower();
+
+			cRZString option(arg);
+			option.Erase(0, 1);
+			option.MakeLower();
+
+			if (option.find(needle.ToChar(), 0, needle.Strlen()) == 0)
+			{
+				return i;
+			}
+		}
+	}
+
 	return -1;
 }
 
 bool cRZCmdLine::InsertArgument(cIGZString const& arg, int index)
 {
-	int insertAt = 0;
-	if (!arguments.empty() && index > -1 && arguments.size() - index != 0 && index <= arguments.size())
+	int size = (int)mArguments.size();
+	int insertAt;
+
+	if (size == 0)
+	{
+		insertAt = 0;
+	}
+	else
 	{
 		insertAt = index;
+		if (insertAt < 0)
+		{
+			insertAt = 0;
+		}
+		else if (insertAt >= size)
+		{
+			insertAt = size;
+		}
 	}
 
-	arguments.insert(arguments.begin() + insertAt, cRZString(arg.Data(), arg.Strlen()));
-	ConvertStringArrayToString(arguments, fullText);
+	mArguments.insert(mArguments.begin() + insertAt, cRZString(arg));
+	ConvertStringArrayToString(mArguments, mFullText);
 	return true;
 }
 
 bool cRZCmdLine::EraseArgument(int index)
 {
-	arguments.erase(arguments.begin() + index);
-	ConvertStringArrayToString(arguments, fullText);
+	if (index >= (int)mArguments.size())
+	{
+		index = (int)mArguments.size() - 1;
+	}
+
+	mArguments.erase(mArguments.begin() + index);
+	ConvertStringArrayToString(mArguments, mFullText);
 	return true;
 }
 
 cRZString const& cRZCmdLine::operator[] (int index) const
 {
-	if (index >= arguments.size())
+	if (index < (int)mArguments.size())
 	{
-		return emptyStr;
+		return mArguments[index];
 	}
-	else
-	{
-		return arguments[index];
-	}
+
+	return mEmptyStr;
 }
 
 void cRZCmdLine::ConvertStringArrayToString(cRZString const& str, std::vector<cRZString>& array)
 {
-	cRZString tempArg;
+	cRZString token;
 	cRZString strCopy(str);
 	array.clear();
 
-	size_t length = strCopy.length();
-	while (length != 0)
+	// Trim whitespace off the end of the command line string
+	while (strCopy.Strlen() != 0)
 	{
-		if (strCopy[length - 1] >= ' ' && strCopy[length - 1] <= '~')
+		int last = (int)strCopy.Strlen() - 1;
+		if (strCopy[last] != '\n' && strCopy[last] != '\t' && strCopy[last] != ' ')
 		{
 			break;
 		}
 
-		strCopy.erase(length - 1, 1);
-		length = strCopy.length();
+		strCopy.Erase(strCopy.Strlen() - 1, 1);
 	}
 
-	while (length != 0)
+	// Trim whitespace off the start of the command line string
+	while (strCopy.Strlen() != 0 && (strCopy[0] == '\n' || strCopy[0] == '\t' || strCopy[0] == ' '))
 	{
-		if (strCopy[length - 1] >= ' ' && strCopy[length - 1] <= '~')
+		strCopy.Erase(0, 1);
+	}
+
+	// Start slicing the arguments
+	int length = (int)strCopy.Strlen();
+	if (length != 0)
+	{
+		int quoteCount = 0;
+		int tokenStart = 0;
+
+		for (int i = 0; i < length; i++)
 		{
-			break;
+			char c = strCopy[i];
+
+			// Found an argument separator - add the token to the argument array...
+			if (c == '\n' || c == '\t' || c == ' ')
+			{
+				// ... unless we're in the middle of a quote string
+				if (quoteCount & 1)
+				{
+					continue;
+				}
+
+				quoteCount = 0;
+
+				char const* tokenData = strCopy.ToChar() + tokenStart;
+				token.assign(tokenData, tokenData + (i - tokenStart));
+
+				// Trim quotes from the beginning and end of the token
+				if (token[0] == '"' && token[token.Strlen() - 1] == '"')
+				{
+					token.Erase(token.Strlen() - 1, 1);
+					if (token.Strlen() != 0)
+					{
+						token.Erase(0, 1);
+					}
+				}
+
+				array.push_back(token);
+
+				// Skip extra whitespace between this argument and the next one
+				while (strCopy[i + 1] == '\n' || strCopy[i + 1] == '\t' || strCopy[i + 1] == ' ')
+				{
+					i++;
+				}
+
+				tokenStart = i + 1;
+			}
+			else if (c == '"')
+			{
+				quoteCount++;
+			}
 		}
 
-		strCopy.erase(0, 1);
-		length = strCopy.length();
-	}
+		// After leaving the loop above, there'll be one last token that we need to add
+		char const* tokenData = strCopy.ToChar() + tokenStart;
+		token.assign(tokenData, tokenData + (i - tokenStart));
 
-	if (length == 0)
-	{
-		return;
-	}
+		if (token[0] == '"' && token[token.Strlen() - 1] == '"')
+		{
+			token.Erase(token.Strlen() - 1, 1);
+			if (token.Strlen() != 0)
+			{
+				token.Erase(0, 1);
+			}
+		}
 
-	// TODO
+		array.push_back(token);
+	}
 }
 
 void cRZCmdLine::ConvertStringArrayToString(std::vector<cRZString> const& array, cRZString& str)
 {
 	str.Erase();
-
-	if (array.size() == 0)
+	for (size_t i = 0, count = array.size(); i < count; i++)
 	{
-		return;
-	}
+		size_t length = array[i].length();
+		bool quote = false;
 
-	while (true)
-	{
-		// TODO
+		for (size_t j = 0; j < length; j++)
+		{
+			if (array[i][j] == '\n' || array[i][j] == '\t' || array[i][j] == ' ')
+			{
+				quote = true;
+				str += '"';
+				break;
+			}
+		}
+
+		str += array[i];
+		if (quote)
+		{
+			str += '"';
+		}
+
+		if (i < count - 1)
+		{
+			str += ' ';
+		}
 	}
 }

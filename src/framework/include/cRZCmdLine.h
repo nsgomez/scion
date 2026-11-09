@@ -30,6 +30,7 @@ public:
 	cRZCmdLine();
 	cRZCmdLine(cIGZCmdLine const& cmdLine);
 	cRZCmdLine(char const* cmdLine);
+	virtual ~cRZCmdLine() { }
 
 public:
 	virtual bool QueryInterface(GZIID iid, void** outPtr);
@@ -44,11 +45,11 @@ public:
 	virtual int Find(cIGZString const& searchTerm, bool caseSensitive = true) const;
 	virtual int FindSubString(cIGZString const& searchTerm, bool caseSensitive = true) const;
 
-	virtual bool IsSwitchPresent(char option, cIGZString& valueOut, bool unknown) const; // TODO
+	virtual bool IsSwitchPresent(char option, cIGZString& valueOut, bool trimValueQuotes) const;
 	virtual int GetIndexOfSwitch(char option, int startIndex) const;
 
 	virtual bool IsSwitchPresent(cIGZString const& searchTerm) const;
-	virtual bool IsSwitchPresent(cIGZString const& searchTerm, cIGZString& valueOut, bool unknown) const; // TODO
+	virtual bool IsSwitchPresent(cIGZString const& searchTerm, cIGZString& valueOut, bool trimValueQuotes) const;
 	virtual int GetIndexOfSwitch(cIGZString const& searchTerm, int startIndex) const;
 
 	virtual bool InsertArgument(cIGZString const& arg, int index);
@@ -60,8 +61,8 @@ protected:
 	void ConvertStringArrayToString(cRZString const& str, std::vector<cRZString>& array);
 	void ConvertStringArrayToString(std::vector<cRZString> const& array, cRZString& str);
 
-	uint32_t refCount;
-	tArgList arguments;
-	cRZString fullText;
-	cRZString emptyStr;
+	uint32_t mRefCount;
+	tArgList mArguments;
+	cRZString mFullText;
+	cRZString mEmptyStr;
 };
