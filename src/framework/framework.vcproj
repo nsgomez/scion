@@ -287,6 +287,9 @@
 				RelativePath=".\src\cRZKeyboard.cpp">
 			</File>
 			<File
+				RelativePath=".\src\cRZLanguageUtility.cpp">
+			</File>
+			<File
 				RelativePath=".\src\cRZMessage2Standard.cpp">
 			</File>
 			<File
@@ -562,6 +565,9 @@
 				RelativePath=".\include\cIGZKeyMessage.h">
 			</File>
 			<File
+				RelativePath=".\include\cIGZLanguageUtility.h">
+			</File>
+			<File
 				RelativePath=".\include\cIGZMessage2.h">
 			</File>
 			<File
@@ -701,6 +707,9 @@
 			</File>
 			<File
 				RelativePath=".\include\cRZKeyboard.h">
+			</File>
+			<File
+				RelativePath=".\include\cRZLanguageUtility.h">
 			</File>
 			<File
 				RelativePath=".\include\cRZMessage2Standard.h">

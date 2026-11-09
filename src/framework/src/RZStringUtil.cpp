@@ -39,6 +39,16 @@ void ConvertStringEncoding(void const* src, uint32_t srcLength, int32_t codePage
 	// TODO
 }
 
+void ConvertUTF8StringToDestinationFormat(cIGZString& str)
+{
+	// TODO
+}
+
+uint32_t GetCurrentFrameworkCodePage()
+{
+	return GZ_CODEPAGE_UTF8;
+}
+
 void Sprintf(cRZString& output, const char* format, ...)
 {
 	// TODO
