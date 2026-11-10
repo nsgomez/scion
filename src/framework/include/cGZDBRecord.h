@@ -31,14 +31,14 @@ class cGZDBRecord : public cGZPersistDBSerialRecord
 public:
 	cGZDBRecord(uint32_t type, cGZPersistResourceKey const& key, cIGZPersistDBSegment* segment, bool useLittleEndian) :
         cGZPersistDBSerialRecord(key, segment, useLittleEndian),
-		type(type)
+		mType(type)
 	{
 	}
 
 public:
 	virtual void DoPostClose(void) = 0;
-	uint32_t GetReadRecordType(void) { return type; }
+	uint32_t GetReadRecordType(void) { return mType; }
 
 protected:
-	uint32_t type;
+	uint32_t mType;
 };

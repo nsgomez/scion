@@ -48,8 +48,8 @@ public:
 	virtual bool WriteRecordToParent(uint32_t offset, uint32_t size);
 
 protected:
-	std::vector<uint8_t> buffer;
-	uint32_t bufferPos;
-	cRZFile* tmpFile;
-	bool triedCreatingTmpFile;
+	std::vector<uint8_t> mBuffer;
+	uint32_t mBufferPos;
+	cRZFile* mTmpFile;
+	bool mTriedCreatingTmpFile;
 };

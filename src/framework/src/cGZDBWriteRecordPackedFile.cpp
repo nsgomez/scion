@@ -19,294 +19,289 @@
 #include "cGZDBSegmentPackedFile.h"
 #include "cGZDBWriteRecordPackedFile.h"
 
-static const size_t bufferSize = 16384;
+static const size_t kDefaultBufferSize = 16384;
 
 cGZDBWriteRecordPackedFile::cGZDBWriteRecordPackedFile(uint8_t* data, uint32_t size, cGZPersistResourceKey const& key, cGZDBSegmentPackedFile* segment, bool useLittleEndian) :
 	cGZDBRecord(DBWriteRecordPackedFile, key, segment, useLittleEndian),
-	buffer(),
-	bufferPos(0),
-	tmpFile(NULL),
-	triedCreatingTmpFile(false)
+	mBuffer(),
+	mBufferPos(0),
+	mTmpFile(NULL),
+	mTriedCreatingTmpFile(false)
 {
+	mAccessFlags = GZFileAccessReadWrite;
+	mBuffer.resize(size);
+	memcpy(&mBuffer[0], data, size);
 }
 
 cGZDBWriteRecordPackedFile::cGZDBWriteRecordPackedFile(uint32_t parentOffset, uint32_t size, cGZPersistResourceKey const& key, cGZDBSegmentPackedFile* segment, bool useLittleEndian) :
 	cGZDBRecord(DBWriteRecordPackedFile, key, segment, useLittleEndian),
-	buffer(),
-	bufferPos(0),
-	tmpFile(NULL),
-	triedCreatingTmpFile(false)
+	mBuffer(),
+	mBufferPos(0),
+	mTmpFile(NULL),
+	mTriedCreatingTmpFile(false)
 {
-	if (size > 2000000 && !triedCreatingTmpFile)
+	mAccessFlags = GZFileAccessReadWrite;
+	mBuffer.reserve(128);
+
+	if (size != 0)
 	{
-		bool tmpFileReady = false;
-		cRZString tmpFilePath;
-		triedCreatingTmpFile = true;
-
-		tmpFilePath.Sprintf("Record_%08x_", key.type);
-		if (cRZFile::MakeTempPathName(tmpFilePath, NULL))
+		if (size > 2000000 && !mTriedCreatingTmpFile)
 		{
-			tmpFile = new cRZFile(tmpFilePath);
-			if (tmpFile->Open(GZFileAccessReadWrite, GZFileCreateNewOpenExisting, GZFileShareRead))
+			bool tmpFileReady = false;
+			cRZString tmpFilePath;
+			mTriedCreatingTmpFile = true;
+
+			tmpFilePath.Sprintf("Record_%08x_", key.type);
+			if (cRZFile::MakeTempPathName(tmpFilePath, NULL))
 			{
-				uint8_t* tmpBuf = new uint8_t[bufferSize];
-				cGZDBSegmentPackedFile* packedFile = static_cast<cGZDBSegmentPackedFile*>(segment);
-
-				tmpFile->SeekToPosition(0);
-				tmpFileReady = true;
-
-				uint32_t offset = parentOffset;
-				while (true)
+				mTmpFile = new cRZFile(tmpFilePath);
+				if (mTmpFile->Open(GZFileAccessReadWrite, GZFileCreateNewOpenExisting, GZFileShareRead))
 				{
-					if (offset >= size || !tmpFileReady)
+					uint8_t* tmpBuf = new uint8_t[kDefaultBufferSize];
+					cGZDBSegmentPackedFile* packedFile = static_cast<cGZDBSegmentPackedFile*>(segment);
+
+					mTmpFile->SeekToPosition(0);
+					tmpFileReady = true;
+
+					uint32_t offset = parentOffset;
+					while (true)
 					{
-						break;
+						if (offset >= size || !tmpFileReady)
+						{
+							break;
+						}
+
+						uint32_t bytesToRead = size - offset;
+						if (offset + kDefaultBufferSize <= size)
+						{
+							bytesToRead = kDefaultBufferSize;
+						}
+
+						tmpFileReady = packedFile->ReadFileSpan(tmpBuf, offset, bytesToRead);
+						if (tmpFileReady)
+						{
+							tmpFileReady = mTmpFile->Write(tmpBuf, bytesToRead);
+							offset += bytesToRead;
+						}
 					}
 
-					uint32_t bytesToRead = size - offset;
-					if (offset + bufferSize <= size)
-					{
-						bytesToRead = bufferSize;
-					}
-
-					tmpFileReady = packedFile->ReadFileSpan(tmpBuf, offset, bytesToRead);
 					if (tmpFileReady)
 					{
-						tmpFileReady = tmpFile->Write(tmpBuf, bytesToRead);
-						offset += bytesToRead;
+						mTmpFile->SeekToPosition(mBufferPos);
 					}
+
+					delete[] tmpBuf;
 				}
 
-				if (tmpFileReady)
+				if (!tmpFileReady)
 				{
-					tmpFile->SeekToPosition(bufferPos);
+					if (mTmpFile->IsOpen())
+					{
+						mTmpFile->Close();
+						cRZFile::Remove(mTmpFile->GetPath());
+					}
+
+					delete mTmpFile;
+					mTmpFile = NULL;
 				}
-
-				delete[] tmpBuf;
-			}
-
-			if (!tmpFileReady)
-			{
-				if (tmpFile->IsOpen())
-				{
-					tmpFile->Close();
-					cRZFile::Remove(tmpFile->GetPath());
-				}
-
-				delete tmpFile;
-				tmpFile = NULL;
 			}
 		}
-	}
 
-	if (tmpFile == NULL)
-	{
-		cGZDBSegmentPackedFile* packedFile = static_cast<cGZDBSegmentPackedFile*>(segment);
-		buffer.resize(size);
-		packedFile->ReadFileSpan(&buffer[0], parentOffset, size);
+		if (mTmpFile == NULL)
+		{
+			cGZDBSegmentPackedFile* packedFile = static_cast<cGZDBSegmentPackedFile*>(segment);
+			mBuffer.resize(size);
+			packedFile->ReadFileSpan(&mBuffer[0], parentOffset, size);
+		}
 	}
 }
 
 cGZDBWriteRecordPackedFile::~cGZDBWriteRecordPackedFile(void)
 {
-	if (tmpFile != NULL)
+	if (mTmpFile != NULL)
 	{
-		if (tmpFile->IsOpen())
+		if (mTmpFile->IsOpen())
 		{
-			tmpFile->Close();
-			cRZFile::Remove(tmpFile->GetPath());
+			mTmpFile->Close();
+			cRZFile::Remove(mTmpFile->GetPath());
 		}
 
-		delete tmpFile;
-		tmpFile = NULL;
+		delete mTmpFile;
+		mTmpFile = NULL;
 	}
 }
 
 bool cGZDBWriteRecordPackedFile::GetFieldVoid(void* data, uint32_t size)
 {
-	if (!mAccessFlags)
+	if (mAccessFlags != 0)
 	{
-		return false;
-	}
-	else if (tmpFile != NULL)
-	{
-		return tmpFile->Read(data, size);
-	}
-	else if (bufferPos + size > buffer.size())
-	{
-		return false;
+		if (mTmpFile != NULL)
+		{
+			return mTmpFile->Read(data, size);
+		}
+
+		if (mBufferPos + size <= mBuffer.size())
+		{
+			memcpy(data, &mBuffer[mBufferPos], size);
+			mBufferPos += size;
+			return true;
+		}
 	}
 
-	void* src = &buffer[bufferPos];
-	if (size < 32)
-	{
-		memcpy(data, src, size);
-	}
-	else if (size > 0)
-	{
-		memmove(data, src, size);
-	}
-
-	bufferPos += size;
-	return true;
+	return false;
 }
 
 bool cGZDBWriteRecordPackedFile::SetFieldVoid(void const* data, uint32_t size)
 {
-	if (!mAccessFlags)
+	bool result = false;
+	if (mAccessFlags != 0)
 	{
-		return false;
-	}
-	else if (tmpFile != NULL)
-	{
-		return tmpFile->Write(data, size);
-	}
-
-	if (bufferPos + size > 2000000 && !triedCreatingTmpFile)
-	{
-		bool tmpFileReady = false;
-		cRZString tmpFilePath;
-		triedCreatingTmpFile = true;
-
-		tmpFilePath.Sprintf("Record_%08x_", mKey.type);
-		if (cRZFile::MakeTempPathName(tmpFilePath, NULL))
+		if (mTmpFile != NULL)
 		{
-			tmpFile = new cRZFile(tmpFilePath);
-			if (tmpFile->Open(GZFileAccessReadWrite, GZFileCreateNewOpenExisting, GZFileShareRead))
+			return mTmpFile->Write(data, size);
+		}
+
+		int32_t newEnd = (int32_t)(mBufferPos + size);
+		if (newEnd >= 2000000 && !mTriedCreatingTmpFile)
+		{
+			bool tmpFileReady = false;
+
+			cRZString tmpFilePath;
+			mTriedCreatingTmpFile = true;
+
+			tmpFilePath.Sprintf("Record_%08x_", mKey.type);
+			if (cRZFile::MakeTempPathName(tmpFilePath, NULL))
 			{
-				tmpFile->SeekToPosition(0);
-				tmpFile->SetLength(0);
-				if (tmpFile->Write(&buffer[0], buffer.size()))
+				mTmpFile = new cRZFile(tmpFilePath);
+				if (mTmpFile->Open(GZFileAccessReadWrite, GZFileCreateNewOpenExisting, GZFileShareRead))
 				{
-					tmpFile->Write(data, size);
-					buffer.clear();
+					mTmpFile->SeekToPosition(0);
+					mTmpFile->SetLength(0);
 
-					tmpFileReady = true;
-					bufferPos = 0;
+					if (mTmpFile->Write(&mBuffer[0], mBuffer.size()))
+					{
+						mTmpFile->Write(data, size);
+						mBuffer.resize(0);
 
-					return true;
+						tmpFileReady = true;
+						mBufferPos = 0;
+						result = true;
+					}
 				}
 			}
 
 			if (!tmpFileReady)
 			{
-				if (tmpFile->IsOpen())
+				if (mTmpFile->IsOpen())
 				{
-					tmpFile->Close();
-					cRZFile::Remove(tmpFile->GetPath());
+					mTmpFile->Close();
+					cRZFile::Remove(mTmpFile->GetPath());
 				}
 
-				delete tmpFile;
-				tmpFile = NULL;
+				delete mTmpFile;
+				mTmpFile = NULL;
 			}
+		}
+
+		if (mTmpFile == NULL)
+		{
+			uint32_t bufSize = mBuffer.size();
+			if (mBufferPos == bufSize && size < 64 && size > 0)
+			{
+				for (uint32_t i = 0; i < size; i++)
+				{
+					mBuffer.push_back((uint8_t)(static_cast<char const*>(data)[i]));
+				}
+			}
+			else
+			{
+				if (newEnd > bufSize)
+				{
+					mBuffer.resize(mBufferPos + size, 0);
+				}
+
+				memcpy(&mBuffer[mBufferPos], data, size);
+			}
+
+			mBufferPos += size;
+			result = true;
 		}
 	}
 
-	if (tmpFile == NULL)
+	return result;
+}
+
+uint32_t cGZDBWriteRecordPackedFile::GetSize(void)
+{
+	if (mAccessFlags)
 	{
-		if (bufferPos == buffer.size() && size < 64)
+		if (mTmpFile != NULL)
 		{
-			uint8_t const* dataBytes = reinterpret_cast<uint8_t const*>(data);
-			for (int i = 0; i < size; i++)
-			{
-				buffer.push_back(*(dataBytes++));
-			}
-		}
-		else
-		{
-			if (buffer.size() < bufferPos + size)
-			{
-				buffer.resize(bufferPos + size);
-			}
-
-			if (size < 32)
-			{
-				memcpy(&buffer[bufferPos], data, size);
-			}
-			else if (size > 0)
-			{
-				memmove(&buffer[bufferPos], data, size);
-			}
+			return mTmpFile->Length();
 		}
 
-		bufferPos += size;
+		return mBuffer.size();
+	}
+
+	return 0;
+}
+
+bool cGZDBWriteRecordPackedFile::SetSize(size_t size)
+{
+	if (mAccessFlags)
+	{
+		if (mTmpFile != NULL)
+		{
+			return mTmpFile->SetLength(size);
+		}
+
+		mBuffer.resize(size);
 		return true;
 	}
 
 	return false;
 }
 
-uint32_t cGZDBWriteRecordPackedFile::GetSize(void)
-{
-	if (!mAccessFlags)
-	{
-		return 0;
-	}
-	else if (tmpFile == NULL)
-	{
-		return buffer.size();
-	}
-	else
-	{
-		return tmpFile->Length();
-	}
-}
-
-bool cGZDBWriteRecordPackedFile::SetSize(size_t size)
-{
-	if (!mAccessFlags)
-	{
-		return false;
-	}
-	else if (tmpFile == NULL)
-	{
-		buffer.resize(size, '\0');
-		return true;
-	}
-	else
-	{
-		return tmpFile->SetLength(size);
-	}
-}
-
 uint32_t cGZDBWriteRecordPackedFile::GetPosition(void)
 {
-	if (!mAccessFlags)
+	if (mAccessFlags)
 	{
-		return 0;
+		if (mTmpFile != NULL)
+		{
+			return mTmpFile->Position();
+		}
+
+		return mBufferPos;
 	}
-	else if (tmpFile == NULL)
-	{
-		return bufferPos;
-	}
-	else
-	{
-		return tmpFile->Position();
-	}
+
+	return 0;
 }
 
 bool cGZDBWriteRecordPackedFile::SeekAbsolute(uint32_t position)
 {
-	if (!mAccessFlags)
+	if (mAccessFlags)
 	{
-		return false;
-	}
-	else if (tmpFile == NULL)
-	{
-		bufferPos = position;
+		if (mTmpFile != NULL)
+		{
+			return mTmpFile->SeekToPosition(position) == position;
+		}
+
+		mBufferPos = position;
 		return true;
 	}
-	else
-	{
-		return tmpFile->SeekToPosition(position) == position;
-	}
+
+	return false;
 }
 
 bool cGZDBWriteRecordPackedFile::SeekRelative(int32_t offset)
 {
-	uint32_t size = GetSize();
-	return size + offset >= 0
-		&& SeekAbsolute(size + offset);
+	int64_t position = (int64_t)(GetPosition() + offset);
+	if (position >= 0)
+	{
+		return SeekAbsolute((uint32_t)position);
+	}
+
+	return false;
 }
 
 void cGZDBWriteRecordPackedFile::DoPostClose(void)
@@ -314,77 +309,77 @@ void cGZDBWriteRecordPackedFile::DoPostClose(void)
 	mAccessFlags = 0;
 	mSegment = NULL;
 
-	if (tmpFile != NULL)
+	if (mTmpFile != NULL)
 	{
-		if (tmpFile->IsOpen())
+		if (mTmpFile->IsOpen())
 		{
-			tmpFile->Close();
-			cRZFile::Remove(tmpFile->GetPath());
+			mTmpFile->Close();
+			cRZFile::Remove(mTmpFile->GetPath());
 		}
 
-		delete tmpFile;
-		tmpFile = NULL;
+		delete mTmpFile;
+		mTmpFile = NULL;
 	}
 
-	buffer.clear();
-	bufferPos = 0;
-	triedCreatingTmpFile = false;
+	mBuffer.clear();
+	mBufferPos = 0;
+	mTriedCreatingTmpFile = false;
 }
 
 bool cGZDBWriteRecordPackedFile::WriteRecordToParent(uint32_t offset, uint32_t size)
 {
-	if (!mAccessFlags)
+	bool succeeded = false;
+	if (mAccessFlags)
 	{
-		return false;
-	}
-
-	if (tmpFile != NULL)
-	{
-		uint32_t tmpOffset = offset;
-		uint32_t position = tmpFile->Position();
-		uint8_t* tmpData = new uint8_t[bufferSize];
-
-		tmpFile->SeekToPosition(0);
-
-		bool haveData = true;
-		uint32_t totalBytesRead = 0;
-
-		while (true)
+		if (mTmpFile != NULL)
 		{
-			uint32_t bytesToRead = size - totalBytesRead;
-			if (totalBytesRead + bufferSize <= size)
-			{
-				bytesToRead = bufferSize;
-			}
+			uint32_t position = mTmpFile->Position();
+			uint32_t totalBytesWritten = 0;
+			uint32_t tmpOffset = offset;
+			uint8_t* tmpData = new uint8_t[kDefaultBufferSize];
 
-			bool ioResult = true;
-			do
+			mTmpFile->SeekToPosition(0);
+			succeeded = true;
+
+			while (totalBytesWritten < size && succeeded)
 			{
-				if (size <= totalBytesRead || !ioResult)
+				uint32_t bytesToWrite;
+				if (totalBytesWritten + kDefaultBufferSize <= size)
 				{
-					delete[] tmpData;
-					tmpFile->SeekToPosition(position);
+					bytesToWrite = kDefaultBufferSize;
+				}
+				else
+				{
+					bytesToWrite = size - totalBytesWritten;
 				}
 
-				ioResult = tmpFile->Read(tmpData, bytesToRead);
+				succeeded = mTmpFile->Read(tmpData, bytesToWrite);
+				if (succeeded)
+				{
+					cGZDBSegmentPackedFile* packedFile = static_cast<cGZDBSegmentPackedFile*>(&*mSegment);
+					succeeded = packedFile->WriteFileSpan(tmpData, tmpOffset, bytesToWrite);
+
+					totalBytesWritten += bytesToWrite;
+					tmpOffset += bytesToWrite;
+				}
 			}
-			while (ioResult);
 
+			delete[] tmpData;
+			mTmpFile->SeekToPosition(position);
+		}
+		else
+		{
 			cGZDBSegmentPackedFile* packedFile = static_cast<cGZDBSegmentPackedFile*>(&*mSegment);
-			packedFile->WriteFileSpan(tmpData, tmpOffset, bytesToRead);
 
-			totalBytesRead += bytesToRead;
-			tmpOffset += bytesToRead;
+			uint32_t bytesToWrite = size;
+			if (bytesToWrite > mBuffer.size())
+			{
+				bytesToWrite = mBuffer.size();
+			}
+
+			succeeded = packedFile->WriteFileSpan(&mBuffer[0], offset, bytesToWrite);
 		}
 	}
 
-	cGZDBSegmentPackedFile* packedFile = static_cast<cGZDBSegmentPackedFile*>(&*mSegment);
-	uint32_t bytesToWrite = buffer.size();
-
-	if (size <= bytesToWrite)
-	{
-		bytesToWrite = size;
-	}
-
-	return packedFile->WriteFileSpan(&buffer[0], offset, bytesToWrite);
+	return succeeded;
 }

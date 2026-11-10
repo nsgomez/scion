@@ -133,7 +133,7 @@ public:
 	virtual uint32_t GetResourceKeyList(cIGZPersistResourceKeyList* list, cIGZPersistResourceKeyFilter* filter);
 
 protected:
-	bool IsOpenInternal(void) const { return (fileAccessFlags & GZFileAccessReadWrite) != 0; }
+	bool IsOpenInternal(void) const { return (mFileAccessFlags & GZFileAccessReadWrite) != 0; }
 	uint32_t GetDecompressedRecordLength(cGZPersistResourceKey const& key);
 
 	bool WriteEmptyHeaderRecord(void);
@@ -169,61 +169,25 @@ protected:
 	bool CloseOpenRecords(void);
 
 protected:
-	struct KeyTGI
-	{
-	public:
-		KeyTGI(cGZPersistResourceKey const& key) :
-			type(key.type),
-			group(key.group),
-			instance(key.instance)
-		{
-		}
-
-		KeyTGI& operator=(const KeyTGI& other)
-		{
-			type = other.type;
-			group = other.group;
-			instance = other.instance;
-
-			return *this;
-		}
-
-		operator cGZPersistResourceKey() const
-		{
-			return cGZPersistResourceKey(type, group, instance);
-		}
-
-		bool operator==(KeyTGI const& other)
-		{
-			return type == other.type && group == other.group && instance == other.instance;
-		}
-
-		friend bool operator==(KeyTGI const& left, KeyTGI const& right)
-		{
-			return left.type == right.type && left.group == right.group && left.instance == right.instance;
-		}
-
-	public:
-		uint32_t type;
-		uint32_t group;
-		uint32_t instance;
-	};
-
 	struct RecordDataInfo
 	{
 	public:
 		RecordDataInfo() { }
-		RecordDataInfo(cGZPersistResourceKey const& key, uint32_t offset, uint32_t size)
+		RecordDataInfo(uint32_t offset, uint32_t size)
 		{
-			this->key = key;
 			this->offset = offset;
 			this->size = size;
 		}
 
-		operator cGZPersistResourceKey() const
-		{
-			return cGZPersistResourceKey(key.type, key.group, key.instance);
-		}
+	public:
+		uint32_t offset;
+		uint32_t size;
+	};
+
+	struct IndexRecordData
+	{
+	public:
+		IndexRecordData() { }
 
 	public:
 		cGZPersistResourceKey key;
@@ -291,12 +255,6 @@ protected:
 		uint32_t size;
 	};
 
-	struct KeyTGIHash
-	{
-	public:
-		size_t operator()(KeyTGI const key) const { return key.instance; }
-	};
-
 	struct ResourceKeyHash
 	{
 	public:
@@ -304,33 +262,33 @@ protected:
 	};
 
 protected:
-	typedef std::hash_map<KeyTGI, RecordDataInfo, KeyTGIHash> tRecordInfoTable;
+	typedef std::hash_map<cGZPersistResourceKey, RecordDataInfo, ResourceKeyHash> tRecordInfoTable;
 	typedef std::map<cGZPersistResourceKey, cGZPersistDBSerialRecord*> tOpenRecordMap;
 	typedef std::hash_map<uint32_t, int> tUseCountMap;
 	typedef std::hash_map<cGZPersistResourceKey, CompressedRecordData, ResourceKeyHash> tCompressedRecordsMap;
 	typedef std::set<HoleRecord> tHoleSet;
 
 protected:
-	bool inited;
-	uint32_t segmentID;
-	uint32_t fileAccessFlags;
+	bool mInited;
+	uint32_t mSegmentID;
+	uint32_t mFileAccessFlags;
 
-	uint32_t unknown;
-	tRecordInfoTable* recordInfoTable;
-	bool shouldWriteRecords;
+	uint32_t mUnknown;
+	tRecordInfoTable* mRecordInfoTable;
+	bool mShouldWriteRecords;
 
-	cRZString path;
-	cRZFile file;
+	cRZString mPath;
+	cRZFile mFile;
 
-	uint32_t startingOffset;
-	uint32_t readBufferSize;
-	uint32_t writeBufferSize;
+	uint32_t mStartingOffset;
+	uint32_t mReadBufferSize;
+	uint32_t mWriteBufferSize;
 
-	uint32_t nextUserVersionMajor;
-	uint32_t nextUserVersionMinor;
+	uint32_t mNextUserVersionMajor;
+	uint32_t mNextUserVersionMinor;
 
-	uint32_t sizeLimitForInMemoryRecords;
-	tOpenRecordMap openRecords;
+	uint32_t mSizeLimitForInMemoryRecords;
+	tOpenRecordMap mOpenRecords;
 
 	////////////////////////////////////////
 	// BEGIN DBPF HEADER
@@ -365,27 +323,27 @@ protected:
 		uint32_t indexTableOffset;
 
 		char __reserved1[28];
-	} header;
+	} mHeader;
 
 	////////////////////////////////////////
 	// END DBPF HEADER
 	////////////////////////////////////////
 
-	uint8_t holeUseFlags;
-	float holeCompactionMinRatio;
-	tHoleSet holes;
-	bool shouldWriteHoles;
-	bool compacted;
+	uint32_t mHoleUseFlags;
+	float mHoleCompactionMinRatio;
+	tHoleSet mHoles;
+	bool mShouldWriteHoles;
+	bool mCompacted;
 
-	bool typeAndGroupUseTrackingEnabled;
-	tUseCountMap typeUseCount;
-	tUseCountMap groupUseCount;
+	bool mTypeAndGroupUseTrackingEnabled;
+	tUseCountMap mTypeUseCount;
+	tUseCountMap mGroupUseCount;
 
-	bool shouldWriteCompressedRecords;
-	bool compressAllRecords;
-	std::hash_set<uint32_t> compressedTypeIDs;
-	std::hash_set<uint32_t> compressedGroupIDs;
-	tCompressedRecordsMap compressedRecords;
+	bool mShouldWriteCompressedRecords;
+	bool mCompressAllRecords;
+	std::hash_set<uint32_t> mCompressedTypeIDs;
+	std::hash_set<uint32_t> mCompressedGroupIDs;
+	tCompressedRecordsMap mCompressedRecords;
 
-	uint8_t* smallScratchBuffer;
+	uint8_t* mSmallScratchBuffer;
 };

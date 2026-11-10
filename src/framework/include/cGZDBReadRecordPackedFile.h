@@ -43,7 +43,7 @@ public:
 	virtual void DoPostClose(void);
 
 protected:
-	uint32_t recordOffset;
-	uint32_t position;
-	uint32_t size;
+	uint32_t mRecordOffset;
+	uint32_t mPosition;
+	uint32_t mSize;
 };

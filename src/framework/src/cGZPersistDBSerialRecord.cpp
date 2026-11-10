@@ -25,16 +25,14 @@ static const size_t StackElementCountLimit = 256;
 cGZPersistDBSerialRecord::cGZPersistDBSerialRecord(cIGZPersistDBSegment* segment, bool useLittleEndian) :
 	cGZPersistDBRecord(segment),
 	cRZOStream(useLittleEndian),
-	cRZIStream(useLittleEndian),
-	useLittleEndian(useLittleEndian)
+	cRZIStream(useLittleEndian)
 {
 }
 
 cGZPersistDBSerialRecord::cGZPersistDBSerialRecord(cGZPersistResourceKey const& key, cIGZPersistDBSegment* segment, bool useLittleEndian) :
 	cGZPersistDBRecord(key, segment),
 	cRZOStream(useLittleEndian),
-	cRZIStream(useLittleEndian),
-	useLittleEndian(useLittleEndian)
+	cRZIStream(useLittleEndian)
 {
 }
 
