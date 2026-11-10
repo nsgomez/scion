@@ -33,19 +33,20 @@ public:
 
 public:
 	virtual cGZPersistResourceKey GetKey(void) const;
-	virtual void SetKey(cGZPersistResourceKey const& key);
+	virtual bool SetKey(cGZPersistResourceKey const& key);
 
 	virtual uint32_t GetType(void) const;
 	virtual uint32_t GetGroup(void) const;
 	virtual uint32_t GetInstance(void) const;
 
-	virtual void SetType(uint32_t value);
-	virtual void SetGroup(uint32_t value);
-	virtual void SetInstance(uint32_t value);
+	virtual bool SetType(uint32_t value);
+	virtual bool SetGroup(uint32_t value);
+	virtual bool SetInstance(uint32_t value);
 
 	virtual uint32_t GetRefCount(void);
 
 protected:
-	volatile int32_t refCount;
-	cGZPersistResourceKey key;
+	volatile int32_t mRefCount;
+	uint32_t mUnused;
+	cGZPersistResourceKey mKey;
 };

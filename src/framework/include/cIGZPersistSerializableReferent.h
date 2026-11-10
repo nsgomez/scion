@@ -21,6 +21,10 @@
 
 static const GZIID GZIID_cIGZPersistSerializableReferent = 0xBB11A53E;
 
+class cIGZPersistResource2;
+
 class cIGZPersistSerializableReferent : public cIGZPersistSerializable2
 {
+public:
+	virtual cIGZPersistResource2* Resource() const = 0;
 };

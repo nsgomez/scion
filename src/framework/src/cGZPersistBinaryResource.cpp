@@ -20,23 +20,28 @@
 
 cGZPersistBinaryResource::cGZPersistBinaryResource() :
 	cGZPersistResource(),
-	data(NULL),
-	length(0)
+	mData(NULL),
+	mLength(0)
 {
+}
+
+cGZPersistBinaryResource::~cGZPersistBinaryResource()
+{
+	SetData(NULL, 0);
 }
 
 bool cGZPersistBinaryResource::QueryInterface(GZIID iid, void** outPtr)
 {
-	if (iid == GZIID_cIGZPersistBinaryResource)
-	{
-		*outPtr = static_cast<cIGZPersistBinaryResource*>(this);
-		AddRef();
-		return true;
-	}
-	else
+	*outPtr = NULL;
+
+	if (iid != GZIID_cIGZPersistBinaryResource)
 	{
 		return cGZPersistResource::QueryInterface(iid, outPtr);
 	}
+
+	*outPtr = static_cast<cIGZPersistBinaryResource*>(this);
+	AddRef();
+	return true;
 }
 
 uint32_t cGZPersistBinaryResource::AddRef(void)
@@ -49,56 +54,45 @@ uint32_t cGZPersistBinaryResource::Release(void)
 	return cGZPersistResource::Release();
 }
 
-void cGZPersistBinaryResource::SetData(void* newData, uint32_t newLength)
+bool cGZPersistBinaryResource::SetData(void* newData, uint32_t newLength)
 {
 	if (newData == NULL || newLength == 0)
 	{
-		if (data != NULL)
+		if (mData != NULL)
 		{
-			delete[] data;
-			data = NULL;
+			delete[] mData;
+			mData = NULL;
 		}
 
-		allocatedLength = 0;
-		length = 0;
+		mLength = 0;
+		mAllocatedLength = 0;
 	}
 	else
 	{
-		void* targetBuffer;
-		if (allocatedLength < newLength)
+		if (mAllocatedLength < newLength)
 		{
-			allocatedLength = newLength;
-			if (data != NULL)
+			mAllocatedLength = newLength;
+			if (mData != NULL)
 			{
-				delete[] data;
+				delete[] mData;
 			}
 
-			targetBuffer = new uint8_t[allocatedLength];
-			data = targetBuffer;
-		}
-		else
-		{
-			targetBuffer = data;
+			mData = new uint8_t[mAllocatedLength];
 		}
 
-		length = newLength;
-		if (newLength < 32)
-		{
-			memcpy(targetBuffer, newData, newLength);
-		}
-		else if (newLength > 0)
-		{
-			memmove(targetBuffer, newData, newLength);
-		}
+		mLength = newLength;
+		memcpy(mData, newData, newLength);
 	}
+
+	return true;
 }
 
 void* cGZPersistBinaryResource::GetData(void) const
 {
-	return data;
+	return mData;
 }
 
 uint32_t cGZPersistBinaryResource::GetDataLength(void) const
 {
-	return length;
+	return mLength;
 }

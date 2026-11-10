@@ -19,60 +19,87 @@
 #include "cGZDBReadRecordRAM.h"
 #include "cGZDBSegmentPackedFile.h"
 
-// TODO: create + use SharedMemoryPointer type
-
-cGZDBReadRecordRAM::cGZDBReadRecordRAM(uint8_t* data, uint32_t size, cGZPersistResourceKey const& key, cGZDBSegmentPackedFile* segment, bool useLittleEndian) :
+cGZDBReadRecordRAM::cGZDBReadRecordRAM(SharedMemoryPointer* data, int32_t size, cGZPersistResourceKey const& key, cGZDBSegmentPackedFile* segment, bool useLittleEndian) :
 	cGZDBRecord(DBReadRecordTypeRAM, key, segment, useLittleEndian),
-	data(data),
-	position(0),
-	size(size)
+	mPosition(0),
+	mData(data),
+	mSize(size)
 {
-	accessFlags = GZFileAccessRead;
+	mData->AddRef();
+	mAccessFlags = GZFileAccessRead;
+}
+
+cGZDBReadRecordRAM::cGZDBReadRecordRAM(void* data, int32_t size, cGZPersistResourceKey const& key, cGZDBSegmentPackedFile* segment, bool useLittleEndian) :
+	cGZDBRecord(DBReadRecordTypeRAM, key, segment, useLittleEndian),
+	mPosition(0),
+	mData(new SharedMemoryPointer(data)),
+	mSize(size)
+{
+	mData->AddRef();
+	mAccessFlags = GZFileAccessRead;
 }
 
 cGZDBReadRecordRAM::~cGZDBReadRecordRAM(void)
 {
-	// TODO: release SharedMemoryPointer once implemented
+	if (mData != NULL)
+	{
+		mData->Release();
+		mData = NULL;
+	}
 }
 
 bool cGZDBReadRecordRAM::GetFieldVoid(void* data, uint32_t size)
 {
-	if (!accessFlags || this->size < position + size)
+	if (mAccessFlags)
 	{
-		return false;
+		int32_t newPos = mPosition + size;
+		if (newPos <= mSize)
+		{
+			memcpy(data, mData->data + mPosition, size);
+			mPosition = newPos;
+
+			return true;
+		}
 	}
 
-	uint8_t const* src = this->data + position;
-	if (size < 32)
+	return false;
+}
+
+void cGZDBReadRecordRAM::DoPostClose(void)
+{
+	mAccessFlags = 0;
+
+	if (mSegment != NULL)
 	{
-		memcpy(data, src, size);
-	}
-	else if (size > 0)
-	{
-		memmove(data, src, size);
+		mSegment->Release();
+		mSegment = NULL;
 	}
 
-	position += size;
-	return true;
+	if (mData != NULL)
+	{
+		mData->Release();
+		mData = NULL;
+	}
+
+	mPosition = 0;
 }
 
 bool cGZDBReadRecordRAM::SetFieldVoid(void const* data, uint32_t size)
 {
-	if (!accessFlags || this->size < position + size)
+	if (!mAccessFlags || mSize < (mPosition + (int32_t)size))
 	{
 		return false;
 	}
 
-	uint8_t* dest = this->data + position;
-	memcpy(dest, data, size);
+	memcpy(mData->data + mPosition, data, size);
+	mPosition += (int32_t)size;
 
-	position += size;
 	return true;
 }
 
 uint32_t cGZDBReadRecordRAM::GetSize(void)
 {
-	return size;
+	return (uint32_t)mSize;
 }
 
 bool cGZDBReadRecordRAM::SetSize(size_t size)
@@ -82,41 +109,33 @@ bool cGZDBReadRecordRAM::SetSize(size_t size)
 
 uint32_t cGZDBReadRecordRAM::GetPosition(void)
 {
-	return position;
+	return (uint32_t)mPosition;
 }
 
 bool cGZDBReadRecordRAM::SeekAbsolute(uint32_t position)
 {
-	if (!accessFlags || size <= position)
+	if (!mAccessFlags || mSize <= (int32_t)position)
 	{
 		return false;
 	}
 
-	this->position = position;
+	mPosition = (int32_t)position;
 	return true;
 }
 
 bool cGZDBReadRecordRAM::SeekRelative(int32_t offset)
 {
-	if (!accessFlags)
+	if (!mAccessFlags)
 	{
 		return false;
 	}
 
-	int32_t newPosition = offset + position;
-	if (newPosition < 0 || size <= newPosition)
+	int32_t newPosition = mPosition + offset;
+	if (newPosition < 0 || mSize <= newPosition)
 	{
 		return false;
 	}
 
-	position = newPosition;
+	mPosition = newPosition;
 	return true;
-}
-
-void cGZDBReadRecordRAM::DoPostClose(void)
-{
-	accessFlags = 0;
-	segment = NULL;
-	data = NULL;
-	position = 0;
 }

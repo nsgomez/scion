@@ -224,6 +224,9 @@
 				RelativePath=".\src\cGZPersistResourceFactory.cpp">
 			</File>
 			<File
+				RelativePath=".\src\cGZPersistResourceKey.cpp">
+			</File>
+			<File
 				RelativePath=".\src\cGZPersistResourceKeyFilter.cpp">
 			</File>
 			<File
@@ -369,6 +372,9 @@
 			</File>
 			<File
 				RelativePath=".\src\RZStringUtil.cpp">
+			</File>
+			<File
+				RelativePath=".\src\SharedMemoryPointer.cpp">
 			</File>
 			<File
 				RelativePath=".\src\W32FileHelpers.cpp">
@@ -622,6 +628,9 @@
 				RelativePath=".\include\cIGZPersistResource.h">
 			</File>
 			<File
+				RelativePath=".\include\cIGZPersistResource2.h">
+			</File>
+			<File
 				RelativePath=".\include\cIGZPersistResourceFactory.h">
 			</File>
 			<File
@@ -800,6 +809,9 @@
 			</File>
 			<File
 				RelativePath=".\include\RZStringUtil.h">
+			</File>
+			<File
+				RelativePath=".\include\SharedMemoryPointer.h">
 			</File>
 			<File
 				RelativePath=".\include\SignalPlatformData.h">

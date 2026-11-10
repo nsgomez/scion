@@ -22,9 +22,53 @@
 #include "cIGZPersistResource.h"
 
 cGZPersistResourceFactory::cGZPersistResourceFactory(void) :
-	refCount(0),
-	criticalSection()
+	mRefCount(0),
+	mCriticalSection()
 {
+}
+
+bool cGZPersistResourceFactory::QueryInterface(GZIID iid, void** outPtr)
+{
+	switch (iid)
+	{
+	case GZIID_cIGZPersistResourceFactory:
+		*outPtr = static_cast<cIGZPersistResourceFactory*>(this);
+		AddRef();
+		return true;
+
+	case GZIID_cIGZUnknown:
+		*outPtr = static_cast<cIGZUnknown*>(this);
+		AddRef();
+		return true;
+	}
+
+	return false;
+}
+
+uint32_t cGZPersistResourceFactory::AddRef()
+{
+	cRZCriticalSectionHolder lock(mCriticalSection);
+	return ++mRefCount;
+}
+
+uint32_t cGZPersistResourceFactory::Release()
+{
+	mCriticalSection.Lock();
+	uint32_t result;
+
+	if (mRefCount > 1)
+	{
+		result = --mRefCount;
+		mCriticalSection.Unlock();
+	}
+	else
+	{
+		mCriticalSection.Unlock();
+		delete this;
+		result = 0;
+	}
+
+	return result;
 }
 
 bool cGZPersistResourceFactory::CreateInstance(uint32_t type, uint32_t iid, void** outPtr, uint32_t n3, cIGZUnknown* ptr2)
@@ -34,37 +78,32 @@ bool cGZPersistResourceFactory::CreateInstance(uint32_t type, uint32_t iid, void
 
 bool cGZPersistResourceFactory::CreateInstance(cIGZPersistDBRecord& record, uint32_t iid, void** outPtr, int32_t n2, cIGZUnknown* ptr2)
 {
-	cRZCriticalSectionHolder lock(criticalSection);
+	cRZCriticalSectionHolder lock(mCriticalSection);
 	cIGZPersistResource* resource;
 
-	bool haveInstance;
+	bool result;
 	if (n2 == 0 && ptr2 == NULL)
 	{
-		haveInstance = CreateInstance(record.GetKey().type, GZIID_cIGZPersistResource, reinterpret_cast<void**>(&resource));
+		result = CreateInstance(record.GetKey().type, GZIID_cIGZPersistResource, reinterpret_cast<void**>(&resource));
 	}
 	else
 	{
-		haveInstance = CreateInstance(record.GetKey().type, GZIID_cIGZPersistResource, reinterpret_cast<void**>(&resource), n2, ptr2);
+		result = CreateInstance(record.GetKey().type, GZIID_cIGZPersistResource, reinterpret_cast<void**>(&resource), n2, ptr2);
 	}
 
-	if (haveInstance)
+	if (result)
 	{
 		resource->SetKey(record.GetKey());
-		uint32_t type = resource->GetType();
-		if (type != 0 && resource->QueryInterface(iid, outPtr))
-		{
-			return true;
-		}
-
+		result = Read(*resource, record) && resource->QueryInterface(iid, outPtr);
 		resource->Release();
 	}
 
-	return false;
+	return result;
 }
 
 bool cGZPersistResourceFactory::Read(cIGZPersistResource& resource, cIGZPersistDBRecord& record)
 {
-	cRZCriticalSectionHolder lock(criticalSection);
+	cRZCriticalSectionHolder lock(mCriticalSection);
 	cIGZPersistDBSerialRecord* serialRecord;
 
 	bool result = false;
@@ -79,7 +118,7 @@ bool cGZPersistResourceFactory::Read(cIGZPersistResource& resource, cIGZPersistD
 
 bool cGZPersistResourceFactory::Write(cIGZPersistResource const& resource, cIGZPersistDBRecord& record)
 {
-	cRZCriticalSectionHolder lock(criticalSection);
+	cRZCriticalSectionHolder lock(mCriticalSection);
 	cIGZPersistDBSerialRecord* serialRecord;
 
 	bool result = false;

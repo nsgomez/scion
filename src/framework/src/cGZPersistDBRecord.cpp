@@ -19,76 +19,74 @@
 #include "cGZPersistDBRecord.h"
 
 cGZPersistDBRecord::cGZPersistDBRecord(cIGZPersistDBSegment* segment) :
-	refCount(0),
-	accessFlags(0),
-	key(),
-	segment(segment)
+	mRefCount(0),
+	mAccessFlags(0),
+	mKey(),
+	mSegment(segment)
 {
 }
 
 cGZPersistDBRecord::cGZPersistDBRecord(cGZPersistResourceKey const& key, cIGZPersistDBSegment* segment) :
-	refCount(0),
-	accessFlags(0),
-	key(key),
-	segment(segment)
+	mRefCount(0),
+	mAccessFlags(0),
+	mKey(key),
+	mSegment(segment)
 {
 }
 
 bool cGZPersistDBRecord::QueryInterface(GZIID iid, void** outPtr)
 {
-	if (iid == GZIID_cIGZPersistDBRecord)
+	switch (iid)
 	{
+	case GZIID_cIGZPersistDBRecord:
 		*outPtr = static_cast<cIGZPersistDBRecord*>(this);
 		AddRef();
 		return true;
-	}
-	else if (iid == GZIID_cIGZUnknown)
-	{
+
+	case GZIID_cIGZUnknown:
 		*outPtr = static_cast<cIGZUnknown*>(this);
 		AddRef();
 		return true;
 	}
-	else
-	{
-		return false;
-	}
+
+	return false;
 }
 
 uint32_t cGZPersistDBRecord::AddRef()
 {
-	return ++refCount;
+	return ++mRefCount;
 }
 
 uint32_t cGZPersistDBRecord::Release()
 {
-	if (refCount < 2)
+	if (mRefCount > 1)
 	{
-		delete this;
-		return 0;
+		return --mRefCount;
 	}
 	else
 	{
-		return --refCount;
+		delete this;
+		return 0;
 	}
 }
 
 cGZPersistResourceKey cGZPersistDBRecord::GetKey(void)
 {
-	return key;
+	return mKey;
 }
 
 int32_t cGZPersistDBRecord::GetAccessFlags(void)
 {
-	return accessFlags;
+	return mAccessFlags;
 }
 
 bool cGZPersistDBRecord::Close(void)
 {
 	bool succeeded = false;
-	if (segment != NULL)
+	if (mSegment != NULL)
 	{
-		succeeded = segment->CloseRecord(this);
-		segment = NULL;
+		succeeded = mSegment->CloseRecord(this);
+		mSegment = NULL;
 	}
 
 	return succeeded;
@@ -96,10 +94,10 @@ bool cGZPersistDBRecord::Close(void)
 
 void cGZPersistDBRecord::SetKey(cGZPersistResourceKey const& key)
 {
-	this->key = key;
+	mKey = key;
 }
 
 void cGZPersistDBRecord::SetAccessFlags(int32_t flags)
 {
-	this->accessFlags = flags;
+	mAccessFlags = flags;
 }

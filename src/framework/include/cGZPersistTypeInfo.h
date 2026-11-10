@@ -17,7 +17,8 @@
  */
 
 #pragma once
-#include <stdint.h>
+#include "cIGZString.h"
+#include "cRZAutoRefCount.h"
 
 class cIGZString;
 
@@ -37,7 +38,7 @@ public:
 	}
 
 public:
-	cIGZString* name;
+	cRZAutoRefCount<cIGZString> name;
 	uint32_t clsid;
 	uint32_t data;
 };

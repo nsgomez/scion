@@ -20,7 +20,11 @@
 #include <deque>
 #include <vector>
 #include "cGZPersistTypeInfo.h"
+#include "cIGZIStream.h"
 #include "cIGZPersistReader.h"
+#include "cIGZPersistResource2.h"
+#include "cIGZPersistSerializableReferent.h"
+#include "cRZAutoRefCount.h"
 
 static const GZCLSID GZCLSID_cGZPersistBinaryReader = 0x5B101E6B;
 
@@ -38,30 +42,30 @@ public:
 public:
 	virtual void ReadRoot(cIGZPersistResource2* resource, cIGZIStream* stream);
 
-	virtual bool ReadBool(void);
-	virtual int8_t ReadSint8(void);
-	virtual uint8_t ReadUint8(void);
-	virtual int16_t ReadSint16(void);
-	virtual uint16_t ReadUint16(void);
-	virtual int32_t ReadSint32(void);
-	virtual uint32_t ReadUint32(void);
-	virtual float ReadFloat32(void);
-	virtual double ReadFloat64(void);
+	virtual bool ReadBool(char const* name);
+	virtual int8_t ReadSint8(char const* name);
+	virtual uint8_t ReadUint8(char const* name);
+	virtual int16_t ReadSint16(char const* name);
+	virtual uint16_t ReadUint16(char const* name);
+	virtual int32_t ReadSint32(char const* name);
+	virtual uint32_t ReadUint32(char const* name);
+	virtual float ReadFloat32(char const* name);
+	virtual double ReadFloat64(char const* name);
 
-	virtual void ReadBoolArray(bool* array, size_t length);
-	virtual void ReadSint8Array(int8_t* array, size_t length);
-	virtual void ReadUint8Array(uint8_t* array, size_t length);
-	virtual void ReadSint16Array(int16_t* array, size_t length);
-	virtual void ReadUint16Array(uint16_t* array, size_t length);
-	virtual void ReadSint32Array(int32_t* array, size_t length);
-	virtual void ReadUint32Array(uint32_t* array, size_t length);
-	virtual void ReadFloat32Array(float* array, size_t length);
-	virtual void ReadFloat64Array(double* array, size_t length);
+	virtual void ReadBoolArray(char const* name, bool* array, size_t length);
+	virtual void ReadSint8Array(char const* name, int8_t* array, size_t length);
+	virtual void ReadUint8Array(char const* name, uint8_t* array, size_t length);
+	virtual void ReadSint16Array(char const* name, int16_t* array, size_t length);
+	virtual void ReadUint16Array(char const* name, uint16_t* array, size_t length);
+	virtual void ReadSint32Array(char const* name, int32_t* array, size_t length);
+	virtual void ReadUint32Array(char const* name, uint32_t* array, size_t length);
+	virtual void ReadFloat32Array(char const* name, float* array, size_t length);
+	virtual void ReadFloat64Array(char const* name, double* array, size_t length);
 
-	virtual void ReadString(cIGZString* str);
-	virtual void SkipBytes(size_t length);
-	virtual void ReadObject(GZCLSID clsid, void** out);
-	virtual void ReadObjectRef(GZCLSID clsid, void** out);
+	virtual void ReadString(char const* name, cIGZString* str);
+	virtual void SkipBytes(char const* name, size_t length);
+	virtual void ReadObject(char const* name, GZIID iid, void** out);
+	virtual void ReadObjectRef(char const* name, GZIID iid, void** out);
 	virtual cGZPersistTypeInfo ReadTypeInfo(void);
 
 	virtual cIGZIStream* InputStream(void);
@@ -70,13 +74,21 @@ protected:
 	struct cResourceInfo
 	{
 	public:
-		std::vector<cIGZUnknown*> unk1;
-		std::vector<cIGZUnknown*> unk2;
-		cIGZIStream* stream;
-		cIGZUnknown* unk3;
+		cResourceInfo(cIGZIStream* stream);
+
+	public:
+		std::vector<cRZAutoRefCount<cIGZPersistResource2> > dependents;
+		std::vector<cRZAutoRefCount<cIGZPersistSerializableReferent> > objectRefs;
+		cRZAutoRefCount<cIGZIStream> stream;
+	};
+
+	struct cResourceInfoList : public std::deque<cResourceInfo>
+	{
+	public:
+		cResourceInfoList();
 	};
 
 protected:
-	int32_t refCount;
-	std::deque<cResourceInfo> resources;
+	uint32_t mRefCount;
+	cResourceInfoList mResources;
 };

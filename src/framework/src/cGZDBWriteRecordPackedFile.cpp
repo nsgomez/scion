@@ -124,7 +124,7 @@ cGZDBWriteRecordPackedFile::~cGZDBWriteRecordPackedFile(void)
 
 bool cGZDBWriteRecordPackedFile::GetFieldVoid(void* data, uint32_t size)
 {
-	if (!accessFlags)
+	if (!mAccessFlags)
 	{
 		return false;
 	}
@@ -153,7 +153,7 @@ bool cGZDBWriteRecordPackedFile::GetFieldVoid(void* data, uint32_t size)
 
 bool cGZDBWriteRecordPackedFile::SetFieldVoid(void const* data, uint32_t size)
 {
-	if (!accessFlags)
+	if (!mAccessFlags)
 	{
 		return false;
 	}
@@ -168,7 +168,7 @@ bool cGZDBWriteRecordPackedFile::SetFieldVoid(void const* data, uint32_t size)
 		cRZString tmpFilePath;
 		triedCreatingTmpFile = true;
 
-		tmpFilePath.Sprintf("Record_%08x_", key.type);
+		tmpFilePath.Sprintf("Record_%08x_", mKey.type);
 		if (cRZFile::MakeTempPathName(tmpFilePath, NULL))
 		{
 			tmpFile = new cRZFile(tmpFilePath);
@@ -238,7 +238,7 @@ bool cGZDBWriteRecordPackedFile::SetFieldVoid(void const* data, uint32_t size)
 
 uint32_t cGZDBWriteRecordPackedFile::GetSize(void)
 {
-	if (!accessFlags)
+	if (!mAccessFlags)
 	{
 		return 0;
 	}
@@ -254,7 +254,7 @@ uint32_t cGZDBWriteRecordPackedFile::GetSize(void)
 
 bool cGZDBWriteRecordPackedFile::SetSize(size_t size)
 {
-	if (!accessFlags)
+	if (!mAccessFlags)
 	{
 		return false;
 	}
@@ -271,7 +271,7 @@ bool cGZDBWriteRecordPackedFile::SetSize(size_t size)
 
 uint32_t cGZDBWriteRecordPackedFile::GetPosition(void)
 {
-	if (!accessFlags)
+	if (!mAccessFlags)
 	{
 		return 0;
 	}
@@ -287,7 +287,7 @@ uint32_t cGZDBWriteRecordPackedFile::GetPosition(void)
 
 bool cGZDBWriteRecordPackedFile::SeekAbsolute(uint32_t position)
 {
-	if (!accessFlags)
+	if (!mAccessFlags)
 	{
 		return false;
 	}
@@ -311,8 +311,8 @@ bool cGZDBWriteRecordPackedFile::SeekRelative(int32_t offset)
 
 void cGZDBWriteRecordPackedFile::DoPostClose(void)
 {
-	accessFlags = 0;
-	segment = NULL;
+	mAccessFlags = 0;
+	mSegment = NULL;
 
 	if (tmpFile != NULL)
 	{
@@ -333,7 +333,7 @@ void cGZDBWriteRecordPackedFile::DoPostClose(void)
 
 bool cGZDBWriteRecordPackedFile::WriteRecordToParent(uint32_t offset, uint32_t size)
 {
-	if (!accessFlags)
+	if (!mAccessFlags)
 	{
 		return false;
 	}
@@ -370,7 +370,7 @@ bool cGZDBWriteRecordPackedFile::WriteRecordToParent(uint32_t offset, uint32_t s
 			}
 			while (ioResult);
 
-			cGZDBSegmentPackedFile* packedFile = static_cast<cGZDBSegmentPackedFile*>(&*segment);
+			cGZDBSegmentPackedFile* packedFile = static_cast<cGZDBSegmentPackedFile*>(&*mSegment);
 			packedFile->WriteFileSpan(tmpData, tmpOffset, bytesToRead);
 
 			totalBytesRead += bytesToRead;
@@ -378,7 +378,7 @@ bool cGZDBWriteRecordPackedFile::WriteRecordToParent(uint32_t offset, uint32_t s
 		}
 	}
 
-	cGZDBSegmentPackedFile* packedFile = static_cast<cGZDBSegmentPackedFile*>(&*segment);
+	cGZDBSegmentPackedFile* packedFile = static_cast<cGZDBSegmentPackedFile*>(&*mSegment);
 	uint32_t bytesToWrite = buffer.size();
 
 	if (size <= bytesToWrite)

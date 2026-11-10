@@ -26,15 +26,15 @@ class cIGZPersistResource : public cIGZUnknown
 {
 public:
 	virtual cGZPersistResourceKey GetKey(void) const = 0;
-	virtual void SetKey(cGZPersistResourceKey const& key) = 0;
+	virtual bool SetKey(cGZPersistResourceKey const& key) = 0;
 
 	virtual uint32_t GetType(void) const = 0;
 	virtual uint32_t GetGroup(void) const = 0;
 	virtual uint32_t GetInstance(void) const = 0;
 
-	virtual void SetType(uint32_t value) = 0;
-	virtual void SetGroup(uint32_t value) = 0;
-	virtual void SetInstance(uint32_t value) = 0;
+	virtual bool SetType(uint32_t value) = 0;
+	virtual bool SetGroup(uint32_t value) = 0;
+	virtual bool SetInstance(uint32_t value) = 0;
 
 	virtual uint32_t GetRefCount(void) = 0;
 };

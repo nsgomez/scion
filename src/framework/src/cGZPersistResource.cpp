@@ -21,88 +21,92 @@
 #include "RZPlatform.h"
 
  cGZPersistResource::cGZPersistResource() :
-	refCount(0),
-	key()
+	mRefCount(0),
+	mUnused(0),
+	mKey()
 {
 }
 
 bool cGZPersistResource::QueryInterface(GZIID iid, void** outPtr)
 {
-	if (iid == GZIID_cIGZUnknown)
+	switch (iid)
 	{
+	case GZIID_cIGZUnknown:
 		*outPtr = static_cast<cIGZUnknown*>(this);
 		AddRef();
 		return true;
-	}
-	else if (iid == GZIID_cIGZPersistResource)
-	{
+
+	case GZIID_cIGZPersistResource:
 		*outPtr = static_cast<cIGZPersistResource*>(this);
 		AddRef();
 		return true;
 	}
-	else
-	{
-		return false;
-	}
+
+	return false;
 }
 
 uint32_t cGZPersistResource::AddRef(void)
 {
-	return RZThreadSafeAdd(&refCount, 1);
+	return RZThreadSafeAdd(&mRefCount, 1);
 }
 
 uint32_t cGZPersistResource::Release(void)
 {
-	int32_t newRefCount = RZThreadSafeAdd(&refCount, -1);
-	if (newRefCount == 0)
+	uint32_t newRefCount = RZThreadSafeAdd(&mRefCount, -1);
+	if (newRefCount > 0)
 	{
-		delete this;
+		return newRefCount;
 	}
 
-	return newRefCount;
+	delete this;
+	return 0;
 }
 
 cGZPersistResourceKey cGZPersistResource::GetKey(void) const
 {
-	return key;
+	return mKey;
 }
 
-void cGZPersistResource::SetKey(cGZPersistResourceKey const& other)
+bool cGZPersistResource::SetKey(cGZPersistResourceKey const& other)
 {
-	key = other;
+	mKey = other;
+	return true;
 }
 
 uint32_t cGZPersistResource::GetType(void) const
 {
-	return key.type;
+	return mKey.type;
 }
 
 uint32_t cGZPersistResource::GetGroup(void) const
 {
-	return key.group;
+	return mKey.group;
 }
 
 uint32_t cGZPersistResource::GetInstance(void) const
 {
-	return key.instance;
+	return mKey.instance;
 }
 
-void cGZPersistResource::SetType(uint32_t value)
+bool cGZPersistResource::SetType(uint32_t value)
 {
-	key.type = value;
+	mKey.type = value;
+	return true;
 }
 
-void cGZPersistResource::SetGroup(uint32_t value)
+bool cGZPersistResource::SetGroup(uint32_t value)
 {
-	key.group = value;
+	mKey.group = value;
+	return true;
 }
 
-void cGZPersistResource::SetInstance(uint32_t value)
+bool cGZPersistResource::SetInstance(uint32_t value)
 {
-	key.instance = value;
+	mKey.instance = value;
+	return true;
 }
 
 uint32_t cGZPersistResource::GetRefCount(void)
 {
-	return refCount;
+	return mRefCount;
 }

@@ -29,6 +29,11 @@ public:
 	virtual ~cGZPersistResourceFactory(void) { }
 
 public:
+	virtual bool QueryInterface(GZIID iid, void** outPtr);
+	virtual uint32_t AddRef();
+	virtual uint32_t Release();
+
+public:
 	virtual bool CreateInstance(uint32_t type, uint32_t iid, void** outPtr, uint32_t, cIGZUnknown*);
 	virtual bool CreateInstance(cIGZPersistDBRecord& record, uint32_t iid, void** outPtr, int32_t, cIGZUnknown*);
 
@@ -42,6 +47,6 @@ protected:
 	virtual bool SerialWrite(cIGZPersistResource& resource, cIGZPersistDBSerialRecord& record) = 0;
 
 protected:
-	uint32_t refCount;
-	cRZCriticalSection criticalSection;
+	uint32_t mRefCount;
+	cRZCriticalSection mCriticalSection;
 };

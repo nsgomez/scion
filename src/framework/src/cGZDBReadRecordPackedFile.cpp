@@ -25,17 +25,17 @@ cGZDBReadRecordPackedFile::cGZDBReadRecordPackedFile(uint32_t recordOffset, uint
 	position(0),
 	size(size)
 {
-	accessFlags = GZFileAccessRead;
+	mAccessFlags = GZFileAccessRead;
 }
 
 bool cGZDBReadRecordPackedFile::GetFieldVoid(void* data, uint32_t size)
 {
-	if (!accessFlags || this->size < position + size)
+	if (!mAccessFlags || this->size < position + size)
 	{
 		return false;
 	}
 
-	cGZDBSegmentPackedFile* file = static_cast<cGZDBSegmentPackedFile*>(&*this->segment);
+	cGZDBSegmentPackedFile* file = static_cast<cGZDBSegmentPackedFile*>(&*mSegment);
 	if (file->ReadFileSpan(data, recordOffset + position, size))
 	{
 		position += size;
@@ -67,7 +67,7 @@ uint32_t cGZDBReadRecordPackedFile::GetPosition(void)
 
 bool cGZDBReadRecordPackedFile::SeekAbsolute(uint32_t position)
 {
-	if (!accessFlags || size <= position)
+	if (!mAccessFlags || size <= position)
 	{
 		return false;
 	}
@@ -78,7 +78,7 @@ bool cGZDBReadRecordPackedFile::SeekAbsolute(uint32_t position)
 
 bool cGZDBReadRecordPackedFile::SeekRelative(int32_t offset)
 {
-	if (!accessFlags || size <= offset + position)
+	if (!mAccessFlags || size <= offset + position)
 	{
 		return false;
 	}
@@ -89,7 +89,7 @@ bool cGZDBReadRecordPackedFile::SeekRelative(int32_t offset)
 
 void cGZDBReadRecordPackedFile::DoPostClose(void)
 {
-	accessFlags = 0;
-	segment = NULL;
+	mAccessFlags = 0;
+	mSegment = NULL;
 	position = 0;
 }

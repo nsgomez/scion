@@ -535,6 +535,19 @@ void cGZDBSegmentPackedFile::SetRecordCompressed(cGZPersistResourceKey const& ke
 	}
 }
 
+uint32_t cGZDBSegmentPackedFile::GetCompressedRecordLength(cGZPersistResourceKey const& key)
+{
+	cRZCriticalSectionHolder lock(criticalSection);
+	uint32_t length = (-1)u;
+
+	if (compressedRecords.find(key) != compressedREcords.end())
+	{
+		length = GetRecordSizeRaw(key);
+	}
+
+	return length;
+}
+
 bool cGZDBSegmentPackedFile::AllocateSpace(uint32_t& offset, uint32_t sizeToAlloc)
 {
 	if ((fileAccessFlags & GZFileAccessWrite) == 0)
@@ -985,7 +998,7 @@ bool cGZDBSegmentPackedFile::DoOpenRecord(cGZPersistResourceKey const& key, cIGZ
 		if (recordType == DBReadRecordTypeRAM)
 		{
 			cGZDBReadRecordRAM* original = static_cast<cGZDBReadRecordRAM*>(readRecord);
-			record = new cGZDBReadRecordRAM(original->data, original->size, key, this, true);
+			record = new cGZDBReadRecordRAM(original->mData, original->mSize, key, this, true);
 		}
 		else if (recordType == DBReadRecordTypePackedFile)
 		{
@@ -1296,52 +1309,32 @@ bool cGZDBSegmentPackedFile::SeekAbsolute(int32_t position)
 	return file.SeekToPosition(startingOffset + position) == startingOffset + position;
 }
 
-uint32_t cGZDBSegmentPackedFile::ReadFileSpan(void* data, uint32_t offset, uint32_t length)
+bool cGZDBSegmentPackedFile::ReadFileSpan(void* data, uint32_t offset, uint32_t length)
 {
 	cRZCriticalSectionHolder lock(criticalSection);
-	if (!IsOpenInternal())
-	{
-		return false;
-	}
 
-	if (file.SeekToPosition(startingOffset + offset) != startingOffset + offset)
-	{
-		return false;
-	}
-
-	return file.Read(data, length);
+	return IsOpenInternal()
+		&& file.SeekToPosition(startingOffset + offset) == startingOffset + offset
+		&& file.Read(data, length);
 }
 
 bool cGZDBSegmentPackedFile::ReadFileSpanWithCount(void* data, uint32_t offset, uint32_t& length)
 {
 	cRZCriticalSectionHolder lock(criticalSection);
-	if (!IsOpenInternal())
-	{
-		return false;
-	}
 
-	if (file.SeekToPosition(startingOffset + offset) != startingOffset + offset)
-	{
-		return false;
-	}
-
-	return file.ReadWithCount(data, length);
+	return IsOpenInternal()
+		&& file.SeekToPosition(startingOffset + offset) == startingOffset + offset
+		&& file.ReadWithCount(data, length);
 }
 
 bool cGZDBSegmentPackedFile::WriteFileSpan(void const* data, uint32_t offset, uint32_t length)
 {
 	cRZCriticalSectionHolder lock(criticalSection);
-	if ((fileAccessFlags & GZFileAccessWrite) == 0)
-	{
-		return false;
-	}
 
-	if (file.SeekToPosition(startingOffset + offset) != startingOffset + offset)
-	{
-		return false;
-	}
-
-	return file.Write(data, length);
+	return IsOpenInternal()
+		&& (fileAccessFlags & GZFileAccessWrite) != 0
+		&& file.SeekToPosition(startingOffset + offset) == startingOffset + offset
+		&& file.Write(data, length);
 }
 
 uint32_t cGZDBSegmentPackedFile::GetDecompressedRecordLength(cGZPersistResourceKey const& key)

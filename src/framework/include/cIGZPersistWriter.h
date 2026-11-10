@@ -33,31 +33,31 @@ class cIGZPersistWriter : public cIGZUnknown
 public:
 	virtual void WriteRoot(cIGZPersistResource2 const* resource, cIGZOStream* stream) = 0;
 
-	virtual void WriteBool(bool value) = 0;
-	virtual void WriteSint8(int8_t value) = 0;
-	virtual void WriteUint8(uint8_t value) = 0;
-	virtual void WriteSint16(int16_t value) = 0;
-	virtual void WriteUint16(uint16_t value) = 0;
-	virtual void WriteSint32(int32_t value) = 0;
-	virtual void WriteUint32(uint32_t value) = 0;
-	virtual void WriteFloat32(float value) = 0;
-	virtual void WriteFloat64(double value) = 0;
+	virtual void WriteBool(char const* name, bool value) = 0;
+	virtual void WriteSint8(char const* name, int8_t value) = 0;
+	virtual void WriteUint8(char const* name, uint8_t value) = 0;
+	virtual void WriteSint16(char const* name, int16_t value) = 0;
+	virtual void WriteUint16(char const* name, uint16_t value) = 0;
+	virtual void WriteSint32(char const* name, int32_t value) = 0;
+	virtual void WriteUint32(char const* name, uint32_t value) = 0;
+	virtual void WriteFloat32(char const* name, float value) = 0;
+	virtual void WriteFloat64(char const* name, double value) = 0;
 
-	virtual void WriteBoolArray(bool const* array, size_t length) = 0;
-	virtual void WriteSint8Array(int8_t const* array, size_t length) = 0;
-	virtual void WriteUint8Array(uint8_t const* array, size_t length) = 0;
-	virtual void WriteSint16Array(int16_t const* array, size_t length) = 0;
-	virtual void WriteUint16Array(uint16_t const* array, size_t length) = 0;
-	virtual void WriteSint32Array(int32_t const* array, size_t length) = 0;
-	virtual void WriteUint32Array(uint32_t const* array, size_t length) = 0;
-	virtual void WriteFloat32Array(float const* array, size_t length) = 0;
-	virtual void WriteFloat64Array(double const* array, size_t length) = 0;
+	virtual void WriteBoolArray(char const* name, bool const* array, size_t length) = 0;
+	virtual void WriteSint8Array(char const* name, int8_t const* array, size_t length) = 0;
+	virtual void WriteUint8Array(char const* name, uint8_t const* array, size_t length) = 0;
+	virtual void WriteSint16Array(char const* name, int16_t const* array, size_t length) = 0;
+	virtual void WriteUint16Array(char const* name, uint16_t const* array, size_t length) = 0;
+	virtual void WriteSint32Array(char const* name, int32_t const* array, size_t length) = 0;
+	virtual void WriteUint32Array(char const* name, uint32_t const* array, size_t length) = 0;
+	virtual void WriteFloat32Array(char const* name, float const* array, size_t length) = 0;
+	virtual void WriteFloat64Array(char const* name, double const* array, size_t length) = 0;
 
-	virtual void WriteString(cIGZString const* str) = 0;
-	virtual void WriteString(char const* str) = 0;
-	virtual void WriteObject(cIGZPersistSerializable2 const* obj) = 0;
-	virtual void WriteObjectRef(cIGZPersistSerializableReferent const* obj) = 0;
-	virtual void WriteObjectRef(cIGZUnknown const* obj) = 0;
+	virtual void WriteString(char const* name, cIGZString const* str) = 0;
+	virtual void WriteString(char const* name, char const* str) = 0;
+	virtual void WriteObject(char const* name, cIGZPersistSerializable2 const* obj) = 0;
+	virtual void WriteObjectRef(char const* name, cIGZPersistSerializableReferent const* obj) = 0;
+	virtual void WriteObjectRef(char const* name, cIGZUnknown const* obj) = 0;
 	virtual void WriteTypeInfo(cGZPersistTypeInfo const& info) = 0;
 
 	virtual cIGZOStream* OutputStream() = 0;

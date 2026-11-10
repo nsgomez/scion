@@ -22,6 +22,8 @@
 class cIGZPersistDBRecord;
 class cIGZPersistResource;
 
+static const GZIID GZIID_cIGZPersistResourceFactory = 0xA56B8F17;
+
 class cIGZPersistResourceFactory : public cIGZUnknown
 {
 public:

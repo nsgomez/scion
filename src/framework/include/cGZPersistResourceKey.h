@@ -52,11 +52,7 @@ public:
 		return *this;
 	}
 
-	bool operator== (cGZPersistResourceKey const& other)
-	{
-		return type == other.type && group == other.group && instance == other.instance;
-	}
-
+	bool operator== (cGZPersistResourceKey const& other);
 	bool operator< (cGZPersistResourceKey const& other)
 	{
 		return type < other.type || group < other.group || instance < other.instance;

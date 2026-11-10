@@ -24,7 +24,7 @@ class cGZPersistDBSegment : public cIGZPersistDBSegment
 {
 public:
 	cGZPersistDBSegment(void);
-	virtual ~cGZPersistDBSegment(void) { }
+	virtual ~cGZPersistDBSegment(void);
 
 public:
 	virtual bool QueryInterface(GZIID iid, void** outPtr);

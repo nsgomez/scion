@@ -25,24 +25,27 @@ cGZPersistDBSegment::cGZPersistDBSegment(void) :
 {
 }
 
+cGZPersistDBSegment::~cGZPersistDBSegment()
+{
+}
+
 bool cGZPersistDBSegment::QueryInterface(GZIID iid, void** outPtr)
 {
 	if (iid == GZIID_cIGZPersistDBSegment)
 	{
 		*outPtr = static_cast<cIGZPersistDBSegment*>(this);
-		AddRef();
-		return true;
 	}
 	else if (iid == GZIID_cIGZUnknown)
 	{
 		*outPtr = static_cast<cIGZUnknown*>(this);
-		AddRef();
-		return true;
 	}
 	else
 	{
 		return false;
 	}
+
+	AddRef();
+	return true;
 }
 
 uint32_t cGZPersistDBSegment::AddRef(void)
@@ -54,18 +57,21 @@ uint32_t cGZPersistDBSegment::AddRef(void)
 uint32_t cGZPersistDBSegment::Release(void)
 {
 	criticalSection.Lock();
-	if (refCount < 2)
+	uint32_t retVal;
+
+	if (refCount > 1)
 	{
+		retVal = --refCount;
 		criticalSection.Unlock();
-		delete this;
-		return 0;
 	}
 	else
 	{
-		uint32_t retVal = --refCount;
 		criticalSection.Unlock();
-		return retVal;
+		FinalRelease();
+		retVal = 0;
 	}
+
+	return retVal;
 }
 
 bool cGZPersistDBSegment::Lock(void)
@@ -87,7 +93,7 @@ uint32_t cGZPersistDBSegment::GetResourceKeyList(cIGZPersistResourceKeyList* lis
 
 uint32_t cGZPersistDBSegment::GetResourceKeyList(cIGZPersistResourceKeyList& list)
 {
-	return GetResourceKeyList(&list, NULL);
+	return GetResourceKeyList(&list, NULL) != 0;
 }
 
 bool cGZPersistDBSegment::TestForRecord(cGZPersistResourceKey const& key)
@@ -99,7 +105,7 @@ bool cGZPersistDBSegment::TestForRecord(cGZPersistResourceKey const& key)
 int32_t cGZPersistDBSegment::GetRecordSize(cGZPersistResourceKey const& key)
 {
 	cRZCriticalSectionHolder lock(criticalSection);
-	return GetRecordSize(key);
+	return DoGetRecordSize(key);
 }
 
 bool cGZPersistDBSegment::OpenRecord(cGZPersistResourceKey const& key, cIGZPersistDBRecord** out, uint32_t flags)

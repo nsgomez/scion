@@ -44,8 +44,8 @@ public:
 	virtual void SetAccessFlags(int32_t flags);
 
 protected:
-	uint16_t refCount;
-	uint16_t accessFlags;
-	cGZPersistResourceKey key;
-	cRZAutoRefCount<cIGZPersistDBSegment> segment;
+	uint16_t mRefCount;
+	uint16_t mAccessFlags;
+	cGZPersistResourceKey mKey;
+	cRZAutoRefCount<cIGZPersistDBSegment> mSegment;
 };

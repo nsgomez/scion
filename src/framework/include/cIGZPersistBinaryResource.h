@@ -24,7 +24,7 @@ static const GZIID GZIID_cIGZPersistBinaryResource = 0xCA63D8E9;
 class cIGZPersistBinaryResource : public cIGZUnknown
 {
 public:
-	virtual void SetData(void* data, uint32_t length) = 0;
+	virtual bool SetData(void* data, uint32_t length) = 0;
 	virtual void* GetData(void) const = 0;
 	virtual uint32_t GetDataLength(void) const = 0;
 };

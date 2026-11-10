@@ -17,6 +17,18 @@
  */
 
 #pragma once
-#include "cIGZUnknown.h"
+#include "cGZPersistResourceFactory.h"
 
 static const GZGUID GZCLSID_cGZPersistBinaryResourceFactory = 0x0A63DF8C;
+
+class cGZPersistBinaryResourceFactory : public cGZPersistResourceFactory
+{
+public:
+	cGZPersistBinaryResourceFactory();
+	virtual ~cGZPersistBinaryResourceFactory() { }
+
+protected:
+	virtual bool CreateInstance(uint32_t type, uint32_t iid, void** outPtr);
+	virtual bool SerialRead(cIGZPersistResource& resource, cIGZPersistDBSerialRecord& record);
+	virtual bool SerialWrite(cIGZPersistResource& resource, cIGZPersistDBSerialRecord& record);
+};

@@ -26,8 +26,6 @@ cGZPersistDBSerialRecord::cGZPersistDBSerialRecord(cIGZPersistDBSegment* segment
 	cGZPersistDBRecord(segment),
 	cRZOStream(useLittleEndian),
 	cRZIStream(useLittleEndian),
-	refCount(0),
-	key(),
 	useLittleEndian(useLittleEndian)
 {
 }
@@ -36,8 +34,6 @@ cGZPersistDBSerialRecord::cGZPersistDBSerialRecord(cGZPersistResourceKey const& 
 	cGZPersistDBRecord(key, segment),
 	cRZOStream(useLittleEndian),
 	cRZIStream(useLittleEndian),
-	refCount(0),
-	key(key),
 	useLittleEndian(useLittleEndian)
 {
 }
@@ -794,7 +790,7 @@ bool cGZPersistDBSerialRecord::SeekRelative(int32_t offset)
 
 cGZPersistResourceKey cGZPersistDBSerialRecord::GetKey(void)
 {
-	return key;
+	return mKey;
 }
 
 bool cGZPersistDBSerialRecord::Skip(uint32_t bytes)

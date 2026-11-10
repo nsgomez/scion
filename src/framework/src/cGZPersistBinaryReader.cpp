@@ -17,15 +17,27 @@
  */
 
 #include "cGZPersistBinaryReader.h"
+#include "cGZPersistResourceManager.h"
 #include "cIGZCOM.h"
 #include "cIGZPersistSerializable2.h"
 #include "cIGZIStream.h"
 #include "cRZString.h"
+#include "cRZSysServPtr.h"
 #include "RZStatics.h"
 
+cGZPersistBinaryReader::cResourceInfo::cResourceInfo(cIGZIStream* stream) :
+	dependents(),
+	objectRefs(),
+	stream(stream)
+{
+}
+
+cGZPersistBinaryReader::cResourceInfoList::cResourceInfoList()
+{
+}
+
 cGZPersistBinaryReader::cGZPersistBinaryReader(void) :
-	refCount(0),
-	resources()
+	mRefCount(0)
 {
 }
 
@@ -35,211 +47,282 @@ bool cGZPersistBinaryReader::QueryInterface(GZIID iid, void** outPtr)
 	{
 		return false;
 	}
-	else if (iid == GZIID_cIGZUnknown)
+
+	switch (iid)
 	{
+	case GZIID_cIGZPersistReader:
+		*outPtr = static_cast<cIGZPersistReader*>(this);
+		AddRef();
+		return true;
+
+	case GZIID_cIGZUnknown:
 		*outPtr = static_cast<cIGZUnknown*>(this);
 		AddRef();
 		return true;
 	}
-	else if (iid == GZIID_cIGZPersistReader)
-	{
-		*outPtr = static_cast<cIGZPersistReader*>(this);
-		AddRef();
-		return true;
-	}
-	else
-	{
-		return false;
-	}
+
+	return false;
 }
 
 uint32_t cGZPersistBinaryReader::AddRef(void)
 {
-	return ++refCount;
+	return ++mRefCount;
 }
 
 uint32_t cGZPersistBinaryReader::Release(void)
 {
-	if (--refCount == 0)
+	if (--mRefCount == 0)
 	{
 		delete this;
+		return 0;
 	}
 
-	return refCount;
+	return mRefCount;
 }
 
 void cGZPersistBinaryReader::ReadRoot(cIGZPersistResource2* resource, cIGZIStream* stream)
 {
-	// TODO
+	mResources.push_back(cResourceInfo(stream));
+
+	cRZSysServPtr<cIGZPersistResourceManager, GZIID_cIGZPersistResourceManager, GZCLSID_cGZPersistResourceManager> manager;
+
+	bool resourceWasPreRegistered = manager->HasRegisteredResource(resource->AsResource()->GetKey());
+	if (!resourceWasPreRegistered)
+	{
+		manager->RegisterResource(resource->AsResource()->GetKey(), resource->AsResource());
+	}
+
+	uint32_t numDependentResources;
+	InputStream()->GetUint32(numDependentResources);
+
+	for (uint32_t i = 0; i < numDependentResources; i++)
+	{
+		cGZPersistResourceKey key;
+		InputStream()->GetUint32(key.group);
+		InputStream()->GetUint32(key.instance);
+		InputStream()->GetUint32(key.type);
+
+		cRZAutoRefCount<cIGZPersistResource2> dependent;
+		if (key.type != 0)
+		{
+			if (!manager->GetResource(key, GZIID_cIGZPersistResource2, reinterpret_cast<void**>(&dependent), 0, NULL))
+			{
+				cRZString message;
+				message.Sprintf("Cannot load dependent resource with group ID = %u, instance ID = %u, type = %u\n",
+					key.group, key.instance, key.type);
+			}
+		}
+		else
+		{
+			cRZString message;
+			message.Sprintf("Null dependent resource with group ID = %u, instance ID = %u, type = %u\n",
+				key.group, key.instance, key.type);
+		}
+
+		mResources.back().dependents.push_back(dependent);
+	}
+
+	uint32_t numObjectRefs;
+	InputStream()->GetUint32(numObjectRefs);
+
+	mResources.back().objectRefs.push_back(cRZAutoRefCount<cIGZPersistSerializableReferent>(resource));
+
+	uint32_t clsid;
+	InputStream()->GetUint32(clsid);
+
+	for (uint32_t i = 0; i < numObjectRefs; i++)
+	{
+		InputStream()->GetUint32(clsid);
+
+		if (clsid != 0)
+		{
+			cRZAutoRefCount<cIGZPersistSerializableReferent> obj;
+			cIGZCOM* com = GZCOM();
+
+			obj = NULL;
+			com->GetClassObject(clsid, GZIID_cIGZPersistSerializableReferent, reinterpret_cast<void**>(&obj));
+
+			mResources.back().objectRefs.push_back(obj);
+		}
+		else
+		{
+			mResources.back().objectRefs.push_back(cRZAutoRefCount<cIGZPersistSerializableReferent>());
+		}
+	}
+
+	for (uint32_t i = 0; i < numObjectRefs; i++)
+	{
+		if (mResources.back().objectRefs[i] != NULL)
+		{
+			mResources.back().objectRefs[i]->ReadFrom(this);
+		}
+	}
+
+	if (!resourceWasPreRegistered)
+	{
+		manager->UnregisterResource(resource->AsResource()->GetKey());
+	}
+
+	mResources.pop_back();
 }
 
-bool cGZPersistBinaryReader::ReadBool(void)
+bool cGZPersistBinaryReader::ReadBool(char const* name)
 {
 	uint8_t data;
 	InputStream()->GetUint8(data);
 	return !!data;
 }
 
-int8_t cGZPersistBinaryReader::ReadSint8(void)
+int8_t cGZPersistBinaryReader::ReadSint8(char const* name)
 {
 	int8_t data;
 	InputStream()->GetSint8(data);
 	return data;
 }
 
-uint8_t cGZPersistBinaryReader::ReadUint8(void)
+uint8_t cGZPersistBinaryReader::ReadUint8(char const* name)
 {
 	uint8_t data;
 	InputStream()->GetUint8(data);
 	return data;
 }
 
-int16_t cGZPersistBinaryReader::ReadSint16(void)
+int16_t cGZPersistBinaryReader::ReadSint16(char const* name)
 {
 	int16_t data;
 	InputStream()->GetSint16(data);
 	return data;
 }
 
-uint16_t cGZPersistBinaryReader::ReadUint16(void)
+uint16_t cGZPersistBinaryReader::ReadUint16(char const* name)
 {
 	uint16_t data;
 	InputStream()->GetUint16(data);
 	return data;
 }
 
-int32_t cGZPersistBinaryReader::ReadSint32(void)
+int32_t cGZPersistBinaryReader::ReadSint32(char const* name)
 {
 	int32_t data;
 	InputStream()->GetSint32(data);
 	return data;
 }
 
-uint32_t cGZPersistBinaryReader::ReadUint32(void)
+uint32_t cGZPersistBinaryReader::ReadUint32(char const* name)
 {
 	uint32_t data;
 	InputStream()->GetUint32(data);
 	return data;
 }
 
-float cGZPersistBinaryReader::ReadFloat32(void)
+float cGZPersistBinaryReader::ReadFloat32(char const* name)
 {
 	float data;
 	InputStream()->GetFloat32(data);
 	return data;
 }
 
-double cGZPersistBinaryReader::ReadFloat64(void)
+double cGZPersistBinaryReader::ReadFloat64(char const* name)
 {
 	double data;
 	InputStream()->GetFloat64(data);
 	return data;
 }
 
-void cGZPersistBinaryReader::ReadBoolArray(bool* array, size_t length)
+void cGZPersistBinaryReader::ReadBoolArray(char const* name, bool* array, size_t length)
 {
-	uint8_t data;
 	for (size_t i = 0; i < length; i++)
 	{
+		uint8_t data;
 		InputStream()->GetUint8(data);
 		*(array++) = !!data;
 	}
 }
 
-void cGZPersistBinaryReader::ReadSint8Array(int8_t* array, size_t length)
+void cGZPersistBinaryReader::ReadSint8Array(char const* name, int8_t* array, size_t length)
 {
 	InputStream()->GetVoid(array, length);
 }
 
-void cGZPersistBinaryReader::ReadUint8Array(uint8_t* array, size_t length)
+void cGZPersistBinaryReader::ReadUint8Array(char const* name, uint8_t* array, size_t length)
 {
 	InputStream()->GetVoid(array, length);
 }
 
-void cGZPersistBinaryReader::ReadSint16Array(int16_t* array, size_t length)
+void cGZPersistBinaryReader::ReadSint16Array(char const* name, int16_t* array, size_t length)
 {
-	// FUTURE: why not use GetVoid here?
-	int16_t data;
 	for (size_t i = 0; i < length; i++)
 	{
-		InputStream()->GetSint16(data);
-		*(array++) = data;
+		InputStream()->GetSint16(*array);
+		array++;
 	}
 }
 
-void cGZPersistBinaryReader::ReadUint16Array(uint16_t* array, size_t length)
+void cGZPersistBinaryReader::ReadUint16Array(char const* name, uint16_t* array, size_t length)
 {
-	uint16_t data;
 	for (size_t i = 0; i < length; i++)
 	{
-		InputStream()->GetUint16(data);
-		*(array++) = data;
+		InputStream()->GetUint16(*array);
+		array++;
 	}
 }
 
-void cGZPersistBinaryReader::ReadSint32Array(int32_t* array, size_t length)
+void cGZPersistBinaryReader::ReadSint32Array(char const* name, int32_t* array, size_t length)
 {
-	int32_t data;
 	for (size_t i = 0; i < length; i++)
 	{
-		InputStream()->GetSint32(data);
-		*(array++) = data;
+		InputStream()->GetSint32(*array);
+		array++;
 	}
 }
 
-void cGZPersistBinaryReader::ReadUint32Array(uint32_t* array, size_t length)
+void cGZPersistBinaryReader::ReadUint32Array(char const* name, uint32_t* array, size_t length)
 {
-	uint32_t data;
 	for (size_t i = 0; i < length; i++)
 	{
-		InputStream()->GetUint32(data);
-		*(array++) = data;
+		InputStream()->GetUint32(*array);
+		array++;
 	}
 }
 
-void cGZPersistBinaryReader::ReadFloat32Array(float* array, size_t length)
+void cGZPersistBinaryReader::ReadFloat32Array(char const* name, float* array, size_t length)
 {
-	float data;
 	for (size_t i = 0; i < length; i++)
 	{
-		InputStream()->GetFloat32(data);
-		*(array++) = data;
+		InputStream()->GetFloat32(*array);
+		array++;
 	}
 }
 
-void cGZPersistBinaryReader::ReadFloat64Array(double* array, size_t length)
+void cGZPersistBinaryReader::ReadFloat64Array(char const* name, double* array, size_t length)
 {
-	double data;
 	for (size_t i = 0; i < length; i++)
 	{
-		InputStream()->GetFloat64(data);
-		*(array++) = data;
+		InputStream()->GetFloat64(*array);
+		array++;
 	}
 }
 
-void cGZPersistBinaryReader::ReadString(cIGZString* str)
+void cGZPersistBinaryReader::ReadString(char const* name, cIGZString* str)
 {
 	InputStream()->GetGZStr(*str);
 }
 
-void cGZPersistBinaryReader::SkipBytes(size_t length)
+void cGZPersistBinaryReader::SkipBytes(char const* name, size_t length)
 {
 	InputStream()->Skip(length);
 }
 
-void cGZPersistBinaryReader::ReadObject(GZIID iid, void** out)
+void cGZPersistBinaryReader::ReadObject(char const* name, GZIID iid, void** out)
 {
 	GZCLSID clsid;
-	cIGZPersistSerializable2* serializable;
 	InputStream()->GetUint32(clsid);
 
-	if (!clsid)
+	if (clsid != 0)
 	{
-		*out = NULL;
-	}
-	else
-	{
+		cIGZPersistSerializable2* serializable = NULL;
 		GZCOM()->GetClassObject(clsid, GZIID_cIGZPersistSerializable2, reinterpret_cast<void**>(&serializable));
+
 		serializable->ReadFrom(this);
 		serializable->QueryInterface(iid, out);
 
@@ -249,19 +332,52 @@ void cGZPersistBinaryReader::ReadObject(GZIID iid, void** out)
 			serializable->Release();
 		}
 	}
+	else
+	{
+		*out = NULL;
+	}
 }
 
-void cGZPersistBinaryReader::ReadObjectRef(GZCLSID clsid, void** out)
+void cGZPersistBinaryReader::ReadObjectRef(char const* name, GZIID iid, void** out)
 {
-	// TODO
+	uint8_t hasRef;
+	InputStream()->GetUint8(hasRef);
+
+	if (hasRef)
+	{
+		uint8_t isDependentResource;
+		uint32_t index;
+
+		InputStream()->GetUint8(isDependentResource);
+		InputStream()->GetUint32(index);
+
+		*out = NULL;
+
+		if (isDependentResource)
+		{
+			if (mResources.back().dependents[index] != NULL)
+			{
+				mResources.back().dependents[index]->QueryInterface(iid, out);
+			}
+		}
+		else
+		{
+			if (mResources.back().objectRefs[index] != NULL)
+			{
+				mResources.back().objectRefs[index]->QueryInterface(iid, out);
+			}
+		}
+	}
+	else
+	{
+		*out = NULL;
+	}
 }
 
 cGZPersistTypeInfo cGZPersistBinaryReader::ReadTypeInfo(void)
 {
 	cGZPersistTypeInfo info;
-	cIGZString* name = new cRZString();
-
-	info.name = name;
+	info.name = new cRZString();
 
 	InputStream()->GetGZStr(*info.name);
 	InputStream()->GetUint32(info.clsid);
@@ -272,6 +388,5 @@ cGZPersistTypeInfo cGZPersistBinaryReader::ReadTypeInfo(void)
 
 cIGZIStream* cGZPersistBinaryReader::InputStream(void)
 {
-	// TODO
-	return NULL;
+	return mResources.back().stream;
 }

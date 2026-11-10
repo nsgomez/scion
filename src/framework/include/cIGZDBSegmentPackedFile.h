@@ -72,6 +72,8 @@ public:
 	virtual bool GetRecordCompressed(cGZPersistResourceKey const& key) = 0;
 	virtual void SetRecordCompressed(cGZPersistResourceKey const& key, bool flag, uint32_t size) = 0;
 
+	virtual uint32_t GetCompressedRecordLength(cGZPersistResourceKey const& key) = 0;
+
 	virtual bool AllocateSpace(uint32_t& offset, uint32_t sizeToAlloc) = 0;
 	virtual bool FreeSpace(uint32_t holeStart, uint32_t holeSize) = 0;
 	virtual bool ReallocateSpace(cGZPersistResourceKey const& key, uint32_t&, uint32_t) = 0;

@@ -1,6 +1,6 @@
 /*
  *  Scion - an open-source implementation of the Maxis GZCOM/RZCOM framework
- *  Copyright (C) 2024  Nelson Gomez (nsgomez) <nelson@ngomez.me>
+ *  Copyright (C) 2026  Nelson Gomez (nsgomez) <nelson@ngomez.me>
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public
@@ -17,3 +17,8 @@
  */
 
 #pragma once
+#include "cIGZPersistResourceManager.h"
+
+static const GZCLSID GZCLSID_cGZPersistResourceManager = 0x056B906E;
+
+// TODO

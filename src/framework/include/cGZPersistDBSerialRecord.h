@@ -147,7 +147,5 @@ public:
 	virtual cIGZIStream& operator>> (cIGZString& str);
 
 protected:
-	uint16_t refCount;
-	cGZPersistResourceKey key;
 	bool useLittleEndian;
 };

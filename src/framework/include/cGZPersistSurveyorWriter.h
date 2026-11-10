@@ -20,3 +20,5 @@
 #include "cIGZUnknown.h"
 
 static const GZGUID GZCLSID_cGZPersistSurveyorWriter = 0xBB194C78;
+
+// TODO

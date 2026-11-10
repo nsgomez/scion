@@ -90,6 +90,8 @@ public:
 	virtual bool GetRecordCompressed(cGZPersistResourceKey const& key);
 	virtual void SetRecordCompressed(cGZPersistResourceKey const& key, bool flag, uint32_t size);
 
+	virtual uint32_t GetCompressedRecordLength(cGZPersistResourceKey const& key);
+
 	virtual bool AllocateSpace(uint32_t& offset, uint32_t sizeToAlloc);
 	virtual bool FreeSpace(uint32_t holeStart, uint32_t holeSize);
 	virtual bool ReallocateSpace(cGZPersistResourceKey const& key, uint32_t&, uint32_t);
@@ -123,7 +125,7 @@ public:
 
 	virtual bool GetModificationTime(uint32_t& creationTime, uint32_t& modificationTime);
 	virtual bool SeekAbsolute(int32_t position);
-	virtual uint32_t ReadFileSpan(void* data, uint32_t offset, uint32_t length);
+	virtual bool ReadFileSpan(void* data, uint32_t offset, uint32_t length);
 	virtual bool ReadFileSpanWithCount(void* data, uint32_t offset, uint32_t& length);
 	virtual bool WriteFileSpan(void const* data, uint32_t offset, uint32_t length);
 

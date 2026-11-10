@@ -20,11 +20,13 @@
 #include "cIGZPersistBinaryResource.h"
 #include "cGZPersistResource.h"
 
+static const GZGUID GZTYPE_cGZPersistBinaryResource = 0xCA63E2A3;
+
 class cGZPersistBinaryResource : public cGZPersistResource, public cIGZPersistBinaryResource
 {
 public:
 	cGZPersistBinaryResource();
-	virtual ~cGZPersistBinaryResource() { }
+	virtual ~cGZPersistBinaryResource();
 
 public:
 	virtual bool QueryInterface(GZIID iid, void** outPtr);
@@ -32,12 +34,12 @@ public:
 	virtual uint32_t Release(void);
 
 public:
-	virtual void SetData(void* newData, uint32_t newLength);
+	virtual bool SetData(void* newData, uint32_t newLength);
 	virtual void* GetData(void) const;
 	virtual uint32_t GetDataLength(void) const;
 
 protected:
-	void* data;
-	uint32_t allocatedLength;
-	uint32_t length;
+	void* mData;
+	uint32_t mAllocatedLength;
+	uint32_t mLength;
 };
