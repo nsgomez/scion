@@ -19,6 +19,7 @@
 #pragma once
 #include "cIGZMessage2Standard.h"
 #include "cIGZSerializable.h"
+#include "cIGZString.h"
 #include "cRZAutoRefCount.h"
 
 const GZCLSID GZCLSID_cRZMessage2Standard = 0x46DF45E7;

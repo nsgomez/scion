@@ -137,6 +137,9 @@
 				RelativePath=".\src\cGZCOMLibrary.cpp">
 			</File>
 			<File
+				RelativePath=".\src\cGZCommandParameterSet.cpp">
+			</File>
+			<File
 				RelativePath=".\src\cGZDate.cpp">
 			</File>
 			<File
@@ -168,6 +171,12 @@
 			</File>
 			<File
 				RelativePath=".\src\cGZMessage.cpp">
+			</File>
+			<File
+				RelativePath=".\src\cGZMessage2CommandDispatcher.cpp">
+			</File>
+			<File
+				RelativePath=".\src\cGZMessage2CommandDispatcherMessage.cpp">
 			</File>
 			<File
 				RelativePath=".\src\cGZMessageQueue.cpp">
@@ -246,6 +255,9 @@
 			</File>
 			<File
 				RelativePath=".\src\cGZPersistSurveyorWriter.cpp">
+			</File>
+			<File
+				RelativePath=".\src\cGZStringCommandGenerator.cpp">
 			</File>
 			<File
 				RelativePath=".\src\CriticalSectionPlatformData.cpp">
@@ -400,6 +412,9 @@
 				RelativePath=".\include\cGZCOMLibrary.h">
 			</File>
 			<File
+				RelativePath=".\include\cGZCommandParameterSet.h">
+			</File>
+			<File
 				RelativePath=".\include\cGZDate.h">
 			</File>
 			<File
@@ -434,6 +449,12 @@
 			</File>
 			<File
 				RelativePath=".\include\cGZMessage.h">
+			</File>
+			<File
+				RelativePath=".\include\cGZMessage2CommandDispatcher.h">
+			</File>
+			<File
+				RelativePath=".\include\cGZMessage2CommandDispatcherMessage.h">
 			</File>
 			<File
 				RelativePath=".\include\cGZMessageQueue.h">
@@ -517,6 +538,9 @@
 				RelativePath=".\include\cGZPersistTypeInfo.h">
 			</File>
 			<File
+				RelativePath=".\include\cGZStringCommandGenerator.h">
+			</File>
+			<File
 				RelativePath=".\include\cIGZAllocatorService.h">
 			</File>
 			<File
@@ -533,6 +557,21 @@
 			</File>
 			<File
 				RelativePath=".\include\cIGZCOMLibrary.h">
+			</File>
+			<File
+				RelativePath=".\include\cIGZCommandDispatcher.h">
+			</File>
+			<File
+				RelativePath=".\include\cIGZCommandDispatcherObject.h">
+			</File>
+			<File
+				RelativePath=".\include\cIGZCommandGenerator.h">
+			</File>
+			<File
+				RelativePath=".\include\cIGZCommandParameterSet.h">
+			</File>
+			<File
+				RelativePath=".\include\cIGZCommandServer.h">
 			</File>
 			<File
 				RelativePath=".\include\cIGZCompression.h">
