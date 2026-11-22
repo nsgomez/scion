@@ -1852,12 +1852,7 @@ bool cRZLanguageUtility::DoesLanguageUseCharacterSet(GZCharacterSet characterSet
 
 bool cRZLanguageUtility::GetLanguageRoadDrivingSide() const
 {
-	if (mLanguage == kGZLanguage_English_UK || mLanguage == kGZLanguage_Japanese)
-	{
-		return false;
-	}
-
-	return true;
+	return !(mLanguage == kGZLanguage_English_UK || mLanguage == kGZLanguage_Japanese);
 }
 
 bool cRZLanguageUtility::GetMeasurementSystem() const
@@ -1868,15 +1863,10 @@ bool cRZLanguageUtility::GetMeasurementSystem() const
 
 bool cRZLanguageUtility::AreFirstAndLastNamesReversed() const
 {
-	if (mLanguage == kGZLanguage_Japanese
+	return mLanguage == kGZLanguage_Japanese
 		|| mLanguage == kGZLanguage_Chinese_Simplified
 		|| mLanguage == kGZLanguage_Chinese_Traditional
-		|| mLanguage == kGZLanguage_Korean)
-	{
-		return true;
-	}
-
-	return false;
+		|| mLanguage == kGZLanguage_Korean;
 }
 
 bool cRZLanguageUtility::DoesLanguageUseInputMethodEditing() const
@@ -1891,7 +1881,7 @@ bool cRZLanguageUtility::DoesLanguageUseMultiByteCharacters() const
 {
 	switch (GetCurrentFrameworkCodePage())
 	{
-	case 0:
+	case 0: // TODO: is there a good constant name we can give this for GZ_CODEPAGE?
 		return false;
 
 	case GZ_CODEPAGE_UTF8:
