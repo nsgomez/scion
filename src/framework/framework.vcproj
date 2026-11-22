@@ -625,6 +625,9 @@
 				RelativePath=".\include\cIGZMessageQueue2.h">
 			</File>
 			<File
+				RelativePath=".\include\cIGZMessageQueueManager2.h">
+			</File>
+			<File
 				RelativePath=".\include\cIGZMessageServer.h">
 			</File>
 			<File

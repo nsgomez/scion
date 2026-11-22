@@ -1,6 +1,6 @@
 /*
  *  Scion - an open-source implementation of the Maxis GZCOM/RZCOM framework
- *  Copyright (C) 2022  Nelson Gomez (nsgomez) <nelson@ngomez.me>
+ *  Copyright (C) 2026  Nelson Gomez (nsgomez) <nelson@ngomez.me>
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public
@@ -16,3 +16,144 @@
  *  License along with this library; if not, see <https://www.gnu.org/licenses/>.
  */
 
+#include "cGZMessageQueue2.h"
+#include "cGZMessageQueueManager2.h"
+
+cGZMessageQueueManager2::cGZMessageQueueManager2() :
+	cRZSystemService(RZSRVID_cGZMessageQueueManager2, 5000000)
+{
+}
+
+cGZMessageQueueManager2::~cGZMessageQueueManager2()
+{
+}
+
+bool cGZMessageQueueManager2::QueryInterface(GZIID iid, void** outPtr)
+{
+	if (iid == GZIID_cIGZMessageQueueManager2)
+	{
+		*outPtr = static_cast<cIGZMessageQueueManager2*>(this);
+		AddRef();
+		return true;
+	}
+	else
+	{
+		return cRZSystemService::QueryInterface(iid, outPtr);
+	}
+}
+
+uint32_t cGZMessageQueueManager2::AddRef()
+{
+	return cRZSystemService::AddRef();
+}
+
+uint32_t cGZMessageQueueManager2::Release()
+{
+	return cRZSystemService::Release();
+}
+
+bool cGZMessageQueueManager2::Init()
+{
+	return true;
+}
+
+bool cGZMessageQueueManager2::Shutdown()
+{
+	return true;
+}
+
+bool cGZMessageQueueManager2::GetQueue(GZGUID id, cIGZMessageQueue2** queueOut)
+{
+	cRZCriticalSectionHolder lock(mCriticalSection);
+
+	std::map<GZGUID, cRZAutoRefCount<cIGZMessageQueue2> >::iterator it = mQueueMap.find(id);
+	if (it == mQueueMap.end())
+	{
+		return false;
+	}
+	else
+	{
+		cIGZMessageQueue2* queue = it->second;
+		*queueOut = queue;
+		queue->AddRef();
+
+		return *queueOut != NULL;
+	}
+}
+
+bool cGZMessageQueueManager2::AddQueue(GZGUID id, cIGZMessageQueue2* queue)
+{
+	cRZCriticalSectionHolder lock(mCriticalSection);
+
+	std::map<GZGUID, cRZAutoRefCount<cIGZMessageQueue2> >::iterator it = mQueueMap.find(id);
+	if (it == mQueueMap.end())
+	{
+		mQueueMap.insert(std::pair<GZGUID, cRZAutoRefCount<cIGZMessageQueue2> >(id, queue));
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+}
+
+bool cGZMessageQueueManager2::AddQueue(GZGUID id)
+{
+	cRZCriticalSectionHolder lock(mCriticalSection);
+
+	std::map<GZGUID, cRZAutoRefCount<cIGZMessageQueue2> >::iterator it = mQueueMap.find(id);
+	if (it == mQueueMap.end())
+	{
+		cRZAutoRefCount<cIGZMessageQueue2> queue = new cGZMessageQueue2();
+		mQueueMap.insert(std::pair<GZGUID, cRZAutoRefCount<cIGZMessageQueue2> >(id, queue));
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+}
+
+bool cGZMessageQueueManager2::RemoveQueue(cIGZMessageQueue2* queue)
+{
+	cRZCriticalSectionHolder lock(mCriticalSection);
+
+	std::map<GZGUID, cRZAutoRefCount<cIGZMessageQueue2> >::iterator end = mQueueMap.end();
+	for (std::map<GZGUID, cRZAutoRefCount<cIGZMessageQueue2> >::iterator it = mQueueMap.begin(); it != end; it++)
+	{
+		if (it->second == queue)
+		{
+			mQueueMap.erase(it);
+			return true;
+		}
+	}
+
+	return false;
+}
+
+bool cGZMessageQueueManager2::RemoveQueue(GZGUID id)
+{
+	cRZCriticalSectionHolder lock(mCriticalSection);
+
+	std::map<GZGUID, cRZAutoRefCount<cIGZMessageQueue2> >::iterator it = mQueueMap.find(id);
+	if (it != mQueueMap.end())
+	{
+		mQueueMap.erase(it);
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+}
+
+void cGZMessageQueueManager2::RemoveAllQueues()
+{
+	cRZCriticalSectionHolder lock(mCriticalSection);
+	mQueueMap.clear();
+}
+
+uint32_t cGZMessageQueueManager2::GetQueueCount()
+{
+	return mQueueMap.size();
+}
