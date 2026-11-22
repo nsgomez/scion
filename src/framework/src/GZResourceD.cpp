@@ -77,8 +77,7 @@ GZGUID cGZResManCOMDirector::GetDirectorID(void) const
 
 cIGZUnknown* cGZResManCOMDirector::CreateGZDBSegmentDirectoryFiles(void)
 {
-	// TODO
-	return NULL;
+	return static_cast<cIGZPersistDBSegmentDirectoryFiles*>(new cGZDBSegmentDirectoryFiles());
 }
 
 cIGZUnknown* cGZResManCOMDirector::CreateGZDBSegmentMultiPackedFiles(void)
@@ -99,8 +98,7 @@ cIGZUnknown* cGZResManCOMDirector::CreateGZDBSerialRecordAsIGZFile(void)
 
 cIGZUnknown* cGZResManCOMDirector::CreateASCIIWriter(void)
 {
-	// TODO
-	return NULL;
+	return static_cast<cIGZPersistWriter*>(new cGZPersistASCIIWriter());
 }
 
 cIGZUnknown* cGZResManCOMDirector::CreateBinaryReader(void)
@@ -120,8 +118,7 @@ cIGZUnknown* cGZResManCOMDirector::CreateBinaryWriter(void)
 
 cIGZUnknown* cGZResManCOMDirector::CreateSurveyorWriter(void)
 {
-	// TODO
-	return NULL;
+	return static_cast<cIGZPersistSurveyorWriter*>(new cGZPersistSurveyorWriter());
 }
 
 cIGZUnknown* cGZResManCOMDirector::CreateGZResourceKeyList(void)

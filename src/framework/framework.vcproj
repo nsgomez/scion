@@ -221,9 +221,6 @@
 				RelativePath=".\src\cGZPersistDBSegment.cpp">
 			</File>
 			<File
-				RelativePath=".\src\cGZPersistDBSegmentMultiPackedFiles.cpp">
-			</File>
-			<File
 				RelativePath=".\src\cGZPersistDBSerialRecord.cpp">
 			</File>
 			<File
@@ -257,6 +254,9 @@
 				RelativePath=".\src\cGZPersistSurveyorWriter.cpp">
 			</File>
 			<File
+				RelativePath=".\src\cGZRESIDtoExtensionMap.cpp">
+			</File>
+			<File
 				RelativePath=".\src\cGZStringCommandGenerator.cpp">
 			</File>
 			<File
@@ -264,6 +264,9 @@
 			</File>
 			<File
 				RelativePath=".\src\cRZAutoMsg2Notification.cpp">
+			</File>
+			<File
+				RelativePath=".\src\cRZCallbackTimer.cpp">
 			</File>
 			<File
 				RelativePath=".\src\cRZCmdLine.cpp">
@@ -499,9 +502,6 @@
 				RelativePath=".\include\cGZPersistDBSegment.h">
 			</File>
 			<File
-				RelativePath=".\include\cGZPersistDBSegmentMultiPackedFiles.h">
-			</File>
-			<File
 				RelativePath=".\include\cGZPersistDBSerialRecord.h">
 			</File>
 			<File
@@ -536,6 +536,9 @@
 			</File>
 			<File
 				RelativePath=".\include\cGZPersistTypeInfo.h">
+			</File>
+			<File
+				RelativePath=".\include\cGZRESIDtoExtensionMap.h">
 			</File>
 			<File
 				RelativePath=".\include\cGZStringCommandGenerator.h">
@@ -578,9 +581,6 @@
 			</File>
 			<File
 				RelativePath=".\include\cIGZDate.h">
-			</File>
-			<File
-				RelativePath=".\include\cIGZDBSegmentMultiPackedFiles.h">
 			</File>
 			<File
 				RelativePath=".\include\cIGZDBSegmentPackedFile.h">
@@ -652,6 +652,9 @@
 				RelativePath=".\include\cIGZPersistDBRecord.h">
 			</File>
 			<File
+				RelativePath=".\include\cIGZPersistDBSDFRecord.h">
+			</File>
+			<File
 				RelativePath=".\include\cIGZPersistDBSegment.h">
 			</File>
 			<File
@@ -662,6 +665,9 @@
 			</File>
 			<File
 				RelativePath=".\include\cIGZPersistReader.h">
+			</File>
+			<File
+				RelativePath=".\include\cIGZPersistRESIDtoExtensionMap.h">
 			</File>
 			<File
 				RelativePath=".\include\cIGZPersistResource.h">
@@ -722,6 +728,9 @@
 			</File>
 			<File
 				RelativePath=".\include\cRZAutoRefCount.h">
+			</File>
+			<File
+				RelativePath=".\include\cRZCallbackTimer.h">
 			</File>
 			<File
 				RelativePath=".\include\cRZCmdLine.h">

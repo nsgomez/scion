@@ -759,7 +759,12 @@ bool cGZPersistDBSerialRecord::SetFieldFloat64(double const* array, size_t lengt
 
 bool cGZPersistDBSerialRecord::SetFieldString(cIGZString const& string)
 {
-	// TODO
+	uint32_t const length = string.Strlen();
+	if (SetFieldUint32(length))
+	{
+		return SetFieldVoid(string.Data(), length);
+	}
+
 	return false;
 }
 
