@@ -105,18 +105,17 @@ cIGZUnknown* cGZResManCOMDirector::CreateASCIIWriter(void)
 
 cIGZUnknown* cGZResManCOMDirector::CreateBinaryReader(void)
 {
-	return new cGZPersistBinaryReader();
+	return static_cast<cIGZPersistReader*>(new cGZPersistBinaryReader());
 }
 
 cIGZUnknown* cGZResManCOMDirector::CreateBinaryResourceFactory(void)
 {
-	// TODO
-	return NULL;
+	return static_cast<cIGZPersistResourceFactory*>(new cGZPersistBinaryResourceFactory());
 }
 
 cIGZUnknown* cGZResManCOMDirector::CreateBinaryWriter(void)
 {
-	return new cGZPersistBinaryWriter();
+	return static_cast<cIGZPersistWriter*>(new cGZPersistBinaryWriter());
 }
 
 cIGZUnknown* cGZResManCOMDirector::CreateSurveyorWriter(void)
