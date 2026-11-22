@@ -300,7 +300,7 @@ bool cRZVariant::GetValString(cIGZString& dest) const
 	}
 
 	cRZString str;
-	ConvertToString(*this, str);
+	// ConvertToString(*this, str); // TODO
 	dest.FromChar(str.Data(), (uint32_t)str.size());
 
 	return false;

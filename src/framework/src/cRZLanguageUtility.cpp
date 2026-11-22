@@ -1256,14 +1256,460 @@ bool cRZLanguageUtility::GetAbbrMonthName(uint8_t month, cIGZString& outName) co
 
 bool cRZLanguageUtility::MakeTimeString(int32_t hour, int32_t minute, int32_t second, cIGZString& outTime) const
 {
-	// TODO
-	return false;
+	cRZString result;
+
+	if (hour >= 24)
+	{
+		hour %= 24;
+	}
+
+	if (minute >= 60)
+	{
+		minute %= 60;
+	}
+
+	if (second >= 60)
+	{
+		second %= 60;
+	}
+
+	if (mLanguage == kGZLanguage_English || mLanguage == kGZLanguage_Spanish_Mexican)
+	{
+		char const* ampm = (hour < 12) ? "am" : "pm";
+
+		if (hour == 0)
+		{
+			hour = 12;
+		}
+		else if (hour > 12)
+		{
+			hour -= 12;
+		}
+
+		if (second >= 0)
+		{
+			result.Sprintf("%u:%.2u:%.2u %s", hour, minute, second, ampm);
+		}
+		else if (minute >= 0)
+		{
+			result.Sprintf("%u:%.2u %s", hour, minute, ampm);
+		}
+		else
+		{
+			result.Sprintf("%u %s", hour, ampm);
+		}
+	}
+	else
+	{
+		switch (mLanguage)
+		{
+		case kGZLanguage_Danish:
+		case kGZLanguage_Swedish:
+		case kGZLanguage_Portuguese_Brazilian:
+		case kGZLanguage_French_Belgian:
+		case kGZLanguage_German_Swiss:
+			if (second >= 0)
+			{
+				result.Sprintf("%.2u.%.2u.%.2u", hour, minute, second);
+			}
+			else if (minute >= 0)
+			{
+				result.Sprintf("%.2u.%.2u", hour, minute);
+			}
+			else
+			{
+				result.Sprintf("%.2u:00", hour);
+			}
+
+			break;
+
+		case kGZLanguage_English_UK:
+		case kGZLanguage_French:
+		case kGZLanguage_German:
+		case kGZLanguage_Norwegian:
+		case kGZLanguage_Polish:
+		case kGZLanguage_Hungarian:
+			if (second >= 0)
+			{
+				result.Sprintf("%u.%.2u.%.2u", hour, minute, second);
+			}
+			else if (minute >= 0)
+			{
+				result.Sprintf("%u.%.2u", hour, minute);
+			}
+			else
+			{
+				result.Sprintf("%u:00", hour);
+			}
+
+			break;
+
+		case kGZLanguage_Italian:
+		case kGZLanguage_Greek:
+			if (second >= 0)
+			{
+				result.Sprintf("%.2u:%.2u:%.2u", hour, minute, second);
+			}
+			else if (minute >= 0)
+			{
+				result.Sprintf("%.2u:%.2u", hour, minute);
+			}
+			else
+			{
+				result.Sprintf("%.2u:00", hour);
+			}
+
+			break;
+
+		case kGZLanguage_Spanish:
+		case kGZLanguage_Dutch:
+		case kGZLanguage_Finnish:
+		case kGZLanguage_Hebrew:
+		case kGZLanguage_Russian:
+		case kGZLanguage_Portuguese:
+		case kGZLanguage_Japanese:
+		case kGZLanguage_Chinese_Simplified:
+		case kGZLanguage_Chinese_Traditional:
+		case kGZLanguage_Thai:
+		case kGZLanguage_Korean:
+		case kGZLanguage_Hindi:
+		case kGZLanguage_Arabic:
+		case kGZLanguage_Bulgarian:
+		case kGZLanguage_Cyrillic:
+		case kGZLanguage_Ukrainian:
+		case kGZLanguage_Czech:
+		case kGZLanguage_Icelandic:
+		case kGZLanguage_Romanian:
+		case kGZLanguage_Latin:
+		case kGZLanguage_Slovak:
+		case kGZLanguage_Albanian:
+		case kGZLanguage_Turkish:
+		case kGZLanguage_French_Swiss:
+		case kGZLanguage_French_Canadian:
+		case kGZLanguage_Italian_Swiss:
+		case kGZLanguage_Spanish_Mexican:
+		case kGZLanguage_Tagalog:
+		case kGZLanguage_Vietnamese:
+			if (second >= 0)
+			{
+				result.Sprintf("%u:%.2u:%.2u", hour, minute, second);
+			}
+			else if (minute >= 0)
+			{
+				result.Sprintf("%u:%.2u", hour, minute);
+			}
+			else
+			{
+				result.Sprintf("%u:00", hour);
+			}
+
+			break;
+
+		default:
+			if (second >= 0)
+			{
+				result.Sprintf("%u:%.2u:%.2u", hour, minute, second);
+			}
+			else if (minute >= 0)
+			{
+				result.Sprintf("%u:%.2u", hour, minute);
+			}
+			else
+			{
+				result.Sprintf("%u:00", hour);
+			}
+
+			break;
+		}
+	}
+
+	outTime.FromChar(result.Data());
+	return true;
 }
 
 bool cRZLanguageUtility::MakeDateString(int32_t day, int32_t month, uint32_t year, cIGZString& outDate, GZDateFormat format) const
 {
-	// TODO
-	return false;
+	cRZString result;
+
+	cRZString monthName;
+	cRZString monthAbbr;
+
+	if (format != kGZDateFormat_FullNumeric && format != kGZDateFormat_MonthYearNumeric)
+	{
+		GetMonthName(month, monthName);
+		GetAbbrMonthName(month, monthAbbr);
+	}
+
+	cRZString yearStr;
+	if (year < 100)
+	{
+		yearStr.Sprintf("%02u", year);
+	}
+	else if (year < 1000)
+	{
+		yearStr.Sprintf("%03u", year);
+	}
+	else if (year < 10000)
+	{
+		yearStr.Sprintf("%04u", year);
+	}
+	else
+	{
+		yearStr.Sprintf("%05u", year);
+	}
+
+	switch (mLanguage)
+	{
+	case kGZLanguage_Dutch:
+	case kGZLanguage_Danish:
+	case kGZLanguage_Swedish:
+	case kGZLanguage_Portuguese:
+		switch (format)
+		{
+		case kGZDateFormat_FullNumeric:
+			result.Sprintf("%u-%u-%s", day, month, yearStr.ToChar());
+			break;
+
+		case kGZDateFormat_MonthYearNumeric:
+			result.Sprintf("%u-%s", month, yearStr.ToChar());
+			break;
+
+		case kGZDateFormat_NamedMonthWithDay:
+			result.Sprintf("%u %s, %s", day, monthName.ToChar(), yearStr.ToChar());
+			break;
+
+		case kGZDateFormat_NamedMonth:
+			result.Sprintf("%s %s", monthName.ToChar(), yearStr.ToChar());
+			break;
+
+		case kGZDateFormat_AbbreviatedMonthWithDay:
+			result.Sprintf("%u %s., %s", day, monthAbbr.ToChar(), yearStr.ToChar());
+			break;
+
+		case kGZDateFormat_AbbreviatedMonth:
+			result.Sprintf("%s. %s", monthAbbr.ToChar(), yearStr.ToChar());
+			break;
+
+		default:
+			return false;
+		}
+
+		break;
+
+	case kGZLanguage_German:
+	case kGZLanguage_Norwegian:
+	case kGZLanguage_Finnish:
+	case kGZLanguage_Polish:
+		switch (format)
+		{
+		case kGZDateFormat_FullNumeric:
+			result.Sprintf("%u.%u.%s", day, month, yearStr.ToChar());
+			break;
+
+		case kGZDateFormat_MonthYearNumeric:
+			result.Sprintf("%u.%s", month, yearStr.ToChar());
+			break;
+
+		case kGZDateFormat_NamedMonthWithDay:
+			result.Sprintf("%u %s, %s", day, monthName.ToChar(), yearStr.ToChar());
+			break;
+
+		case kGZDateFormat_NamedMonth:
+			result.Sprintf("%s %s", monthName.ToChar(), yearStr.ToChar());
+			break;
+
+		case kGZDateFormat_AbbreviatedMonthWithDay:
+			result.Sprintf("%u %s., %s", day, monthAbbr.ToChar(), yearStr.ToChar());
+			break;
+
+		case kGZDateFormat_AbbreviatedMonth:
+			result.Sprintf("%s. %s", monthAbbr.ToChar(), yearStr.ToChar());
+			break;
+
+		default:
+			return false;
+		}
+
+		break;
+
+	case kGZLanguage_Chinese_Simplified:
+	case kGZLanguage_Chinese_Traditional:
+	case kGZLanguage_Korean:
+		switch (format)
+		{
+		case kGZDateFormat_FullNumeric:
+			result.Sprintf("%s-%u-%u", yearStr.ToChar(), month, day);
+			break;
+
+		case kGZDateFormat_MonthYearNumeric:
+			result.Sprintf("%s-%u", yearStr.ToChar(), month);
+			break;
+
+		case kGZDateFormat_NamedMonthWithDay:
+			result.Sprintf("%s %s %u", yearStr.ToChar(), monthName.ToChar(), day);
+			break;
+
+		case kGZDateFormat_NamedMonth:
+			result.Sprintf("%s %s", yearStr.ToChar(), monthName.ToChar());
+			break;
+
+		case kGZDateFormat_AbbreviatedMonthWithDay:
+			result.Sprintf("%s %s %u", yearStr.ToChar(), monthAbbr.ToChar(), day);
+			break;
+
+		case kGZDateFormat_AbbreviatedMonth:
+			result.Sprintf("%s %s", yearStr.ToChar(), monthAbbr.ToChar());
+			break;
+
+		default:
+			return false;
+		}
+
+		break;
+
+	case kGZLanguage_Japanese:
+		switch (format)
+		{
+		case kGZDateFormat_FullNumeric:
+			result.Sprintf("%s/%u/%u", yearStr.ToChar(), month, day);
+			break;
+
+		case kGZDateFormat_MonthYearNumeric:
+			result.Sprintf("%s/%u", yearStr.ToChar(), month);
+			break;
+
+		case kGZDateFormat_NamedMonthWithDay:
+			result.Sprintf("%s.%s.%u", yearStr.ToChar(), monthName.ToChar(), day);
+			break;
+
+		case kGZDateFormat_NamedMonth:
+			result.Sprintf("%s.%s", yearStr.ToChar(), monthName.ToChar());
+			break;
+
+		case kGZDateFormat_AbbreviatedMonthWithDay:
+			result.Sprintf("%s.%s.%u", yearStr.ToChar(), monthAbbr.ToChar(), day);
+			break;
+
+		case kGZDateFormat_AbbreviatedMonth:
+			result.Sprintf("%s.%s", yearStr.ToChar(), monthAbbr.ToChar());
+			break;
+
+		default:
+			return false;
+		}
+
+		break;
+
+	case kGZLanguage_Invariant:
+	case kGZLanguage_Unspecified:
+	case kGZLanguage_English:
+		switch (format)
+		{
+		case kGZDateFormat_FullNumeric:
+			result.Sprintf("%u/%u/%s", month, day, yearStr.ToChar());
+			break;
+
+		case kGZDateFormat_MonthYearNumeric:
+			result.Sprintf("%u/%s", month, yearStr.ToChar());
+			break;
+
+		case kGZDateFormat_NamedMonthWithDay:
+			result.Sprintf("%s %u, %s", monthName.ToChar(), day, yearStr.ToChar());
+			break;
+
+		case kGZDateFormat_NamedMonth:
+			result.Sprintf("%s %s", monthName.ToChar(), yearStr.ToChar());
+			break;
+
+		case kGZDateFormat_AbbreviatedMonthWithDay:
+			result.Sprintf("%s. %u, %s", monthAbbr.ToChar(), day, yearStr.ToChar());
+			break;
+
+		case kGZDateFormat_AbbreviatedMonth:
+			result.Sprintf("%s. %s", monthAbbr.ToChar(), yearStr.ToChar());
+			break;
+
+		default:
+			return false;
+		}
+
+		break;
+
+	case kGZLanguage_English_UK:
+	case kGZLanguage_French:
+	case kGZLanguage_Italian:
+	case kGZLanguage_Spanish:
+	case kGZLanguage_Russian:
+	case kGZLanguage_Thai:
+	case kGZLanguage_Portuguese_Brazilian:
+		switch (format)
+		{
+		case kGZDateFormat_FullNumeric:
+			result.Sprintf("%u/%u/%s", day, month, yearStr.ToChar());
+			break;
+
+		case kGZDateFormat_MonthYearNumeric:
+			result.Sprintf("%u/%s", month, yearStr.ToChar());
+			break;
+
+		case kGZDateFormat_NamedMonthWithDay:
+			result.Sprintf("%u %s, %s", day, monthName.ToChar(), yearStr.ToChar());
+			break;
+
+		case kGZDateFormat_NamedMonth:
+			result.Sprintf("%s %s", monthName.ToChar(), yearStr.ToChar());
+			break;
+
+		case kGZDateFormat_AbbreviatedMonthWithDay:
+			result.Sprintf("%u %s., %s", day, monthAbbr.ToChar(), yearStr.ToChar());
+			break;
+
+		case kGZDateFormat_AbbreviatedMonth:
+			result.Sprintf("%s. %s", monthAbbr.ToChar(), yearStr.ToChar());
+			break;
+
+		default:
+			return false;
+		}
+
+		break;
+
+	default:
+		switch (format)
+		{
+		case kGZDateFormat_FullNumeric:
+			result.Sprintf("%u/%u/%s", month, day, yearStr.ToChar());
+			break;
+
+		case kGZDateFormat_MonthYearNumeric:
+			result.Sprintf("%u/%s", month, yearStr.ToChar());
+			break;
+
+		case kGZDateFormat_NamedMonthWithDay:
+			result.Sprintf("%s %u, %s", monthName.ToChar(), day, yearStr.ToChar());
+			break;
+
+		case kGZDateFormat_NamedMonth:
+			result.Sprintf("%s %s", monthName.ToChar(), yearStr.ToChar());
+			break;
+
+		case kGZDateFormat_AbbreviatedMonthWithDay:
+			result.Sprintf("%s. %u, %s", monthAbbr.ToChar(), day, yearStr.ToChar());
+			break;
+
+		case kGZDateFormat_AbbreviatedMonth:
+			result.Sprintf("%s. %s", monthAbbr.ToChar(), yearStr.ToChar());
+			break;
+
+		default:
+			return false;
+		}
+
+		break;
+	}
+
+	outDate.FromChar(result.Data());
+	return true;
 }
 
 bool cRZLanguageUtility::GetCurrencySymbol(cIGZString& outSymbol) const
@@ -1631,8 +2077,80 @@ bool cRZLanguageUtility::MakeFormattedMoneyString(double amount, cIGZString& out
 
 bool cRZLanguageUtility::MakeNumberString(int64_t value, cIGZString& outNumber) const
 {
-	// TODO
-	return false;
+	cRZString digits;
+	cRZString separator(',', 1);
+	cRZString numAccumulator;
+	cRZString temp; // unused but we know there was another cRZString constructor call here
+	cRZString minusString('-', 1);
+	cRZString result;
+
+	bool negative = (value < 0);
+	if (negative)
+	{
+		value = -value;
+	}
+
+	digits.Sprintf("%lld", value);
+	GetDecimalSeparator(separator);
+
+	int32_t const length = digits.Strlen();
+	int32_t i = length;
+
+	while (i > 3)
+	{
+		int32_t groupSize = i % 3;
+		if (groupSize == 0)
+		{
+			groupSize = 3;
+		}
+
+		numAccumulator += digits.Mid(length - i, groupSize);
+		numAccumulator += separator;
+		i -= groupSize;
+	}
+
+	numAccumulator += digits.Right(i);
+
+	if (negative)
+	{
+		switch (mLanguage)
+		{
+		case kGZLanguage_Finnish:
+			result = numAccumulator + minusString;
+			break;
+
+		case kGZLanguage_English:
+		case kGZLanguage_English_UK:
+		case kGZLanguage_French:
+		case kGZLanguage_German:
+		case kGZLanguage_Italian:
+		case kGZLanguage_Spanish:
+		case kGZLanguage_Dutch:
+		case kGZLanguage_Danish:
+		case kGZLanguage_Swedish:
+		case kGZLanguage_Norwegian:
+		case kGZLanguage_Hebrew:
+		case kGZLanguage_Russian:
+		case kGZLanguage_Japanese:
+		case kGZLanguage_Polish:
+		case kGZLanguage_Chinese_Simplified:
+		case kGZLanguage_Chinese_Traditional:
+		case kGZLanguage_Thai:
+		case kGZLanguage_Korean:
+			result = minusString + numAccumulator;
+			break;
+
+		default:
+			break;
+		}
+	}
+	else
+	{
+		result = numAccumulator;
+	}
+
+	outNumber.FromChar(result.Data());
+	return true;
 }
 
 bool cRZLanguageUtility::MakeFormattedNumberString(double value, cIGZString& outNumber, cIGZString const& format) const

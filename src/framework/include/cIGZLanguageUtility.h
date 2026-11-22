@@ -25,12 +25,12 @@ class cIGZString;
 
 enum GZDateFormat
 {
-	kGZDateFormat_Short,
-	kGZDateFormat_Medium,
-	kGZDateFormat_Long,
-	kGZDateFormat_Full,
-	kGZDateFormat_LongAbbr,
-	kGZDateFormat_FullAbbr,
+	kGZDateFormat_FullNumeric,
+	kGZDateFormat_MonthYearNumeric,
+	kGZDateFormat_NamedMonthWithDay,
+	kGZDateFormat_NamedMonth,
+	kGZDateFormat_AbbreviatedMonthWithDay,
+	kGZDateFormat_AbbreviatedMonth,
 };
 
 enum GZCountry
@@ -95,6 +95,8 @@ enum GZCountry
 
 enum GZLanguage
 {
+	kGZLanguage_Invariant   = -1, // TODO: is this a good name?
+	kGZLanguage_Unspecified = 0,  // TODO: is this a good name?
 	kGZLanguage_English    = 1,
 	kGZLanguage_English_UK = 2,
 	kGZLanguage_French     = 3,
