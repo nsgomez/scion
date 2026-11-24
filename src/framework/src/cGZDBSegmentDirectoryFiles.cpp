@@ -20,6 +20,7 @@
 #include "cIGZFile.h"
 #include "cIGZPersistResourceKeyFilter.h"
 #include "cIGZPersistResourceKeyList.h"
+#include "cRZCriticalSectionHolder.h"
 #include "RZPlatform.h"
 
 cGZDBSegmentDirectoryFiles::cGZDBSegmentDirectoryFiles() :

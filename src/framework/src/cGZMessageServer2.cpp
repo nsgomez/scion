@@ -21,6 +21,7 @@
 #include "cIGZFramework.h"
 #include "cIGZMessage2.h"
 #include "cIGZMessageTarget2.h"
+#include "cRZCriticalSectionHolder.h"
 #include "cRZMessage2Standard.h"
 #include "RZStatics.h"
 

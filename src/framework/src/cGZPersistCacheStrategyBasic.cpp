@@ -19,6 +19,7 @@
 #include "cGZPersistCacheStrategyBasic.h"
 #include "cGZPersistResourceKeyFilter.h"
 #include "cIGZPersistResourceKeyList.h"
+#include "cRZCriticalSectionHolder.h"
 
 cGZPersistCacheStrategyBasic::cGZPersistCacheStrategyBasic(void) :
 	mainLock(),

@@ -25,10 +25,11 @@
 #include "cRZCriticalSection.h"
 #include "cRZRandom.h"
 #include "cRZSystemService.h"
+#include "cRZThreadSafeObject.h"
 
 class cRZCOMDllDirector;
 
-class cGZCOM : public cIGZCOM, public cRZSystemService
+class cGZCOM : public cIGZCOM, public cRZThreadSafeObject, public cRZSystemService
 {
 public:
 	cGZCOM();
@@ -75,8 +76,6 @@ protected:
 	typedef std::map<GZCLSID, tClassObjectData> tIdMap;
 	typedef std::set<cGZCOMLibrary> tLibraries;
 
-	cRZCriticalSection* mCriticalSectionPtr;
-	cRZCriticalSection mCriticalSection;
 	bool mInitialized;
 	uint32_t mUnused;
 	tIdMap mClsidMap;

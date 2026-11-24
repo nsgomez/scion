@@ -18,6 +18,7 @@
 
 #include "cGZPersistDBSegment.h"
 #include "cIGZPersistDBRecord.h"
+#include "cRZCriticalSectionHolder.h"
 
 cGZPersistDBSegment::cGZPersistDBSegment(void) :
 	refCount(0),

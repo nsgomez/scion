@@ -28,6 +28,7 @@
 #include "cGZPersistResourceKeyList.h"
 #include "cIGZPersistResourceKeyFilter.h"
 #include "cRZCriticalSection.h"
+#include "cRZCriticalSectionHolder.h"
 #include "cRZFastCompression3.h"
 
 static const uint32_t TypeID_PackedFileCompressedSet = 0xE86B1EEF;

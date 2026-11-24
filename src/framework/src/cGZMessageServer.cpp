@@ -20,6 +20,7 @@
 #include "cGZMessageServer.h"
 #include "cIGZFramework.h"
 #include "cIGZMessageTarget.h"
+#include "cRZCriticalSectionHolder.h"
 #include "RZStatics.h"
 
 cGZMessageServer::GeneralMessageTargetInfo::GeneralMessageTargetInfo(GeneralMessageTargetInfo const& other)

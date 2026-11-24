@@ -21,12 +21,12 @@
 #include "cIGZMessageQueue2.h"
 #include "cIGZMessageQueueManager2.h"
 #include "cRZAutoRefCount.h"
-#include "cRZCriticalSection.h"
 #include "cRZSystemService.h"
+#include "cRZThreadSafeObject.h"
 
 static const GZGUID RZSRVID_cGZMessageQueueManager2 = 0x64FA8434;
 
-class cGZMessageQueueManager2 : public cIGZMessageQueueManager2, public cRZSystemService
+class cGZMessageQueueManager2 : public cIGZMessageQueueManager2, public cRZSystemService, public cRZThreadSafeObject
 {
 public:
 	cGZMessageQueueManager2();
@@ -44,16 +44,15 @@ public:
 public:
 	virtual bool GetQueue(GZGUID id, cIGZMessageQueue2** queueOut);
 
-	virtual bool AddQueue(GZGUID id, cIGZMessageQueue2* queue);
 	virtual bool AddQueue(GZGUID id);
+	virtual bool AddQueue(GZGUID id, cIGZMessageQueue2* queue);
 
-	virtual bool RemoveQueue(cIGZMessageQueue2* queue);
 	virtual bool RemoveQueue(GZGUID id);
-	virtual void RemoveAllQueues();
+	virtual bool RemoveQueue(cIGZMessageQueue2* queue);
+	virtual bool RemoveAllQueues();
 
 	virtual uint32_t GetQueueCount();
 
 protected:
-	cRZCriticalSection mCriticalSection;
 	std::map<GZGUID, cRZAutoRefCount<cIGZMessageQueue2> > mQueueMap;
 };

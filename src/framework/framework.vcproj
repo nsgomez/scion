@@ -745,6 +745,9 @@
 				RelativePath=".\include\cRZCriticalSection.h">
 			</File>
 			<File
+				RelativePath=".\include\cRZCriticalSectionHolder.h">
+			</File>
+			<File
 				RelativePath=".\include\cRZDate.h">
 			</File>
 			<File
@@ -815,6 +818,9 @@
 			</File>
 			<File
 				RelativePath=".\include\cRZThread.h">
+			</File>
+			<File
+				RelativePath=".\include\cRZThreadSafeObject.h">
 			</File>
 			<File
 				RelativePath=".\include\cRZThreadSignal.h">

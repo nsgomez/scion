@@ -18,6 +18,7 @@
 
 #include "cGZMessageQueue2.h"
 #include "cIGZMessage2.h"
+#include "cRZCriticalSectionHolder.h"
 
 static const uint32_t kBlockingCallWaitTimeInMicroseconds = 1000000;
 

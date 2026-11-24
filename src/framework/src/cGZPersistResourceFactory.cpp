@@ -20,6 +20,7 @@
 #include "cIGZPersistDBRecord.h"
 #include "cIGZPersistDBSerialRecord.h"
 #include "cIGZPersistResource.h"
+#include "cRZCriticalSectionHolder.h"
 
 cGZPersistResourceFactory::cGZPersistResourceFactory(void) :
 	mRefCount(0),

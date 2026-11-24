@@ -26,12 +26,12 @@ class cIGZMessageQueueManager2 : public cIGZUnknown
 public:
 	virtual bool GetQueue(GZGUID id, cIGZMessageQueue2** queueOut) = 0;
 
-	virtual bool AddQueue(GZGUID id, cIGZMessageQueue2* queue) = 0;
 	virtual bool AddQueue(GZGUID id) = 0;
+	virtual bool AddQueue(GZGUID id, cIGZMessageQueue2* queue) = 0;
 
-	virtual bool RemoveQueue(cIGZMessageQueue2* queue) = 0;
 	virtual bool RemoveQueue(GZGUID id) = 0;
-	virtual void RemoveAllQueues() = 0;
+	virtual bool RemoveQueue(cIGZMessageQueue2* queue) = 0;
+	virtual bool RemoveAllQueues() = 0;
 
 	virtual uint32_t GetQueueCount() = 0;
 };

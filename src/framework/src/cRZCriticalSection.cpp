@@ -29,7 +29,11 @@ cRZCriticalSection::~cRZCriticalSection()
 {
 	CriticalSectionPlatformData* data = mPlatformData;
 	DeleteCriticalSection(&data->mCriticalSection);
-	delete data;
+
+	if (data != NULL)
+	{
+		delete data;
+	}
 }
 
 uint32_t cRZCriticalSection::Release()

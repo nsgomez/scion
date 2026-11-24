@@ -20,6 +20,7 @@
 #include "cGZCOM.h"
 #include "cGZFramework.h"
 #include "cRZCOMDllDirector.h"
+#include "cRZCriticalSectionHolder.h"
 #include "cRZDate.h"
 #include "cRZThread.h"
 #include "cRZTime.h"
@@ -30,7 +31,6 @@ static const GZGUID RZSRVID_cGZCOM = 0xA3CD8DB3;
 
 cGZCOM::cGZCOM() :
 	cRZSystemService(RZSRVID_cGZCOM, 10000000),
-	mCriticalSectionPtr(&mCriticalSection),
 	mRng(0xFFFFFFFF),
 	mInitialized(false),
 	mUnused(0),

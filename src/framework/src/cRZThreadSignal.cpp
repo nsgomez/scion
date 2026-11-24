@@ -16,6 +16,7 @@
  *  License along with this library; if not, see <https://www.gnu.org/licenses/>.
  */
 
+#include "cRZCriticalSectionHolder.h"
 #include "cRZThreadSignal.h"
 
 cRZThreadSignal::cRZThreadSignal(bool manualReset) :

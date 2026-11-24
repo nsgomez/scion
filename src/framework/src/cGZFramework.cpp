@@ -19,6 +19,7 @@
 #include "cGZFramework.h"
 #include "cIGZApp.h"
 #include "cIGZUnknownEnumerator.h"
+#include "cRZCriticalSectionHolder.h"
 #include "cRZExceptionNotification.h"
 #include "cRZNullIStream.h"
 #include "cRZNullOStream.h"

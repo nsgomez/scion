@@ -18,6 +18,7 @@
 
 #include "cGZMessageQueue2.h"
 #include "cGZMessageQueueManager2.h"
+#include "cRZCriticalSectionHolder.h"
 
 cGZMessageQueueManager2::cGZMessageQueueManager2() :
 	cRZSystemService(RZSRVID_cGZMessageQueueManager2, 5000000)
@@ -64,31 +65,30 @@ bool cGZMessageQueueManager2::Shutdown()
 
 bool cGZMessageQueueManager2::GetQueue(GZGUID id, cIGZMessageQueue2** queueOut)
 {
-	cRZCriticalSectionHolder lock(mCriticalSection);
+	cRZCriticalSectionHolder lock(*this);
 
 	std::map<GZGUID, cRZAutoRefCount<cIGZMessageQueue2> >::iterator it = mQueueMap.find(id);
-	if (it == mQueueMap.end())
+	if (it != mQueueMap.end())
 	{
-		return false;
+		*queueOut = it->second;
+		(*queueOut)->AddRef();
 	}
 	else
 	{
-		cIGZMessageQueue2* queue = it->second;
-		*queueOut = queue;
-		queue->AddRef();
-
-		return *queueOut != NULL;
+		*queueOut = NULL;
 	}
+
+	return *queueOut != NULL;
 }
 
-bool cGZMessageQueueManager2::AddQueue(GZGUID id, cIGZMessageQueue2* queue)
+bool cGZMessageQueueManager2::AddQueue(GZGUID id)
 {
-	cRZCriticalSectionHolder lock(mCriticalSection);
+	cRZCriticalSectionHolder lock(*this);
 
 	std::map<GZGUID, cRZAutoRefCount<cIGZMessageQueue2> >::iterator it = mQueueMap.find(id);
 	if (it == mQueueMap.end())
 	{
-		mQueueMap.insert(std::pair<GZGUID, cRZAutoRefCount<cIGZMessageQueue2> >(id, queue));
+		mQueueMap.insert(std::map<GZGUID, cRZAutoRefCount<cIGZMessageQueue2> >::value_type(id, new cGZMessageQueue2()));
 		return true;
 	}
 	else
@@ -97,15 +97,30 @@ bool cGZMessageQueueManager2::AddQueue(GZGUID id, cIGZMessageQueue2* queue)
 	}
 }
 
-bool cGZMessageQueueManager2::AddQueue(GZGUID id)
+bool cGZMessageQueueManager2::AddQueue(GZGUID id, cIGZMessageQueue2* queue)
 {
-	cRZCriticalSectionHolder lock(mCriticalSection);
+	cRZCriticalSectionHolder lock(*this);
 
 	std::map<GZGUID, cRZAutoRefCount<cIGZMessageQueue2> >::iterator it = mQueueMap.find(id);
 	if (it == mQueueMap.end())
 	{
-		cRZAutoRefCount<cIGZMessageQueue2> queue = new cGZMessageQueue2();
-		mQueueMap.insert(std::pair<GZGUID, cRZAutoRefCount<cIGZMessageQueue2> >(id, queue));
+		mQueueMap.insert(std::map<GZGUID, cRZAutoRefCount<cIGZMessageQueue2> >::value_type(id, queue));
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+}
+
+bool cGZMessageQueueManager2::RemoveQueue(GZGUID id)
+{
+	cRZCriticalSectionHolder lock(*this);
+
+	std::map<GZGUID, cRZAutoRefCount<cIGZMessageQueue2> >::iterator it = mQueueMap.find(id);
+	if (it != mQueueMap.end())
+	{
+		mQueueMap.erase(it);
 		return true;
 	}
 	else
@@ -116,7 +131,7 @@ bool cGZMessageQueueManager2::AddQueue(GZGUID id)
 
 bool cGZMessageQueueManager2::RemoveQueue(cIGZMessageQueue2* queue)
 {
-	cRZCriticalSectionHolder lock(mCriticalSection);
+	cRZCriticalSectionHolder lock(*this);
 
 	std::map<GZGUID, cRZAutoRefCount<cIGZMessageQueue2> >::iterator end = mQueueMap.end();
 	for (std::map<GZGUID, cRZAutoRefCount<cIGZMessageQueue2> >::iterator it = mQueueMap.begin(); it != end; it++)
@@ -131,26 +146,11 @@ bool cGZMessageQueueManager2::RemoveQueue(cIGZMessageQueue2* queue)
 	return false;
 }
 
-bool cGZMessageQueueManager2::RemoveQueue(GZGUID id)
+bool cGZMessageQueueManager2::RemoveAllQueues()
 {
-	cRZCriticalSectionHolder lock(mCriticalSection);
-
-	std::map<GZGUID, cRZAutoRefCount<cIGZMessageQueue2> >::iterator it = mQueueMap.find(id);
-	if (it != mQueueMap.end())
-	{
-		mQueueMap.erase(it);
-		return true;
-	}
-	else
-	{
-		return false;
-	}
-}
-
-void cGZMessageQueueManager2::RemoveAllQueues()
-{
-	cRZCriticalSectionHolder lock(mCriticalSection);
+	cRZCriticalSectionHolder lock(*this);
 	mQueueMap.clear();
+	return true;
 }
 
 uint32_t cGZMessageQueueManager2::GetQueueCount()
