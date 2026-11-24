@@ -20,79 +20,91 @@
 #include "cRZString.h"
 #include "cRZTextOStream.h"
 
-static char const* kFmtSint   = "%d";
-static char const* kFmtUint   = "%u";
-static char const* kFmtSint64 = "%lld";
-static char const* kFmtUint64 = "%llu";
-static char const* kFmtFloat  = "%g";
+enum TextFormat
+{
+	kFormatSint,
+	kFormatUint,
+	kFormatSint64,
+	kFormatUint64,
+	kFormatFloat
+};
+
+static char const* kFormats[] =
+{
+	"%d",
+	"%u",
+	"%lld",
+	"%llu",
+	"%g"
+};
 
 bool cRZTextOStream::SetSint8(int8_t value)
 {
 	cRZString tmp;
-	tmp.Sprintf(kFmtSint, value);
+	tmp.Sprintf(kFormats[kFormatSint], value);
 	return SetRZCharStr(tmp.Data());
 }
 
 bool cRZTextOStream::SetUint8(uint8_t value)
 {
 	cRZString tmp;
-	tmp.Sprintf(kFmtUint, value);
+	tmp.Sprintf(kFormats[kFormatUint], value);
 	return SetRZCharStr(tmp.Data());
 }
 
 bool cRZTextOStream::SetSint16(int16_t value)
 {
 	cRZString tmp;
-	tmp.Sprintf(kFmtSint, value);
+	tmp.Sprintf(kFormats[kFormatSint], value);
 	return SetRZCharStr(tmp.Data());
 }
 
 bool cRZTextOStream::SetUint16(uint16_t value)
 {
 	cRZString tmp;
-	tmp.Sprintf(kFmtUint, value);
+	tmp.Sprintf(kFormats[kFormatUint], value);
 	return SetRZCharStr(tmp.Data());
 }
 
 bool cRZTextOStream::SetSint32(int32_t value)
 {
 	cRZString tmp;
-	tmp.Sprintf(kFmtSint, value);
+	tmp.Sprintf(kFormats[kFormatSint], value);
 	return SetRZCharStr(tmp.Data());
 }
 
 bool cRZTextOStream::SetUint32(uint32_t value)
 {
 	cRZString tmp;
-	tmp.Sprintf(kFmtUint, value);
+	tmp.Sprintf(kFormats[kFormatUint], value);
 	return SetRZCharStr(tmp.Data());
 }
 
 bool cRZTextOStream::SetSint64(int64_t value)
 {
 	cRZString tmp;
-	tmp.Sprintf(kFmtSint64, value);
+	tmp.Sprintf(kFormats[kFormatSint64], value);
 	return SetRZCharStr(tmp.Data());
 }
 
 bool cRZTextOStream::SetUint64(uint64_t value)
 {
 	cRZString tmp;
-	tmp.Sprintf(kFmtUint64, value);
+	tmp.Sprintf(kFormats[kFormatUint64], value);
 	return SetRZCharStr(tmp.Data());
 }
 
 bool cRZTextOStream::SetFloat32(float value)
 {
 	cRZString tmp;
-	tmp.Sprintf(kFmtFloat, value);
+	tmp.Sprintf(kFormats[kFormatFloat], value);
 	return SetRZCharStr(tmp.Data());
 }
 
 bool cRZTextOStream::SetFloat64(double value)
 {
 	cRZString tmp;
-	tmp.Sprintf(kFmtFloat, value);
+	tmp.Sprintf(kFormats[kFormatFloat], value);
 	return SetRZCharStr(tmp.Data());
 }
 
@@ -104,17 +116,25 @@ bool cRZTextOStream::SetGZStr(cIGZString const& str)
 bool cRZTextOStream::SetVoid(void const* buffer, uint32_t size)
 {
 	char line[256];
-	bool ok = SetRZCharStr("\nHEXDUMP");
+	bool ok = SetRZCharStr("\nHEXDUMP:\n");
 
-	char const* bytes = static_cast<char const*>(buffer);
-	for (size_t i = 0; i < size && ok; i++)
+	if (size > 0)
 	{
-		sprintf(line, "%02x ", static_cast<int32_t>(bytes[i]));
-		ok = SetRZCharStr(line);
-
-		if ((i + 1) % 25 == 0)
+		signed char const* bytes = static_cast<signed char const*>(buffer);
+		for (uint32_t i = 0; i < size; i++)
 		{
-			ok = ok && SetRZCharStr("\n");
+			if (!ok)
+			{
+				break;
+			}
+
+			sprintf(line, "%02x ", static_cast<int32_t>(bytes[i]));
+			ok = ok && SetRZCharStr(line);
+
+			if ((i + 1) % 25 == 0)
+			{
+				ok = ok && SetRZCharStr("\n");
+			}
 		}
 	}
 

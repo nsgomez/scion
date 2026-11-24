@@ -19,7 +19,8 @@
 #include "cRZNullIStream.h"
 
 cRZNullIStream::cRZNullIStream() :
-	cRZIStream(false)
+	cRZIStream(false),
+	hasError(false)
 {
 }
 

@@ -26,6 +26,9 @@ public:
 	virtual ~cRZTextOStream() { }
 
 public:
+	virtual void Flush() = 0;
+	virtual bool SetRZCharStr(char const* str) = 0;
+
 	virtual bool SetSint8(int8_t value);
 	virtual bool SetUint8(uint8_t value);
 	virtual bool SetSint16(int16_t value);

@@ -21,22 +21,22 @@
 
 cRZOFStream::cRZOFStream(cIGZString const& path, bool binary, bool useLittleEndian, bool alwaysFlushStrings, bool append) : cRZTextOStream(true)
 {
-	mFile = new std::ofstream(path.ToChar(),
-		(append ? (std::ios_base::out | std::ios_base::app) : (std::ios_base::out | std::ios_base::trunc))
-		| (binary ? std::ios_base::binary : 0));
+	std::ios_base::openmode mode = append ? std::ios_base::app : std::ios_base::trunc;
+	mFile = new std::ofstream(path.ToChar(), mode | (binary ? std::ios_base::binary : 0) | std::ios_base::out);
 
-	mBinary = binary;
 	mAlwaysFlushStrings = mAlwaysFlushStrings;
+	mUseLittleEndian = useLittleEndian;
+	mBinary = binary;
 }
 
 cRZOFStream::cRZOFStream(char const* path, bool binary, bool useLittleEndian, bool alwaysFlushStrings, bool append) : cRZTextOStream(true)
 {
-	mFile = new std::ofstream(path,
-		(append ? (std::ios_base::out | std::ios_base::app) : (std::ios_base::out | std::ios_base::trunc))
-		| (binary ? std::ios_base::binary : 0));
+	std::ios_base::openmode mode = append ? std::ios_base::app : std::ios_base::trunc;
+	mFile = new std::ofstream(path, mode | (binary ? std::ios_base::binary : 0) | std::ios_base::out);
 
+	mAlwaysFlushStrings = mAlwaysFlushStrings;
+	mUseLittleEndian = useLittleEndian;
 	mBinary = binary;
-	mAlwaysFlushStrings = alwaysFlushStrings;
 }
 
 cRZOFStream::~cRZOFStream()
@@ -131,5 +131,5 @@ bool cRZOFStream::SetVoid(void const* buffer, uint32_t size)
 
 bool cRZOFStream::GetError(void) const
 {
-	return mFile->good();
+	return mFile->rdstate() != 0;
 }

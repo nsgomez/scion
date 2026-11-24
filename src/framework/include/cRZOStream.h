@@ -24,20 +24,8 @@
 class cRZOStream : public cIGZOStream
 {
 public:
-	cRZOStream() :
-		mRefCount(0),
-		mUseLittleEndian(false),
-		mUserData(NULL)
-	{
-	}
-
-	cRZOStream(bool useLittleEndian) :
-		mRefCount(0),
-		mUseLittleEndian(useLittleEndian),
-		mUserData(NULL)
-	{
-	}
-
+	cRZOStream();
+	cRZOStream(bool useLittleEndian);
 	virtual ~cRZOStream();
 
 public:

@@ -23,30 +23,41 @@
 #include "cIGZVariant.h"
 #include "cRZOStream.h"
 
+cRZOStream::cRZOStream() :
+	mRefCount(0),
+	mUserData(NULL)
+{
+	mUseLittleEndian = false;
+}
+
+cRZOStream::cRZOStream(bool useLittleEndian) :
+	mRefCount(0),
+	mUserData(NULL)
+{
+	mUseLittleEndian = useLittleEndian;
+}
+
 cRZOStream::~cRZOStream()
 {
-	if (mUserData != NULL)
-	{
-		mUserData->Release();
-	}
 }
 
 bool cRZOStream::QueryInterface(GZIID iid, void** outPtr)
 {
-	if (iid == GZIID_cIGZUnknown)
+	switch (iid)
 	{
-		*outPtr = static_cast<cIGZUnknown*>(this);
-		AddRef();
-		return true;
-	}
-	else if (iid = GZIID_cIGZOStream)
-	{
+	case GZIID_cIGZOStream:
 		*outPtr = static_cast<cIGZOStream*>(this);
 		AddRef();
 		return true;
-	}
 
-	return false;
+	case GZIID_cIGZUnknown:
+		*outPtr = static_cast<cIGZUnknown*>(this);
+		AddRef();
+		return true;
+
+	default:
+		return false;
+	}
 }
 
 uint32_t cRZOStream::AddRef()
@@ -56,120 +67,124 @@ uint32_t cRZOStream::AddRef()
 
 uint32_t cRZOStream::Release()
 {
-	if (mRefCount < 2)
-	{
-		delete this;
-		return 0;
-	}
-	else
+	if (mRefCount > 1)
 	{
 		return --mRefCount;
 	}
+
+	delete this;
+	return 0;
 }
 
 bool cRZOStream::SetSint8(int8_t value)
 {
-	int8_t data = value;
-	return SetVoid(&data, sizeof(data));
+	return SetVoid(&value, sizeof(value));
 }
 
 bool cRZOStream::SetUint8(uint8_t value)
 {
-	uint8_t data = value;
-	return SetVoid(&data, sizeof(data));
+	return SetVoid(&value, sizeof(value));
 }
 
 bool cRZOStream::SetSint16(int16_t value)
 {
 	// FUTURE: See cRZIStream, this should change depending on compiler target
-	if (!mUseLittleEndian)
+	int16_t data;
+	if (mUseLittleEndian)
 	{
-		value = (int16_t)_byteswap_ushort((uint16_t)value);
+		data = value;
+	}
+	else
+	{
+		volatile uint32_t swapped = (uint16_t)value;
+		swapped = _byteswap_ulong(swapped);
+		data = (int16_t)(swapped >> 16);
 	}
 
-	int16_t data = value;
 	return SetVoid(&data, sizeof(data));
 }
 
 bool cRZOStream::SetUint16(uint16_t value)
 {
-	if (!mUseLittleEndian)
+	uint16_t data;
+	if (mUseLittleEndian)
 	{
-		value = _byteswap_ushort(value);
+		data = value;
+	}
+	else
+	{
+		volatile uint32_t swapped = value;
+		swapped = _byteswap_ulong(swapped);
+		data = (uint16_t)(swapped >> 16);
 	}
 
-	uint16_t data = value;
 	return SetVoid(&data, sizeof(data));
 }
 
 bool cRZOStream::SetSint32(int32_t value)
 {
+	int32_t data = value;
 	if (!mUseLittleEndian)
 	{
-		value = (int32_t)_byteswap_ulong((uint32_t)value);
+		volatile uint32_t swapped = (uint32_t)value;
+		swapped = _byteswap_ulong(swapped);
+		data = (int32_t)swapped;
 	}
 
-	int32_t data = value;
 	return SetVoid(&data, sizeof(data));
 }
 
 bool cRZOStream::SetUint32(uint32_t value)
 {
+	uint32_t data = value;
 	if (!mUseLittleEndian)
 	{
-		value = _byteswap_ulong(value);
+		volatile uint32_t swapped = value;
+		swapped = _byteswap_ulong(swapped);
+		data = swapped;
 	}
 
-	uint32_t data = value;
 	return SetVoid(&data, sizeof(data));
 }
 
 bool cRZOStream::SetSint64(int64_t value)
 {
-	if (!mUseLittleEndian)
+	int64_t data;
+	if (mUseLittleEndian)
+	{
+		data = value;
+	}
+	else
 	{
 		value = (int64_t)_byteswap_uint64((uint64_t)value);
 	}
 
-	int64_t data = value;
 	return SetVoid(&data, sizeof(data));
 }
 
 bool cRZOStream::SetUint64(uint64_t value)
 {
-	if (!mUseLittleEndian)
+	uint64_t data;
+	if (mUseLittleEndian)
+	{
+		data = value;
+	}
+	else
 	{
 		value = _byteswap_uint64(value);
 	}
 
-	uint64_t data = value;
 	return SetVoid(&data, sizeof(data));
 }
 
 bool cRZOStream::SetFloat32(float value)
 {
-	double storedValue = value;
-	uint32_t dataAsInt = *reinterpret_cast<uint32_t*>(&storedValue);
-
-	if (!mUseLittleEndian)
-	{
-		dataAsInt = _byteswap_ulong(dataAsInt);
-	}
-
-	return SetVoid(&dataAsInt, sizeof(dataAsInt));
+	return SetVoid(&value, sizeof(value));
 }
 
 bool cRZOStream::SetFloat64(double value)
 {
-	double storedValue = value;
-	uint64_t dataAsInt = *reinterpret_cast<uint64_t*>(&storedValue);
-
-	if (!mUseLittleEndian)
-	{
-		dataAsInt = _byteswap_uint64(dataAsInt);
-	}
-
-	return SetVoid(&dataAsInt, sizeof(dataAsInt));
+	return SetVoid(&value, sizeof(value));
 }
 
 bool cRZOStream::SetRZCharStr(char const* str)
@@ -177,13 +192,12 @@ bool cRZOStream::SetRZCharStr(char const* str)
 	uint32_t length = strlen(str);
 	EncodeStringLength(length);
 
-	bool result = true;
-	if (length != 0)
+	if (length > 0)
 	{
-		result = SetVoid(str, length);
+		return SetVoid(str, length);
 	}
 
-	return result;
+	return true;
 }
 
 bool cRZOStream::SetGZStr(cIGZString const& str)
@@ -191,13 +205,12 @@ bool cRZOStream::SetGZStr(cIGZString const& str)
 	uint32_t length = str.Strlen();
 	EncodeStringLength(length);
 
-	bool result = true;
 	if (length != 0)
 	{
-		result = SetVoid(str.ToChar(), length);
+		return SetVoid(str.ToChar(), length);
 	}
 
-	return result;
+	return true;
 }
 
 bool cRZOStream::SetGZSerializable(cIGZSerializable const& data)
@@ -215,9 +228,9 @@ cIGZVariant* cRZOStream::GetUserData()
 	return mUserData;
 }
 
-bool cRZOStream::Init(bool mUseLittleEndian)
+bool cRZOStream::Init(bool useLittleEndian)
 {
-	this->mUseLittleEndian = mUseLittleEndian;
+	mUseLittleEndian = useLittleEndian;
 	return true;
 }
 
@@ -228,26 +241,22 @@ bool cRZOStream::Shutdown()
 
 void cRZOStream::EncodeStringLength(uint32_t length)
 {
-	if (length == 0)
+	if (length != 0)
 	{
-		SetUint8(0);
+		uint8_t byte = (uint8_t)(length & 0x7f);
+		uint32_t remaining = length >> 7;
+
+		while (remaining != 0)
+		{
+			SetUint8(byte | 0x80);
+			byte = (uint8_t)(remaining & 0x7f);
+			remaining >>= 7;
+		}
+
+		SetUint8(byte);
 	}
 	else
 	{
-		uint8_t byte;
-		while (true)
-		{
-			byte = (uint8_t)length;
-			length >>= 7;
-
-			if (length == 0)
-			{
-				break;
-			}
-
-			SetUint8(byte | 0x80);
-		}
-
-		SetUint8(byte & 0x7F);
+		SetUint8(0);
 	}
 }
