@@ -19,7 +19,7 @@
 #include "cRZCriticalSectionHolder.h"
 #include "cRZThreadSignal.h"
 
-cRZThreadSignal::cRZThreadSignal(bool manualReset) :
+cRZThreadSignal::cRZThreadSignal(int32_t manualReset) :
 	mSignal(NULL)
 {
 	SignalPlatformData* newSignal = new SignalPlatformData();
@@ -77,12 +77,12 @@ bool cRZThreadSignal::Broadcast()
 cIGZThreadSignal::TimedWaitResult cRZThreadSignal::TimedWait(uint32_t waitTimeInMicroseconds)
 {
 	SignalPlatformData* platformData = mSignal;
-	cRZCriticalSectionHolder lock(mSignal->criticalSection);
+	cRZCriticalSectionHolder lock(platformData->criticalSection);
 
 	cIGZThreadSignal::TimedWaitResult operationResult = cIGZThreadSignal::TimedWaitResult::Success;
 	uint32_t waitTimeInMilliseconds = (waitTimeInMicroseconds == -1) ? waitTimeInMicroseconds : (waitTimeInMicroseconds / 1000);
 
-	DWORD waitResult = WaitForSingleObject(mSignal->event, waitTimeInMilliseconds);
+	DWORD waitResult = WaitForSingleObject(platformData->event, waitTimeInMilliseconds);
 	if (waitResult == WAIT_FAILED)
 	{
 		operationResult = cIGZThreadSignal::TimedWaitResult::Failure;

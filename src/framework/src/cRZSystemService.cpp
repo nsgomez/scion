@@ -34,28 +34,22 @@ cRZSystemService::cRZSystemService(GZGUID serviceId, int32_t servicePriority, in
 	this->running = false;
 }
 
+cRZSystemService::~cRZSystemService()
+{
+}
+
 bool cRZSystemService::QueryInterface(GZIID iid, void** outPtr)
 {
 	if (iid == GZIID_cIGZSystemService)
 	{
 		*outPtr = static_cast<cIGZSystemService*>(this);
-		AddRef();
+		static_cast<cIGZSystemService*>(this)->AddRef();
 		return true;
 	}
 	else
 	{
 		return cRZUnknown::QueryInterface(iid, outPtr);
 	}
-}
-
-uint32_t cRZSystemService::AddRef()
-{
-	return cRZUnknown::AddRef();
-}
-
-uint32_t cRZSystemService::Release()
-{
-	return cRZUnknown::Release();
 }
 
 GZGUID cRZSystemService::GetServiceID()
@@ -93,7 +87,7 @@ bool cRZSystemService::Shutdown()
 	return true;
 }
 
-bool cRZSystemService::OnTick(int32_t totalTickFrames)
+bool cRZSystemService::OnTick(uint32_t totalTickFrames)
 {
 	return true;
 }

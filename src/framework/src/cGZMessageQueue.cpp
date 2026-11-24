@@ -97,14 +97,18 @@ void cGZMessageQueue::PushFront(cGZMessage const& msg)
 bool cGZMessageQueue::RemoveFirstFound(cGZMessage const& msg)
 {
 	cRZCriticalSectionHolder lock(mCriticalSection);
+	MessageListIterator it = mMessages.begin();
+	MessageListIterator end = mMessages.end();
 
-	for (MessageListIterator it = mMessages.begin(); it != mMessages.end(); ++it)
+	while (it != end)
 	{
 		if (*it == msg)
 		{
 			mMessages.erase(it);
 			return true;
 		}
+
+		++it;
 	}
 
 	return false;
@@ -274,12 +278,18 @@ cGZMessage const* cGZMessageQueue::PeekBackMessage()
 bool cGZMessageQueue::PeekAnywhereMessage(cGZMessage const& msg)
 {
 	cRZCriticalSectionHolder lock(mCriticalSection);
-	for (MessageListIterator it = mMessages.begin(); it != mMessages.end(); ++it)
+
+	MessageListIterator it = mMessages.begin();
+	MessageListIterator end = mMessages.end();
+
+	while (it != end)
 	{
 		if (*it == msg)
 		{
 			return true;
 		}
+
+		++it;
 	}
 
 	return false;
@@ -368,13 +378,18 @@ bool cGZMessageQueue::GetAnywhereMessage(cGZMessage const& msg)
 {
 	cRZCriticalSectionHolder lock(mCriticalSection);
 
-	for (MessageListIterator it = mMessages.begin(); it != mMessages.end(); ++it)
+	MessageListIterator it = mMessages.begin();
+	MessageListIterator end = mMessages.end();
+
+	while (it != end)
 	{
 		if (*it == msg)
 		{
 			mMessages.erase(it);
 			return true;
 		}
+
+		++it;
 	}
 
 	return false;

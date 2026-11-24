@@ -86,12 +86,12 @@ bool cGZMessageServer2::QueryInterface(GZIID iid, void** outPtr)
 
 uint32_t cGZMessageServer2::AddRef()
 {
-	return cRZSystemService::AddRef();
+	return cRZUnknown::AddRef();
 }
 
 uint32_t cGZMessageServer2::Release()
 {
-	return cRZSystemService::Release();
+	return cRZUnknown::Release();
 }
 
 bool cGZMessageServer2::Init()
@@ -369,30 +369,27 @@ GZCLSID cGZMessageServer2::GetGZCLSID()
 
 void cGZMessageServer2::DoDelayedNotificationAdditionsAndRemovals()
 {
+	cRZCriticalSectionHolder lock(mNotificationLock);
 	static bool bAlreadyHere = false;
 
-	cRZCriticalSectionHolder lock(mNotificationLock);
 	if (!bAlreadyHere)
 	{
 		bAlreadyHere = true;
 		if (mPendingNotificationOps == 0)
 		{
-			DelayedNotificationList::iterator it = mDelayedNotificationChanges.begin();
-			DelayedNotificationList::iterator itEnd = mDelayedNotificationChanges.end();
-
-			while (it != itEnd)
+			while (!mDelayedNotificationChanges.empty())
 			{
-				if (!it->isAddition)
+				DelayedAddOrRemove& change = mDelayedNotificationChanges.front();
+				if (change.isAddition)
 				{
-					RemoveNotification(it->info.target, it->info.msgType);
+					AddNotification(change.info.target, change.info.msgType);
 				}
 				else
 				{
-					AddNotification(it->info.target, it->info.msgType);
-					it->info.target->Release();
+					RemoveNotification(change.info.target, change.info.msgType);
 				}
 
-				it = mDelayedNotificationChanges.erase(it);
+				mDelayedNotificationChanges.pop_front();
 			}
 		}
 
@@ -402,50 +399,44 @@ void cGZMessageServer2::DoDelayedNotificationAdditionsAndRemovals()
 
 void cGZMessageServer2::DoDelayedNotificationAdditionsAndRemovalsImmediately()
 {
-	for (DelayedNotificationList::iterator it = mDelayedNotificationChanges.begin(); it != mDelayedNotificationChanges.end(); ++it)
+	if (!mDelayedNotificationChanges.empty())
 	{
-		bool isAddition = it->isAddition;
-		cIGZMessageTarget2* target = it->info.target;
-		GZGUID msgType = it->info.msgType;
-
-		MessageTargetMap::iterator targetMapIt = mNotificationTargets.find(it->info.msgType);
-
-		// FUTURE: These inner blocks are just copied from the AddNotification and RemoveNotification implementations.
-		// It would be nice to refactor these and make them inline methods.
-		if (!isAddition)
+		for (DelayedNotificationList::iterator it = mDelayedNotificationChanges.begin(); it != mDelayedNotificationChanges.end(); ++it)
 		{
-			if (targetMapIt != mNotificationTargets.end())
+			if (it->isAddition)
 			{
-				MessageTargetList* list = targetMapIt->second;
-				MessageTargetList::iterator targetListIt = std::find(list->begin(), list->end(), target);
-
-				if (targetListIt != list->end())
+				MessageTargetMap::iterator targetMapIt = mNotificationTargets.find(it->info.msgType);
+				if (targetMapIt == mNotificationTargets.end())
 				{
-					list->remove(target);
-					if (list->empty())
+					MessageTargetList* list = new MessageTargetList();
+					mNotificationTargets.insert(MessageTargetMapEntry(it->info.msgType, list));
+					list->push_back(it->info.target);
+				}
+				else
+				{
+					MessageTargetList* list = targetMapIt->second;
+					if (std::find(list->begin(), list->end(), it->info.target) == list->end())
 					{
-						delete list;
-						mNotificationTargets.erase(msgType);
+						list->push_back(it->info.target);
 					}
 				}
 			}
-		}
-		else
-		{
-			if (targetMapIt == mNotificationTargets.end())
-			{
-				MessageTargetList* list = new MessageTargetList();
-				mNotificationTargets.insert(MessageTargetMapEntry(msgType, list));
-				list->push_back(target);
-			}
 			else
 			{
-				MessageTargetList* list = targetMapIt->second;
-				MessageTargetList::iterator targetListIt = std::find(list->begin(), list->end(), target);
-
-				if (targetListIt == list->end())
+				MessageTargetMap::iterator targetMapIt = mNotificationTargets.find(it->info.msgType);
+				if (targetMapIt != mNotificationTargets.end())
 				{
-					list->push_back(target);
+					MessageTargetList* list = targetMapIt->second;
+
+					if (std::find(list->begin(), list->end(), it->info.target) != list->end())
+					{
+						list->remove(it->info.target);
+						if (list->empty())
+						{
+							delete list;
+							mNotificationTargets.erase(it->info.msgType);
+						}
+					}
 				}
 			}
 		}
@@ -456,13 +447,13 @@ void cGZMessageServer2::DoDelayedNotificationAdditionsAndRemovalsImmediately()
 
 void cGZMessageServer2::SendGeneralMessages()
 {
-	mGeneralMessagePostLock.Lock();
-	if (mPendingGeneralMessageCount < 1)
-	{
-		int32_t size = mGeneralMessages.size();
-		mPendingGeneralMessageCount = size;
+	GeneralMessageTargetInfo info;
 
-		if (size < 1)
+	mGeneralMessagePostLock.Lock();
+	if (mPendingGeneralMessageCount <= 0)
+	{
+		mPendingGeneralMessageCount = mGeneralMessages.size();
+		if (mPendingGeneralMessageCount <= 0)
 		{
 			goto end;
 		}
@@ -473,7 +464,7 @@ void cGZMessageServer2::SendGeneralMessages()
 		--mPendingGeneralMessageCount;
 		if (!mGeneralMessages.empty())
 		{
-			GeneralMessageTargetInfo info(mGeneralMessages.front());
+			info = mGeneralMessages.front();
 			mGeneralMessages.pop_front();
 
 			mGeneralMessagePostLock.Unlock();

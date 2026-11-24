@@ -25,11 +25,11 @@ struct SignalPlatformData
 {
 public:
 	SignalPlatformData() :
-		event(NULL),
 		isManualReset(false),
 		unusedStr(),
 		criticalSection()
 	{
+		event = NULL;
 	}
 
 public:

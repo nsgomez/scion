@@ -27,7 +27,7 @@
 
 static const GZGUID RZSRVID_cGZMessageServer = 0x64063387;
 
-class cGZMessageServer : public cIGZMessageServer, public cRZSystemService
+class cGZMessageServer : public cRZSystemService, public cIGZMessageServer
 {
 public:
 	cGZMessageServer();
@@ -77,12 +77,14 @@ protected:
 	struct GeneralMessageTargetInfo
 	{
 	public:
-		GeneralMessageTargetInfo(GeneralMessageTargetInfo const& other);
-		GeneralMessageTargetInfo(cIGZMessageTarget* target, cGZMessage const& msg) :
-			target(target),
-			msg(msg)
+		GeneralMessageTargetInfo() :
+			target(NULL),
+			msg(0)
 		{
 		}
+
+		GeneralMessageTargetInfo(GeneralMessageTargetInfo const& other);
+		GeneralMessageTargetInfo(cIGZMessageTarget* target, cGZMessage const& msg);
 
 		cIGZMessageTarget* target;
 		cGZMessage msg;

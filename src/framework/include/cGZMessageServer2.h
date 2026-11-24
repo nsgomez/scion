@@ -98,6 +98,7 @@ protected:
 	struct GeneralMessageTargetInfo
 	{
 	public:
+		GeneralMessageTargetInfo() { }
 		GeneralMessageTargetInfo(GeneralMessageTargetInfo const& other);
 		GeneralMessageTargetInfo(cIGZMessageTarget2* target, cIGZMessage2* msg) :
 			target(target),

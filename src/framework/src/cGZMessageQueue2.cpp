@@ -36,22 +36,22 @@ cGZMessageQueue2::~cGZMessageQueue2()
 
 bool cGZMessageQueue2::QueryInterface(GZIID iid, void** outPtr)
 {
-	if (iid == GZIID_cIGZMessageQueue2)
+	switch (iid)
 	{
+	case GZIID_cIGZMessageQueue2:
 		*outPtr = static_cast<cIGZMessageQueue2*>(this);
-		AddRef();
-		return true;
-	}
-	else if (iid == GZIID_cIGZUnknown)
-	{
+		break;
+
+	case GZIID_cIGZUnknown:
 		*outPtr = static_cast<cIGZUnknown*>(this);
-		AddRef();
-		return true;
-	}
-	else
-	{
+		break;
+
+	default:
 		return false;
 	}
+
+	AddRef();
+	return true;
 }
 
 uint32_t cGZMessageQueue2::AddRef()

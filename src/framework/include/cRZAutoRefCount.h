@@ -55,6 +55,30 @@ public:
 		}
 	}
 
+	cRZAutoRefCount<T>& operator=(cRZAutoRefCount<T> const& other)
+	{
+		if (&other != this)
+		{
+			T* objToReplace = obj;
+			if (other.obj != objToReplace)
+			{
+				if (other.obj != NULL)
+				{
+					other.obj->AddRef();
+				}
+
+				obj = other.obj;
+
+				if (objToReplace != NULL)
+				{
+					objToReplace->Release();
+				}
+			}
+		}
+
+		return *this;
+	}
+
 	cRZAutoRefCount<T>& operator=(T* other)
 	{
 		T* objToReplace = obj;

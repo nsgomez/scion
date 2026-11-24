@@ -46,7 +46,7 @@ bool cGZApp::QueryInterface(GZIID iid, void** outPtr)
 
 uint32_t cGZApp::AddRef(void)
 {
-	return cRZSystemService::AddRef();
+	return cRZUnknown::AddRef();
 }
 
 uint32_t cGZApp::Release(void)

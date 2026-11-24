@@ -45,12 +45,12 @@ bool cGZMessageQueueManager2::QueryInterface(GZIID iid, void** outPtr)
 
 uint32_t cGZMessageQueueManager2::AddRef()
 {
-	return cRZSystemService::AddRef();
+	return cRZUnknown::AddRef();
 }
 
 uint32_t cGZMessageQueueManager2::Release()
 {
-	return cRZSystemService::Release();
+	return cRZUnknown::Release();
 }
 
 bool cGZMessageQueueManager2::Init()

@@ -32,15 +32,24 @@ cGZMessageServer::GeneralMessageTargetInfo::GeneralMessageTargetInfo(GeneralMess
 	this->msg.data3 = other.msg.data3;
 }
 
+cGZMessageServer::GeneralMessageTargetInfo::GeneralMessageTargetInfo(cIGZMessageTarget* target, cGZMessage const& msg) :
+	target(target),
+	msg(msg)
+{
+}
+
 cGZMessageServer::cGZMessageServer() :
 	cRZSystemService(RZSRVID_cGZMessageServer, 5000000),
-	alwaysClearQueueOnTick(true)
+	totalMessagesDequeued(0),
+	pendingNotificationOps(0),
+	alwaysClearQueueOnTick(true),
+	pendingGeneralMessageCount(0)
 {
 }
 
 cGZMessageServer::~cGZMessageServer()
 {
-	cRZCriticalSectionHolder lock(notificationLock);
+	notificationLock.Lock();
 	pendingNotificationOps = 0;
 
 	while (!notificationTargets.empty())
@@ -51,16 +60,25 @@ cGZMessageServer::~cGZMessageServer()
 		notificationTargets.erase(targetMapIt);
 		if (list != NULL)
 		{
-			for (MessageTargetList::iterator listIt = list->begin(); listIt != list->end(); listIt = list->begin())
+			while (!list->empty())
 			{
-				cIGZMessageTarget* target = *listIt;
-				list->erase(listIt);
-				target->Release();
+				cIGZMessageTarget* target = list->front();
+				list->pop_front();
+
+				__try
+				{
+					target->Release();
+				}
+				__except (EXCEPTION_EXECUTE_HANDLER)
+				{
+				}
 			}
 
 			delete list;
 		}
 	}
+
+	notificationLock.Unlock();
 }
 
 bool cGZMessageServer::QueryInterface(GZIID iid, void** outPtr)
@@ -79,26 +97,23 @@ bool cGZMessageServer::QueryInterface(GZIID iid, void** outPtr)
 
 uint32_t cGZMessageServer::AddRef()
 {
-	return cRZSystemService::AddRef();
+	return cRZUnknown::AddRef();
 }
 
 uint32_t cGZMessageServer::Release()
 {
-	return cRZSystemService::Release();
+	return cRZUnknown::Release();
 }
 
 bool cGZMessageServer::Init()
 {
 	cIGZFramework* framework = RZGetFramework();
-	if (framework == NULL)
+	if (framework != NULL)
 	{
-		return false;
+		return framework->AddToTick(this);
 	}
-	else
-	{
-		framework->AddToTick(this);
-		return true;
-	}
+
+	return false;
 }
 
 bool cGZMessageServer::Shutdown()
@@ -144,13 +159,15 @@ bool cGZMessageServer::MessageSend(cGZMessage const& msg)
 	notificationLock.Unlock();
 
 	currentTargetToNotify = targetsToNotify;
-	while (targetsToNotify[0] != NULL)
+	cIGZMessageTarget* target = *currentTargetToNotify;
+
+	while (target != NULL)
 	{
-		targetsToNotify[0]->DoMessage(msg);
-		targetsToNotify[0]->Release();
+		target->DoMessage(msg);
+		target->Release();
 
 		++currentTargetToNotify;
-		targetsToNotify[0] = *currentTargetToNotify;
+		target = *currentTargetToNotify;
 	}
 
 	return true;
@@ -190,9 +207,9 @@ bool cGZMessageServer::AddNotification(cIGZMessageTarget* target, GZGUID msgType
 	else
 	{
 		MessageTargetList* list = targetMapIt->second;
-		MessageTargetList::iterator targetListIt = std::find(list->begin(), list->end(), target);
+		MessageTargetList::iterator end = list->end();
 
-		if (targetListIt == list->end())
+		if (std::find(list->begin(), end, target) == end)
 		{
 			list->push_back(target);
 			target->AddRef();
@@ -220,9 +237,9 @@ bool cGZMessageServer::RemoveNotification(cIGZMessageTarget* target, GZGUID msgT
 	if (targetMapIt != notificationTargets.end())
 	{
 		MessageTargetList* list = targetMapIt->second;
-		MessageTargetList::iterator targetListIt = std::find(list->begin(), list->end(), target);
+		MessageTargetList::iterator end = list->end();
 
-		if (targetListIt != list->end())
+		if (std::find(list->begin(), end, target) != end)
 		{
 			list->remove(target);
 			target->Release();
@@ -252,16 +269,11 @@ void cGZMessageServer::CancelGeneralMessagePostsToTarget(cIGZMessageTarget* targ
 	cRZCriticalSectionHolder lock(generalMessagePostLock);
 	GeneralMessageDeque::iterator it = generalMessages.begin();
 
-	while (true)
+	while (it != generalMessages.end())
 	{
-		if (generalMessages.empty())
-		{
-			break;
-		}
-
 		if (it->target == target)
 		{
-			it = generalMessages.erase(it);
+			generalMessages.erase(it++);
 		}
 		else
 		{
@@ -272,8 +284,10 @@ void cGZMessageServer::CancelGeneralMessagePostsToTarget(cIGZMessageTarget* targ
 
 bool cGZMessageServer::OnTick(uint32_t tickCount)
 {
+	cGZMessage msg(0);
+
 	messageQueueLock.Lock();
-	int32_t pendingMessageCount = messageQueue.GetMessageCount();
+	uint32_t pendingMessageCount = messageQueue.GetMessageCount();
 	uint64_t targetMessageCount = pendingMessageCount + totalMessagesDequeued;
 	messageQueueLock.Unlock();
 
@@ -283,7 +297,6 @@ bool cGZMessageServer::OnTick(uint32_t tickCount)
 		{
 			messageQueueLock.Lock();
 
-			cGZMessage msg;
 			bool haveMessage = messageQueue.GetFrontMessage(msg);
 			if (haveMessage)
 			{
@@ -304,14 +317,14 @@ bool cGZMessageServer::OnTick(uint32_t tickCount)
 
 processGeneralMessages:
 	generalMessagePostLock.Lock();
-	if (generalMessages.empty())
+	if (!generalMessages.empty())
 	{
 		generalMessagePostLock.Unlock();
+		SendGeneralMessages();
 	}
 	else
 	{
 		generalMessagePostLock.Unlock();
-		SendGeneralMessages();
 	}
 
 	return true;
@@ -330,30 +343,32 @@ void cGZMessageServer::SetAlwaysClearQueueOnTick(bool clearOnTick)
 
 void cGZMessageServer::DoDelayedNotificationAdditionsAndRemovals()
 {
+	cRZCriticalSectionHolder lock(notificationLock);
 	static bool bAlreadyHere = false;
 
-	cRZCriticalSectionHolder lock(notificationLock);
 	if (!bAlreadyHere)
 	{
 		bAlreadyHere = true;
 		if (pendingNotificationOps == 0)
 		{
-			DelayedNotificationList::iterator it = delayedNotificationChanges.begin();
-			DelayedNotificationList::iterator itEnd = delayedNotificationChanges.end();
-
-			while (it != itEnd)
+			if (!delayedNotificationChanges.empty())
 			{
-				if (!it->isAddition)
-				{
-					RemoveNotification(it->target, it->msgType);
-				}
-				else
-				{
-					AddNotification(it->target, it->msgType);
-					it->target->Release();
-				}
+				cIGZMessageServer* server = static_cast<cIGZMessageServer*>(this);
 
-				it = delayedNotificationChanges.erase(it);
+				do
+				{
+					DelayedNotificationInfo& change = delayedNotificationChanges.front();
+					if (change.isAddition)
+					{
+						server->AddNotification(change.target, change.msgType);
+						change.target->Release();
+					}
+					else
+					{
+						server->RemoveNotification(change.target, change.msgType);
+					}
+				}
+				while (!delayedNotificationChanges.empty());
 			}
 		}
 
@@ -363,55 +378,46 @@ void cGZMessageServer::DoDelayedNotificationAdditionsAndRemovals()
 
 void cGZMessageServer::DoDelayedNotificationAdditionsAndRemovalsImmediately()
 {
-	for (DelayedNotificationList::iterator it = delayedNotificationChanges.begin(); it != delayedNotificationChanges.end(); ++it)
+	if (!delayedNotificationChanges.empty())
 	{
-		bool isAddition = it->isAddition;
-		cIGZMessageTarget* target = it->target;
-		GZGUID msgType = it->msgType;
-
-		MessageTargetMap::iterator targetMapIt = notificationTargets.find(it->msgType);
-
-		// FUTURE: These inner blocks are just copied from the AddNotification and RemoveNotification implementations.
-		// It would be nice to refactor these and make them inline methods.
-		if (!isAddition)
+		for (DelayedNotificationList::iterator it = delayedNotificationChanges.begin(); it != delayedNotificationChanges.end(); ++it)
 		{
-			if (targetMapIt != notificationTargets.end())
+			if (it->isAddition)
 			{
-				MessageTargetList* list = targetMapIt->second;
-				MessageTargetList::iterator targetListIt = std::find(list->begin(), list->end(), target);
-
-				if (targetListIt != list->end())
+				MessageTargetMap::iterator targetMapIt = notificationTargets.find(it->msgType);
+				if (targetMapIt == notificationTargets.end())
 				{
-					list->remove(target);
-					target->Release();
-
-					if (list->empty())
+					MessageTargetList* list = new MessageTargetList();
+					notificationTargets.insert(MessageTargetMapEntry(it->msgType, list));
+					list->push_back(it->target);
+				}
+				else
+				{
+					MessageTargetList* list = targetMapIt->second;
+					if (std::find(list->begin(), list->end(), it->target) == list->end())
 					{
-						delete list;
-						notificationTargets.erase(msgType);
+						list->push_back(it->target);
 					}
 				}
 			}
-		}
-		else
-		{
-			if (targetMapIt == notificationTargets.end())
-			{
-				MessageTargetList* list = new MessageTargetList();
-				notificationTargets.insert(MessageTargetMapEntry(msgType, list));
-
-				list->push_back(target);
-				target->AddRef();
-			}
 			else
 			{
-				MessageTargetList* list = targetMapIt->second;
-				MessageTargetList::iterator targetListIt = std::find(list->begin(), list->end(), target);
-
-				if (targetListIt == list->end())
+				MessageTargetMap::iterator targetMapIt = notificationTargets.find(it->msgType);
+				if (targetMapIt != notificationTargets.end())
 				{
-					list->push_back(target);
-					target->AddRef();
+					MessageTargetList* list = targetMapIt->second;
+
+					if (std::find(list->begin(), list->end(), it->target) != list->end())
+					{
+						list->remove(it->target);
+						it->target->Release();
+
+						if (list->empty())
+						{
+							delete list;
+							notificationTargets.erase(it->msgType);
+						}
+					}
 				}
 			}
 		}
@@ -422,13 +428,13 @@ void cGZMessageServer::DoDelayedNotificationAdditionsAndRemovalsImmediately()
 
 void cGZMessageServer::SendGeneralMessages()
 {
-	generalMessagePostLock.Lock();
-	if (pendingGeneralMessageCount < 1)
-	{
-		int32_t size = generalMessages.size();
-		pendingGeneralMessageCount = size;
+	GeneralMessageTargetInfo info;
 
-		if (size < 1)
+	generalMessagePostLock.Lock();
+	if (pendingGeneralMessageCount <= 0)
+	{
+		pendingGeneralMessageCount = generalMessages.size();
+		if (pendingGeneralMessageCount <= 0)
 		{
 			goto end;
 		}
@@ -439,14 +445,12 @@ void cGZMessageServer::SendGeneralMessages()
 		--pendingGeneralMessageCount;
 		if (!generalMessages.empty())
 		{
-			GeneralMessageTargetInfo info(generalMessages.front());
+			info = generalMessages.front();
 			generalMessages.pop_front();
 
 			generalMessagePostLock.Unlock();
 
-			cIGZMessageTarget* target = info.target;
-			target->DoMessage(info.msg);
-
+			info.target->DoMessage(info.msg);
 			generalMessagePostLock.Lock();
 		}
 	}

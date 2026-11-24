@@ -25,7 +25,7 @@
 class cRZThreadSignal : public cIGZThreadSignal
 {
 public:
-	cRZThreadSignal(bool manualReset);
+	cRZThreadSignal(int32_t manualReset);
 	virtual ~cRZThreadSignal();
 
 public:
