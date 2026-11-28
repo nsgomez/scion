@@ -17,6 +17,7 @@
  */
 
 #pragma once
+#include <vector>
 #include <Windows.h>
 
 typedef HANDLE (WINAPI *pfnCreateFileW)(
@@ -74,3 +75,5 @@ public:
 };
 
 extern W32FileHelpers gW32FileHelpers;
+extern int ResolveShellLinkA(char const* originalPath, char* resolvedPath, int resolvedPathSize);
+extern bool ResolveShellLinkW(std::vector<wchar_t> const& originalPath, std::vector<wchar_t>& resolvedPath);

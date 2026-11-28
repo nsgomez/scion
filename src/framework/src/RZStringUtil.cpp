@@ -17,6 +17,7 @@
  */
 
 #include "cIGZString.h"
+#include "cRZString.h"
 #include "RZStringUtil.h"
 
 void ConvertStringEncoding(cIGZString const& src, void* dest, uint32_t& destLength, int32_t codePage)
@@ -44,14 +45,61 @@ void ConvertUTF8StringToDestinationFormat(cIGZString& str)
 	// TODO
 }
 
+int32_t GetCharLength(void const* src, uint32_t srcLength, int32_t codePage)
+{
+	// TODO
+	return 0;
+}
+
 uint32_t GetCurrentFrameworkCodePage()
 {
 	return GZ_CODEPAGE_UTF8;
 }
 
+void LimitStringLength(cRZString& str, uint32_t maxBytes)
+{
+	char const* chars = str.begin();
+	uint32_t position = 0;
+	uint32_t size = str.size();
+
+	if (size == 0)
+	{
+		return;
+	}
+
+	do
+	{
+		uint32_t charLength = (uint32_t)GetCharLength(chars + position, size - position, GZ_CODEPAGE_NATIVE);
+		if (charLength == 0)
+		{
+			break;
+		}
+
+		charLength += position;
+		if (charLength > maxBytes)
+		{
+			break;
+		}
+
+		position = charLength;
+	}
+	while (position < size);
+
+	if (position < size)
+	{
+		str.erase(position);
+	}
+}
+
 void Sprintf(cRZString& output, const char* format, ...)
 {
 	// TODO
+}
+
+uint32_t RZAtoUint32HexA(char const*, ...)
+{
+	// TODO
+	return 0;
 }
 
 std::vector<wchar_t> RZStringToUTF16(cIGZString const& src)
@@ -73,10 +121,4 @@ std::vector<wchar_t> RZStringToUTF16(cIGZString const& src)
 	}
 
 	return result;
-}
-
-uint32_t RZAtoUint32HexA(char const*, ...)
-{
-	// TODO
-	return 0;
 }

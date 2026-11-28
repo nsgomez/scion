@@ -143,14 +143,17 @@ uint32_t cRZFile::Release(void)
 	return 0;
 }
 
-bool cRZFile::Open(uint32_t mAccessFlags, uint32_t mCreateMode, uint32_t mShareFlags)
+bool cRZFile::Open(uint32_t accessFlags, uint32_t createMode, uint32_t shareFlags)
 {
-	if (mOpen)
+	if (IsOpen())
 	{
 		return true;
 	}
 
+	DWORD fileDisposition = 0;
 	DWORD fileAccessMode = 0;
+	DWORD fileShareMode = 0;
+
 	if (mAccessFlags & GZFileAccessRead)
 	{
 		fileAccessMode = GENERIC_READ;
@@ -161,7 +164,6 @@ bool cRZFile::Open(uint32_t mAccessFlags, uint32_t mCreateMode, uint32_t mShareF
 		fileAccessMode |= GENERIC_WRITE;
 	}
 
-	DWORD fileShareMode = 0;
 	if (mShareFlags != GZFileShareExclusive)
 	{
 		fileShareMode = FILE_SHARE_READ;
@@ -169,10 +171,9 @@ bool cRZFile::Open(uint32_t mAccessFlags, uint32_t mCreateMode, uint32_t mShareF
 
 	if (mShareFlags & GZFileShareReadWrite)
 	{
-		fileShareMode = FILE_SHARE_READ | FILE_SHARE_WRITE;
+		fileShareMode |= FILE_SHARE_READ | FILE_SHARE_WRITE;
 	}
 
-	DWORD fileDisposition = 0;
 	switch (mCreateMode)
 	{
 	case GZFileCreateNewOnly:
@@ -199,31 +200,58 @@ bool cRZFile::Open(uint32_t mAccessFlags, uint32_t mCreateMode, uint32_t mShareF
 		return false;
 	}
 
-	cRZString pathCopy(mPath);
-	mFileHandle = CreateFile(pathCopy.ToChar(), fileAccessMode, fileShareMode, NULL, fileDisposition, 0, NULL);
-	
-	if (mFileHandle != INVALID_HANDLE_VALUE)
+	if (gW32FileHelpers.CreateFileW != NULL)
 	{
-		mOpen = true;
+		std::vector<wchar_t> widePath = RZStringToUTF16(mPath);
+		std::vector<wchar_t> resolvedPath;
 
-		this->mAccessFlags = mAccessFlags;
-		this->mCreateMode = mCreateMode;
-		this->mShareFlags = mShareFlags;
+		if (ResolveShellLinkW(widePath, resolvedPath))
+		{
+			widePath.swap(resolvedPath);
+		}
 
-		DWORD offset = SetFilePointer(mFileHandle, 0, 0, FILE_CURRENT);
-		mPosition = offset;
-		mFilePointer = offset;
+		mFileHandle = gW32FileHelpers.CreateFileW(&widePath[0], fileAccessMode, fileShareMode, NULL, fileDisposition, 0, NULL);
+	}
+	else
+	{
+		cRZString path;
+		ConvertStringEncoding(mPath, path, GZ_CODEPAGE_SYSTEM);
 
-		mBufferedReadFilePosition = 0;
-		mReadBytesBuffered = 0;
-		mBufferedWriteFilePosition = 0;
-		mWriteBytesBuffered = 0;
+		char resolvedPath[MAX_PATH];
+		DWORD resolvedPathLen = ResolveShellLinkA(path.c_str(), resolvedPath, MAX_PATH);
 
-		return true;
+		if (resolvedPathLen > 0 && resolvedPathLen != 0xFFFFFFFF)
+		{
+			mFileHandle = CreateFile(resolvedPath, fileAccessMode, fileShareMode, NULL, fileDisposition, 0, NULL);
+		}
+		else
+		{
+			mFileHandle = CreateFile(path.c_str(), fileAccessMode, fileShareMode, NULL, fileDisposition, 0, NULL);
+		}
 	}
 
-	UpdateErrorCode();
-	return false;
+	if (mFileHandle == INVALID_HANDLE_VALUE)
+	{
+		UpdateErrorCode();
+		return false;
+	}
+
+	mOpen = true;
+
+	mAccessFlags = accessFlags;
+	mCreateMode = createMode;
+	mShareFlags = shareFlags;
+
+	DWORD offset = SetFilePointer(mFileHandle, 0, 0, FILE_CURRENT);
+	mPosition = offset;
+	mFilePointer = offset;
+
+	mBufferedReadFilePosition = 0;
+	mReadBytesBuffered = 0;
+	mBufferedWriteFilePosition = 0;
+	mWriteBytesBuffered = 0;
+
+	return true;
 }
 
 bool cRZFile::IsOpen(void) const
@@ -422,22 +450,22 @@ bool cRZFile::ReadWithCount(void* data, uint32_t& byteCount)
 
 			if (mReadBufferSize != 0)
 			{
-				uint32_t bytesToRead = byteCount;
-				void* readTarget = data;
 				bool result = true;
+				void* readTarget = data;
+				int32_t bytesToRead = (int32_t)byteCount;
 
-				if (mPosition >= mBufferedReadFilePosition && mPosition < (mReadBytesBuffered + mBufferedReadFilePosition))
+				if ((int32_t)mPosition >= (int32_t)mBufferedReadFilePosition
+					&& (int32_t)mPosition < (int32_t)mReadBytesBuffered + (int32_t)mBufferedReadFilePosition)
 				{
-					uint32_t const& bytesBuffered = mReadBytesBuffered;
-					uint32_t offset = mPosition - mBufferedReadFilePosition;
-					uint32_t n = bytesBuffered - offset;
+					int32_t offset = (int32_t)(mPosition - mBufferedReadFilePosition);
+					int32_t n = (int32_t)mReadBytesBuffered - offset;
 
 					if (n >= bytesToRead)
 					{
 						n = bytesToRead;
 					}
 
-					memcpy(data, &mReadBuffer[offset], n);
+					memmove(data, &mReadBuffer[offset], n);
 
 					readTarget = reinterpret_cast<uint8_t*>(data) + n;
 					bytesToRead -= n;
@@ -465,24 +493,26 @@ bool cRZFile::ReadWithCount(void* data, uint32_t& byteCount)
 						break;
 					}
 
-					uint32_t bytesAvailable = mReadBytesBuffered;
-					if (bytesAvailable == 0)
+					if (mReadBytesBuffered == 0)
 					{
 						break;
 					}
 
-					uint32_t n = bytesAvailable;
+					int32_t n = (int32_t)mReadBytesBuffered;
 					if (n >= bytesToRead)
 					{
 						n = bytesToRead;
 					}
 
-					memcpy(readTarget, &mReadBuffer[0], n);
+					memmove(readTarget, &mReadBuffer[0], n);
 
-					readTarget = reinterpret_cast<uint8_t*>(data) + n;
+					readTarget = reinterpret_cast<uint8_t*>(readTarget) + n;
 					bytesToRead -= n;
 					mPosition += n;
 				}
+
+				byteCount -= bytesToRead;
+				return result;
 			}
 			else
 			{
@@ -569,17 +599,17 @@ bool cRZFile::Flush(void)
 		bool needFlush = (mWriteBytesBuffered > 0);
 		FlushWriteBuffer();
 
-		bool result = true;
+		BOOL result = TRUE;
 		if (needFlush)
 		{
 			result = FlushFileBuffers(mFileHandle);
-			if (!result)
+			if (result == FALSE)
 			{
 				UpdateErrorCode();
 			}
 		}
 
-		return result;
+		return result != FALSE;
 	}
 
 	return false;
@@ -607,7 +637,7 @@ bool cRZFile::Remove(void)
 		cRZString str;
 		ConvertStringEncoding(mPath, str, GZ_CODEPAGE_SYSTEM);
 
-		BOOL result = DeleteFile(str.ToChar());
+		BOOL result = DeleteFile(str.c_str());
 		if (result == FALSE)
 		{
 			UpdateErrorCode();
@@ -647,9 +677,7 @@ bool cRZFile::Exists(void)
 
 bool cRZFile::Copy(cIGZFile const& srcFile, bool overwrite)
 {
-	cRZString srcPath(srcFile.GetPath());
-
-	bool succeeded = Copy(srcPath, mPath, overwrite);
+	bool succeeded = Copy(cRZString(srcFile.GetPath()), mPath, overwrite);
 	if (!succeeded)
 	{
 		UpdateErrorCode();
@@ -805,7 +833,7 @@ void cRZFile::UpdateErrorCode(void)
 		break;
 
 	case ERROR_ALREADY_EXISTS:
-		mLastError = result;
+		mLastError = GZFileErrorAlreadyExists;
 		break;
 
 	default:
@@ -858,7 +886,7 @@ bool cRZFile::FillWriteBuffer(uint8_t const* data, int size)
 
 		if ((int)mWriteBytesBuffered + size <= (int)mWriteBufferSize)
 		{
-			memcpy(&mWriteBuffer[mWriteBytesBuffered], data, size);
+			memmove(&mWriteBuffer[mWriteBytesBuffered], data, size);
 			mWriteBytesBuffered += size;
 		}
 		else
@@ -878,7 +906,7 @@ bool cRZFile::FillWriteBuffer(uint8_t const* data, int size)
 
 				if (bytesToBuffer != 0)
 				{
-					memcpy(&mWriteBuffer[mWriteBytesBuffered], data, bytesToBuffer);
+					memmove(&mWriteBuffer[mWriteBytesBuffered], data, bytesToBuffer);
 					mWriteBytesBuffered += bytesToBuffer;
 					data += bytesToBuffer;
 					size -= bytesToBuffer;
@@ -962,46 +990,91 @@ bool cRZFile::GetTempDirectory(cIGZString& out)
 
 bool cRZFile::MakeTempFileName(cIGZString const& prefix, cIGZString& name, cIGZString const* suffix)
 {
-	time_t seedNum = time(NULL);
+	static uint32_t kMaxTempNameLength = 244;
+
+	int32_t seedNum = (int32_t)time(NULL);
 	cRZString tmpName;
-	cRZString originalName(name.Data(), name.Strlen());
+	cRZString originalName(name);
 	cRZString suffixStr;
 
-	if (suffix == NULL)
-	{
-		suffixStr = cRZString(".tmp");
-	}
-	else
+	if (suffix != NULL)
 	{
 		suffixStr = suffix;
 	}
-
-	if (originalName.Strlen() < 245)
+	else
 	{
-		if (originalName.Strlen() == 0)
+		suffixStr = cRZString(".tmp");
+	}
+
+	LimitStringLength(originalName, kMaxTempNameLength);
+	if (originalName.empty())
+	{
+		originalName = cRZString("RZ_");
+	}
+
+	for (int32_t i = 0; i < 10000; i++)
+	{
+		cRZString tmp; // TODO: unused?
+		tmpName.Sprintf("%s%s%d%s", prefix.ToChar(), originalName.begin(), seedNum, suffixStr.begin());
+
+		cRZFile newFile(tmpName);
+		if (newFile.Open(GZFileAccessReadWrite, GZFileCreateNewOnly, GZFileShareExclusive))
 		{
-			originalName = cRZString("RZ_");
+			newFile.Close();
+			name.FromChar(tmpName.begin(), tmpName.size());
+			return true;
 		}
+
+		seedNum--;
+	}
+
+	return false;
+}
+
+bool cRZFile::FileCreate(cIGZString const& path, bool truncate)
+{
+	SECURITY_ATTRIBUTES securityAttributes;
+	securityAttributes.nLength = sizeof(SECURITY_ATTRIBUTES);
+	securityAttributes.lpSecurityDescriptor = NULL;
+	securityAttributes.bInheritHandle = FALSE;
+
+	HANDLE hFile;
+	if (gW32FileHelpers.CreateFileW != NULL)
+	{
+		hFile = gW32FileHelpers.CreateFileW(
+			reinterpret_cast<wchar_t const*>(&RZStringToUTF16(path)[0]),
+			GENERIC_READ,
+			FILE_SHARE_READ | FILE_SHARE_WRITE,
+			&securityAttributes,
+			OPEN_ALWAYS,
+			FILE_ATTRIBUTE_NORMAL,
+			NULL);
 	}
 	else
 	{
-		originalName.Resize(245);
+		cRZString str;
+		ConvertStringEncoding(path, str, GZ_CODEPAGE_SYSTEM);
+
+		hFile = CreateFile(
+			str.Data(),
+			GENERIC_READ,
+			FILE_SHARE_READ | FILE_SHARE_WRITE,
+			&securityAttributes,
+			OPEN_ALWAYS,
+			FILE_ATTRIBUTE_NORMAL,
+			NULL);
 	}
 
-	for (int i = 0; i < 10000; i++)
+	if (hFile != INVALID_HANDLE_VALUE)
 	{
-		tmpName.Sprintf("%s%s%d%s", prefix.Data(), originalName, seedNum, suffixStr.Data());
+		if (truncate)
+		{
+			SetFilePointer(hFile, 0, NULL, FILE_BEGIN);
+			SetEndOfFile(hFile);
+		}
 
-		cRZFile newFile(tmpName);
-		if (newFile.Open(GZFileAccessRead | GZFileAccessWrite, GZFileCreateNewOnly, GZFileShareExclusive))
-		{
-			name.FromChar(tmpName.Data(), tmpName.Strlen());
-			return true;
-		}
-		else
-		{
-			seedNum--;
-		}
+		CloseHandle(hFile);
+		return true;
 	}
 
 	return false;
@@ -1072,6 +1145,100 @@ bool cRZFile::FileExists(cIGZString const& path)
 		bool result = GetFileAttributes(str.Data()) != -1;
 		return result;
 	}
+}
+
+bool cRZFile::GetAttribute(cIGZString const& path, uint32_t attributesToCheck)
+{
+	uint32_t attributes;
+	if (gW32FileHelpers.GetFileAttributesW != NULL)
+	{
+		attributes = gW32FileHelpers.GetFileAttributesW(reinterpret_cast<wchar_t const*>(&RZStringToUTF16(path)[0]));
+	}
+	else
+	{
+		cRZString str;
+		ConvertStringEncoding(path, str, GZ_CODEPAGE_SYSTEM);
+
+		attributes = GetFileAttributes(str.c_str());
+	}
+
+	if (((attributesToCheck & RZFileAttributeWritable) == 0 || (attributes & FILE_ATTRIBUTE_READONLY) == 0)
+		|| ((attributesToCheck & RZFileAttributeDirectory) == 0 || (attributes & FILE_ATTRIBUTE_DIRECTORY) != 0))
+	{
+		if (((attributesToCheck & RZFileAttributeArchive) == 0 || (attributes & FILE_ATTRIBUTE_ARCHIVE) != 0)
+			&& ((attributesToCheck & RZFileAttributeHidden) == 0 || (attributes & FILE_ATTRIBUTE_HIDDEN) != 0)
+			&& ((attributesToCheck & RZFileAttributeSystem) == 0 || (attributes & FILE_ATTRIBUTE_SYSTEM) != 0)
+			&& ((attributesToCheck & RZFileAttributeReadOnly) == 0 || (attributes & FILE_ATTRIBUTE_READONLY) != 0))
+		{
+			return true;
+		}
+	}
+
+	return false;
+}
+
+bool cRZFile::SetAttribute(cIGZString const& path, uint32_t attributesToSet, bool value)
+{
+	uint32_t attributes;
+	bool result;
+	cRZString str;
+
+	if (gW32FileHelpers.GetFileAttributesW == NULL || gW32FileHelpers.SetFileAttributesW == NULL)
+	{
+		ConvertStringEncoding(path, str, GZ_CODEPAGE_SYSTEM);
+		attributes = GetFileAttributes(str.c_str());
+	}
+	else
+	{
+		attributes = gW32FileHelpers.GetFileAttributesW(reinterpret_cast<wchar_t const*>(&RZStringToUTF16(path)[0]));
+	}
+
+	uint32_t newAttributes = attributes;
+	if ((attributesToSet & RZFileAttributeWritable) != 0)
+	{
+		newAttributes = value ? (newAttributes & ~FILE_ATTRIBUTE_READONLY) : (newAttributes | FILE_ATTRIBUTE_READONLY);
+	}
+
+	if ((attributesToSet & RZFileAttributeDirectory) != 0 || (attributesToSet & RZFileAttributeSymbolicLink) != 0)
+	{
+		return false;
+	}
+
+	if ((attributesToSet & RZFileAttributeArchive) != 0)
+	{
+		newAttributes = value ? (newAttributes | FILE_ATTRIBUTE_ARCHIVE) : (newAttributes & ~FILE_ATTRIBUTE_ARCHIVE);
+	}
+
+	if ((attributesToSet & RZFileAttributeHidden) != 0)
+	{
+		newAttributes = value ? (newAttributes | FILE_ATTRIBUTE_HIDDEN) : (newAttributes & ~FILE_ATTRIBUTE_HIDDEN);
+	}
+
+	if ((attributesToSet & RZFileAttributeSystem) != 0)
+	{
+		newAttributes = value ? (newAttributes | FILE_ATTRIBUTE_SYSTEM) : (newAttributes & ~FILE_ATTRIBUTE_SYSTEM);
+	}
+
+	if ((attributesToSet & RZFileAttributeReadOnly) != 0)
+	{
+		newAttributes = value ? (newAttributes | FILE_ATTRIBUTE_READONLY) : (newAttributes & ~FILE_ATTRIBUTE_READONLY);
+	}
+
+	if (newAttributes == attributes)
+	{
+		return true;
+	}
+
+	if (gW32FileHelpers.SetFileAttributesW != NULL)
+	{
+		result = gW32FileHelpers.SetFileAttributesW(reinterpret_cast<wchar_t const*>(&RZStringToUTF16(path)[0]), newAttributes) != 0;
+	}
+	else
+	{
+		result = SetFileAttributes(str.c_str(), newAttributes) != 0;
+	}
+
+	return result;
 }
 
 bool cRZFile::Remove(cIGZString const& path)
@@ -1175,13 +1342,22 @@ int32_t cRZFile::GetLength(cIGZString const& path)
 
 bool cRZFile::GetPathExtension(cIGZString const& path, cIGZString& extension)
 {
-	// TODO
-	return false;
+	char drive[_MAX_DRIVE] = "";
+	char dir[_MAX_DIR] = "";
+	char fname[_MAX_FNAME] = "";
+	char ext[_MAX_EXT] = "";
+
+	_splitpath(path.ToChar(), drive, dir, fname, ext);
+
+	size_t extLen = strlen(ext);
+	extension.FromChar(ext, extLen);
+
+	return extLen != 0;
 }
 
 bool cRZFile::GetPathDirectory(cIGZString const& path, cIGZString& directory)
 {
-	char drive[_MAX_DRIVE + 1] = "";
+	char drive[_MAX_DRIVE] = "";
 	char dir[_MAX_DIR] = "";
 	char fname[_MAX_FNAME] = "";
 	char ext[_MAX_EXT] = "";
@@ -1218,20 +1394,62 @@ bool cRZFile::GetPathName(cIGZString const& path, cIGZString& name, bool include
 
 bool cRZFile::GetVolumeName(cIGZString const& path, cIGZString& volume)
 {
-	cRZString dir;
-	if (!GetPathDirectory(path, dir))
+	cRZString root;
+	if (!GetPathVolumeRoot(path, root))
 	{
 		return false;
 	}
 
-	char volumeName[MAX_PATH + 1];
-	char fileSystemName[MAX_PATH + 1];
+	char volumeName[MAX_PATH];
+	char fileSystemName[MAX_PATH];
 	DWORD serialNumber, maxComponentLength, flags;
 
-	if (GetVolumeInformation(dir.ToChar(), volumeName, MAX_PATH, &serialNumber, &maxComponentLength, &flags, fileSystemName, MAX_PATH) != 0)
+	if (GetVolumeInformation(root.ToChar(), volumeName, MAX_PATH, &serialNumber, &maxComponentLength, &flags, fileSystemName, MAX_PATH) == 0)
 	{
-		cRZString tmp(volumeName);
-		ConvertStringEncoding(volume, GZ_CODEPAGE_SYSTEM, tmp);
+		return false;
+	}
+
+	cRZString tmp(volumeName);
+	ConvertStringEncoding(volume, GZ_CODEPAGE_SYSTEM, tmp);
+	return true;
+}
+
+bool cRZFile::GetPathVolumeRoot(cIGZString const& path, cIGZString& root)
+{
+	char drive[_MAX_DRIVE] = "";
+	char dir[_MAX_DIR] = "";
+	char fname[_MAX_FNAME] = "";
+	char ext[_MAX_EXT] = "";
+
+	_splitpath(path.ToChar(), drive, dir, fname, ext);
+
+	size_t driveLen = strlen(drive);
+	if (driveLen != 0)
+	{
+		drive[_MAX_DRIVE - 1] = '\\';
+		drive[_MAX_DRIVE] = '\0';
+
+		root.FromChar(drive, _MAX_DRIVE);
+	}
+
+	return driveLen != 0;
+}
+
+bool cRZFile::IsFullPath(cRZString const& path)
+{
+	return IsFullPath(path.c_str());
+}
+
+bool cRZFile::IsFullPath(char const* path)
+{
+	if ((isalpha(path[0]) && path[1] == ':' && path[2] == '\\')
+		|| (path[0] == '\\' && path[1] == '\\'))
+	{
+		if (strstr(path, "\\.") == NULL && strstr(path, "/.") == NULL)
+		{
+			return true;
+		}
+
 		return true;
 	}
 

@@ -57,3 +57,15 @@ W32FileHelpers::W32FileHelpers()
 }
 
 W32FileHelpers gW32FileHelpers;
+
+int ResolveShellLinkA(char const* originalPath, char* resolvedPath, int resolvedPathSize)
+{
+	// TODO
+	return 0;
+}
+
+bool ResolveShellLinkW(std::vector<wchar_t> const& originalPath, std::vector<wchar_t>& resolvedPath)
+{
+	// TODO
+	return false;
+}

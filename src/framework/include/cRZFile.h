@@ -21,6 +21,17 @@
 #include "cIGZFile.h"
 #include "cRZString.h"
 
+enum RZFileAttributes
+{
+	RZFileAttributeWritable     = 0x0002,
+	RZFileAttributeDirectory    = 0x0008,
+	RZFileAttributeSymbolicLink = 0x0010,
+	RZFileAttributeArchive      = 0x0020,
+	RZFileAttributeHidden       = 0x0040,
+	RZFileAttributeSystem       = 0x0080,
+	RZFileAttributeReadOnly     = 0x1000,
+};
+
 class cRZFile : public cIGZFile
 {
 public:
@@ -76,7 +87,10 @@ public:
 	static bool GetTempDirectory(cIGZString& out);
 	static bool MakeTempFileName(cIGZString const& prefix, cIGZString& name, cIGZString const* suffix);
 	static bool MakeTempPathName(cIGZString& name, cIGZString const* suffix);
+	static bool FileCreate(cIGZString const& path, bool truncate);
 	static bool FileExists(cIGZString const& path);
+	static bool GetAttribute(cIGZString const& path, uint32_t attributesToCheck);
+	static bool SetAttribute(cIGZString const& path, uint32_t attributesToSet, bool value);
 	static bool Remove(cIGZString const& path);
 	static bool Rename(cIGZString const& srcPath, cIGZString const& destPath);
 	static bool Copy(cIGZString const& srcPath, cIGZString const& destPath, bool overwrite);
@@ -84,7 +98,10 @@ public:
 	static bool GetPathDirectory(cIGZString const& path, cIGZString& directory);
 	static bool GetPathName(cIGZString const& path, cIGZString& name, bool includeSeparator);
 	static bool GetVolumeName(cIGZString const& path, cIGZString& volume);
+	static bool GetPathVolumeRoot(cIGZString const& path, cIGZString& root);
 	static int32_t GetLength(cIGZString const& path);
+	static bool IsFullPath(cRZString const& path);
+	static bool IsFullPath(char const* path);
 
 protected:
 	void UpdateErrorCode(void);
@@ -111,5 +128,5 @@ protected:
 	uint32_t mWriteBufferSize;
 	std::vector<uint8_t> mWriteBuffer;
 	uint32_t mBufferedWriteFilePosition;
-	uint32_t mWriteBytesBuffered;
+	int32_t mWriteBytesBuffered;
 };

@@ -33,7 +33,9 @@ extern void ConvertStringEncoding(cIGZString const& src, cIGZString& dest, int32
 extern void ConvertStringEncoding(cIGZString const& src, int32_t codePage, cIGZString& dest);
 extern void ConvertStringEncoding(void const* src, uint32_t srcLength, int32_t codePage, cIGZString& dest);
 extern void ConvertUTF8StringToDestinationFormat(cIGZString& str);
+extern int32_t GetCharLength(void const* src, uint32_t srcLength, int32_t codePage);
 extern uint32_t GetCurrentFrameworkCodePage();
+extern void LimitStringLength(cRZString& str, uint32_t maxBytes);
 extern void Sprintf(cRZString& output, const char* format, ...);
-extern std::vector<wchar_t> RZStringToUTF16(cIGZString const& src);
 extern uint32_t RZAtoUint32HexA(char const*, ...);
+extern std::vector<wchar_t> RZStringToUTF16(cIGZString const& src);
