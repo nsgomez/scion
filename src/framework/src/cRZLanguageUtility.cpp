@@ -30,6 +30,10 @@ cRZLanguageUtility::cRZLanguageUtility() :
 {
 }
 
+cRZLanguageUtility::~cRZLanguageUtility()
+{
+}
+
 bool cRZLanguageUtility::QueryInterface(GZIID iid, void** outPtr)
 {
 	switch (iid)

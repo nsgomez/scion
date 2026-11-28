@@ -18,6 +18,10 @@
 
 #include "cRZRefCount.h"
 
+cRZRefCount::~cRZRefCount()
+{
+}
+
 uint32_t cRZRefCount::Release()
 {
 	if (mRefCount > 1)

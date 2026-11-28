@@ -41,6 +41,10 @@ cRZMessage2Standard::cRZMessage2Standard() :
 {
 }
 
+cRZMessage2Standard::~cRZMessage2Standard()
+{
+}
+
 bool cRZMessage2Standard::QueryInterface(GZIID iid, void** outPtr)
 {
 	if (iid == GZIID_cIGZUnknown)

@@ -26,6 +26,10 @@ cRZCmdLine::cRZCmdLine() :
 {
 }
 
+cRZCmdLine::~cRZCmdLine()
+{
+}
+
 cRZCmdLine::cRZCmdLine(cIGZCmdLine const& cmdLine) :
 	mRefCount(0),
 	mArguments(),

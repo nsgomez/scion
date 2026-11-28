@@ -28,7 +28,7 @@ class cGZPersistBinaryWriter : public cIGZPersistWriter
 {
 public:
 	cGZPersistBinaryWriter(void);
-	virtual ~cGZPersistBinaryWriter(void) { }
+	virtual ~cGZPersistBinaryWriter(void);
 
 public:
 	virtual bool QueryInterface(GZIID iid, void** outPtr);

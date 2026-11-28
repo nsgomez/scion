@@ -36,6 +36,10 @@ cGZPersistDBSerialRecord::cGZPersistDBSerialRecord(cGZPersistResourceKey const& 
 {
 }
 
+cGZPersistDBSerialRecord::~cGZPersistDBSerialRecord()
+{
+}
+
 bool cGZPersistDBSerialRecord::QueryInterface(GZIID iid, void** outPtr)
 {
 	if (iid == GZIID_cIGZPersistDBSerialRecord)

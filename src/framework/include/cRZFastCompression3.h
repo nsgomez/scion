@@ -25,7 +25,7 @@ class cRZFastCompression3 : public cIGZCompression
 {
 public:
 	cRZFastCompression3(void);
-	virtual ~cRZFastCompression3(void) { }
+	virtual ~cRZFastCompression3(void);
 
 public:
 	virtual bool QueryInterface(GZIID iid, void** outPtr);

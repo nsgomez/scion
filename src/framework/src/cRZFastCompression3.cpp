@@ -26,6 +26,10 @@ cRZFastCompression3::cRZFastCompression3(void) :
 {
 }
 
+cRZFastCompression3::~cRZFastCompression3()
+{
+}
+
 bool cRZFastCompression3::QueryInterface(GZIID iid, void** outPtr)
 {
 	if (iid == GZIID_cIGZUnknown)

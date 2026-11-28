@@ -49,6 +49,10 @@ cGZDate::cGZDate(uint32_t dayNumber) :
 {
 }
 
+cGZDate::~cGZDate()
+{
+}
+
 bool cGZDate::QueryInterface(GZIID iid, void** outPtr)
 {
 	if (iid == GZIID_cIGZUnknown)

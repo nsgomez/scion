@@ -25,7 +25,7 @@ class cGZDBReadRecordPackedFile : public cGZDBRecord
 {
 public:
 	cGZDBReadRecordPackedFile(uint32_t recordOffset, uint32_t size, cGZPersistResourceKey const& key, cGZDBSegmentPackedFile* segment, bool useLittleEndian);
-	virtual ~cGZDBReadRecordPackedFile(void) { }
+	virtual ~cGZDBReadRecordPackedFile(void);
 
 	friend class cGZDBSegmentPackedFile;
 

@@ -53,6 +53,10 @@ cGZResManCOMDirector::cGZResManCOMDirector(void) :
 	AddCls(GZCLSID_cGZPersistBinaryResourceFactory, CreateBinaryResourceFactory);
 }
 
+cGZResManCOMDirector::~cGZResManCOMDirector()
+{
+}
+
 bool cGZResManCOMDirector::OnStart(cIGZCOM* com)
 {
 	cIGZSystemService* service;

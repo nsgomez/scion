@@ -27,7 +27,7 @@ class cGZPersistResourceKeyList : public cIGZPersistResourceKeyList
 {
 public:
 	cGZPersistResourceKeyList(void);
-	virtual ~cGZPersistResourceKeyList(void) { }
+	virtual ~cGZPersistResourceKeyList(void);
 
 	friend class cGZDBSegmentPackedFile;
 

@@ -27,6 +27,10 @@
 {
 }
 
+cGZPersistResource::~cGZPersistResource()
+{
+}
+
 bool cGZPersistResource::QueryInterface(GZIID iid, void** outPtr)
 {
 	switch (iid)

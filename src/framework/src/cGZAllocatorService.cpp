@@ -24,6 +24,10 @@ cGZAllocatorService::cGZAllocatorService(void)
 {
 }
 
+cGZAllocatorService::~cGZAllocatorService()
+{
+}
+
 bool cGZAllocatorService::QueryInterface(GZIID iid, void** outPtr)
 {
 	if (iid == GZIID_cIGZAllocatorService)

@@ -28,6 +28,10 @@ cGZDBReadRecordPackedFile::cGZDBReadRecordPackedFile(uint32_t recordOffset, uint
 	mAccessFlags = GZFileAccessRead;
 }
 
+cGZDBReadRecordPackedFile::~cGZDBReadRecordPackedFile()
+{
+}
+
 bool cGZDBReadRecordPackedFile::GetFieldVoid(void* data, uint32_t size)
 {
 	if (!mAccessFlags || mSize < mPosition + size)

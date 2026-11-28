@@ -65,7 +65,7 @@ public:
 	{
 	}
 
-	virtual ~cRZString() { }
+	virtual ~cRZString();
 
 public:
 	virtual bool QueryInterface(GZIID iid, void** outPtr);

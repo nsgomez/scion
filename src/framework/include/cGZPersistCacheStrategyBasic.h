@@ -34,7 +34,7 @@ class cGZPersistCacheStrategyBasic : public cIGZPersistCacheStrategy
 {
 public:
 	cGZPersistCacheStrategyBasic(void);
-	virtual ~cGZPersistCacheStrategyBasic(void) { }
+	virtual ~cGZPersistCacheStrategyBasic(void);
 
 public:
 	virtual void Init(void);

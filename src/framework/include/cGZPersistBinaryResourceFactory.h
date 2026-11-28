@@ -25,7 +25,7 @@ class cGZPersistBinaryResourceFactory : public cGZPersistResourceFactory
 {
 public:
 	cGZPersistBinaryResourceFactory();
-	virtual ~cGZPersistBinaryResourceFactory() { }
+	virtual ~cGZPersistBinaryResourceFactory();
 
 protected:
 	virtual bool CreateInstance(uint32_t type, uint32_t iid, void** outPtr);

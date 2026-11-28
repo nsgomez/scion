@@ -28,6 +28,10 @@ cGZPersistResourceFactory::cGZPersistResourceFactory(void) :
 {
 }
 
+cGZPersistResourceFactory::~cGZPersistResourceFactory()
+{
+}
+
 bool cGZPersistResourceFactory::QueryInterface(GZIID iid, void** outPtr)
 {
 	switch (iid)

@@ -24,7 +24,7 @@ class cGZPersistResource : public cIGZPersistResource
 {
 public:
 	cGZPersistResource();
-	virtual ~cGZPersistResource() { }
+	virtual ~cGZPersistResource();
 
 public:
 	virtual bool QueryInterface(GZIID iid, void** outPtr);

@@ -26,7 +26,7 @@ class cGZPersistDBRecord : public cIGZPersistDBRecord
 public:
 	cGZPersistDBRecord(cIGZPersistDBSegment* segment);
 	cGZPersistDBRecord(cGZPersistResourceKey const& key, cIGZPersistDBSegment* segment);
-	virtual ~cGZPersistDBRecord() { }
+	virtual ~cGZPersistDBRecord();
 
 public:
 	virtual bool QueryInterface(GZIID iid, void** outPtr);

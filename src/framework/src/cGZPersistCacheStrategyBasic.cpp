@@ -31,6 +31,10 @@ cGZPersistCacheStrategyBasic::cGZPersistCacheStrategyBasic(void) :
 {
 }
 
+cGZPersistCacheStrategyBasic::~cGZPersistCacheStrategyBasic()
+{
+}
+
 void cGZPersistCacheStrategyBasic::Init(void)
 {
 }

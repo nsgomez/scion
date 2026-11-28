@@ -36,6 +36,10 @@ cGZPersistBinaryWriter::cGZPersistBinaryWriter(void) :
 {
 }
 
+cGZPersistBinaryWriter::~cGZPersistBinaryWriter()
+{
+}
+
 bool cGZPersistBinaryWriter::QueryInterface(GZIID iid, void** outPtr)
 {
 	if (outPtr == NULL)

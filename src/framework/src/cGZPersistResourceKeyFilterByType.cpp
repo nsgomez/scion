@@ -25,6 +25,10 @@ cGZPersistResourceKeyFilterByType::cGZPersistResourceKeyFilterByType(uint32_t ty
 {
 }
 
+cGZPersistResourceKeyFilterByType::~cGZPersistResourceKeyFilterByType()
+{
+}
+
 bool cGZPersistResourceKeyFilterByType::IsKeyIncluded(cGZPersistResourceKey const& key)
 {
 	return key.type == mType;

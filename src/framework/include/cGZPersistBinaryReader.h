@@ -32,7 +32,7 @@ class cGZPersistBinaryReader : public cIGZPersistReader
 {
 public:
 	cGZPersistBinaryReader(void);
-	virtual ~cGZPersistBinaryReader(void) { }
+	virtual ~cGZPersistBinaryReader(void);
 
 public:
 	virtual bool QueryInterface(GZIID iid, void** outPtr);

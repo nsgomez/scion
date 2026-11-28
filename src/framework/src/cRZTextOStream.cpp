@@ -38,6 +38,10 @@ static char const* kFormats[] =
 	"%g"
 };
 
+cRZTextOStream::~cRZTextOStream()
+{
+}
+
 bool cRZTextOStream::SetSint8(int8_t value)
 {
 	cRZString tmp;

@@ -31,7 +31,7 @@ class cGZPersistDBSerialRecord :
 public:
 	cGZPersistDBSerialRecord(cIGZPersistDBSegment* segment, bool useLittleEndian);
 	cGZPersistDBSerialRecord(cGZPersistResourceKey const& key, cIGZPersistDBSegment* segment, bool useLittleEndian);
-	virtual ~cGZPersistDBSerialRecord(void) { }
+	virtual ~cGZPersistDBSerialRecord(void);
 
 public:
 	virtual bool QueryInterface(GZIID iid, void** outPtr);

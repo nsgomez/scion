@@ -30,7 +30,7 @@ public:
 	cRZCmdLine();
 	cRZCmdLine(cIGZCmdLine const& cmdLine);
 	cRZCmdLine(char const* cmdLine);
-	virtual ~cRZCmdLine() { }
+	virtual ~cRZCmdLine();
 
 public:
 	virtual bool QueryInterface(GZIID iid, void** outPtr);

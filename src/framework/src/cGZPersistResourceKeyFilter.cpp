@@ -24,6 +24,10 @@ cGZPersistResourceKeyFilter::cGZPersistResourceKeyFilter(void) :
 {
 }
 
+cGZPersistResourceKeyFilter::~cGZPersistResourceKeyFilter()
+{
+}
+
 bool cGZPersistResourceKeyFilter::QueryInterface(GZIID iid, void** outPtr)
 {
 	switch (iid)

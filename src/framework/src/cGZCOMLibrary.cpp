@@ -93,6 +93,10 @@ cGZCOMLibrary::cGZCOMLibrary(const cIGZString& libraryPath) :
 {
 }
 
+cGZCOMLibrary::~cGZCOMLibrary()
+{
+}
+
 bool cGZCOMLibrary::QueryInterface(GZIID iid, void** outPtr)
 {
 	if (iid == GZIID_cIGZCOMLibrary)

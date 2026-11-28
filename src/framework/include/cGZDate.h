@@ -30,7 +30,7 @@ public:
 	cGZDate(cRZDate const& date);
 	cGZDate(uint32_t month, uint32_t day, uint32_t year);
 	cGZDate(uint32_t dateCode);
-	virtual ~cGZDate() { }
+	virtual ~cGZDate();
 
 public:
 	virtual cGZDate operator++ (int); // post-increment

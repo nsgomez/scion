@@ -38,7 +38,7 @@ public:
 	virtual HINSTANCE GetHandle() const;
 	virtual bool IsLoaded() const;
 
-	virtual ~cGZCOMLibrary() { }
+	virtual ~cGZCOMLibrary();
 
 public:
 	bool Load();

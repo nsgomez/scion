@@ -23,7 +23,7 @@ class cGZPersistResourceKeyFilter : public cIGZPersistResourceKeyFilter
 {
 public:
 	cGZPersistResourceKeyFilter(void);
-	virtual ~cGZPersistResourceKeyFilter(void) { }
+	virtual ~cGZPersistResourceKeyFilter(void);
 
 public:
 	virtual bool QueryInterface(GZIID iid, void** outPtr);

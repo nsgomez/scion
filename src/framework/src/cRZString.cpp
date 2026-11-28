@@ -20,6 +20,10 @@
 #include "cRZString.h"
 #include "RZStringUtil.h"
 
+cRZString::~cRZString()
+{
+}
+
 bool cRZString::QueryInterface(GZIID iid, void** outPtr)
 {
 	switch (iid)

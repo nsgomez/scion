@@ -41,6 +41,10 @@ cGZPersistBinaryReader::cGZPersistBinaryReader(void) :
 {
 }
 
+cGZPersistBinaryReader::~cGZPersistBinaryReader()
+{
+}
+
 bool cGZPersistBinaryReader::QueryInterface(GZIID iid, void** outPtr)
 {
 	if (outPtr == NULL)

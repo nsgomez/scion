@@ -24,6 +24,10 @@ cGZPersistResourceKeyList::cGZPersistResourceKeyList(void) :
 {
 }
 
+cGZPersistResourceKeyList::~cGZPersistResourceKeyList()
+{
+}
+
 bool cGZPersistResourceKeyList::QueryInterface(GZIID iid, void** outPtr)
 {
 	if (iid == GZIID_cIGZPersistResourceKeyList)

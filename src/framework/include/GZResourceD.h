@@ -25,7 +25,7 @@ class cGZResManCOMDirector : public cRZCOMDllDirector
 {
 public:
 	cGZResManCOMDirector(void);
-	virtual ~cGZResManCOMDirector(void) { }
+	virtual ~cGZResManCOMDirector(void);
 
 public:
 	virtual bool OnStart(cIGZCOM* com);

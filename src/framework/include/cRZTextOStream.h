@@ -23,7 +23,7 @@ class cRZTextOStream : public cRZOStream
 {
 public:
 	cRZTextOStream(bool useLittleEndian) : cRZOStream(useLittleEndian) { }
-	virtual ~cRZTextOStream() { }
+	virtual ~cRZTextOStream();
 
 public:
 	virtual void Flush() = 0;

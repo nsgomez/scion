@@ -24,7 +24,7 @@ class cRZLanguageUtility : public cIGZLanguageUtility
 {
 public:
 	cRZLanguageUtility();
-	virtual ~cRZLanguageUtility() { }
+	virtual ~cRZLanguageUtility();
 
 public:
 	virtual bool QueryInterface(GZIID iid, void** outPtr);

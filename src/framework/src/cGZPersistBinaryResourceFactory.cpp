@@ -26,6 +26,10 @@ cGZPersistBinaryResourceFactory::cGZPersistBinaryResourceFactory() :
 {
 }
 
+cGZPersistBinaryResourceFactory::~cGZPersistBinaryResourceFactory()
+{
+}
+
 bool cGZPersistBinaryResourceFactory::CreateInstance(uint32_t type, uint32_t iid, void** outPtr)
 {
 	if (type == GZTYPE_cGZPersistBinaryResource)

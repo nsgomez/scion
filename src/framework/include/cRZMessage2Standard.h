@@ -28,7 +28,7 @@ class cRZMessage2Standard : public cIGZMessage2Standard
 {
 public:
 	cRZMessage2Standard();
-	virtual ~cRZMessage2Standard() { }
+	virtual ~cRZMessage2Standard();
 
 public:
 	virtual bool QueryInterface(GZIID iid, void** outPtr);

@@ -23,7 +23,7 @@ class cGZPersistResourceKeyFilterByType : public cGZPersistResourceKeyFilter
 {
 public:
 	cGZPersistResourceKeyFilterByType(uint32_t type);
-	virtual ~cGZPersistResourceKeyFilterByType(void) { }
+	virtual ~cGZPersistResourceKeyFilterByType(void);
 
 public:
 	virtual bool IsKeyIncluded(cGZPersistResourceKey const& key);
