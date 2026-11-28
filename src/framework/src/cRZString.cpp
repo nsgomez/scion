@@ -16,7 +16,9 @@
  *  License along with this library; if not, see <https://www.gnu.org/licenses/>.
  */
 
+#include <cstdarg>
 #include <vector>
+#include "cStackString.h"
 #include "cRZString.h"
 #include "RZStringUtil.h"
 
@@ -62,7 +64,7 @@ void cRZString::FromChar(char const* otherStr)
 {
 	if (otherStr != NULL)
 	{
-		assign(otherStr);
+		assign(otherStr, otherStr + strlen(otherStr));
 	}
 	else
 	{
@@ -72,13 +74,13 @@ void cRZString::FromChar(char const* otherStr)
 
 void cRZString::FromChar(char const* otherStr, uint32_t length)
 {
-	if (otherStr == NULL)
+	if (otherStr != NULL)
 	{
-		erase();
+		assign(otherStr, length);
 	}
 	else
 	{
-		assign(otherStr, length);
+		erase();
 	}
 }
 
@@ -120,7 +122,7 @@ bool cRZString::IsEqual(cIGZString const* other, bool caseSensitive) const
 		return false;
 	}
 
-	return memcmp(first.data(), second.data(), first.length());
+	return memcmp(first.data(), second.data(), first.length()) == 0;
 }
 
 bool cRZString::IsEqual(cIGZString const& other, bool caseSensitive) const
@@ -171,7 +173,7 @@ int cRZString::CompareTo(cIGZString const& other, bool caseSensitive) const
 	else
 	{
 		cRZString first(*this);
-		cRZString second(other);
+		cRZString second(other.Data(), other.Strlen());
 
 		first.MakeLower();
 		second.MakeLower();
@@ -357,54 +359,502 @@ uint32_t cRZString::RFind(cRZString const& needle, uint32_t position)
 	return rfind(needle, position);
 }
 
-void cRZString::Sprintf(char const* format, ...)
+cIGZString& __cdecl cRZString::Sprintf(char const* format, ...)
 {
-	// TODO
+	cStackString<64> scratch;
+	cStackString<1024> buffer;
+
+	va_list ap;
+	va_start(ap, format);
+
+	char ch = *format++;
+	while (ch != '\0')
+	{
+		if (ch == '%')
+		{
+			bool minusFlag = false;
+			bool plusFlag = false;
+			bool spaceFlag = false;
+			bool zeroFlag = false;
+			bool hashFlag = false;
+
+			for (;;)
+			{
+				ch = *format++;
+				if (ch == '-')
+				{
+					minusFlag = true;
+					continue;
+				}
+				else if (ch == '+')
+				{
+					plusFlag = true;
+					continue;
+				}
+				else if (ch == ' ')
+				{
+					spaceFlag = true;
+					continue;
+				}
+				else if (ch == '0')
+				{
+					zeroFlag = true;
+					continue;
+				}
+				else if (ch == '#')
+				{
+					hashFlag = true;
+					continue;
+				}
+
+				break;
+			}
+
+			if (ch == '%')
+			{
+				buffer.push_back(ch);
+				goto next;
+			}
+
+			if (minusFlag)
+			{
+				zeroFlag = false;
+			}
+
+			if (plusFlag)
+			{
+				spaceFlag = false;
+			}
+
+			int32_t width = -1;
+			if (ch == '*')
+			{
+				width = va_arg(ap, int32_t);
+				ch = *format++;
+			}
+			else if (isdigit(ch))
+			{
+				int32_t num = 0;
+				do
+				{
+					num = num * 10 + (int32_t)ch - '0';
+					ch = *format++;
+				}
+				while (isdigit(ch));
+
+				width = num;
+			}
+
+			int32_t precision = -1;
+			if (ch == '.')
+			{
+				ch = *format++;
+				if (ch == '*')
+				{
+					precision = va_arg(ap, int32_t);
+					ch = *format++;
+				}
+				else if (isdigit(ch))
+				{
+					int32_t num = 0;
+					do
+					{
+						num = num * 10 + (int32_t)ch - '0';
+						ch = *format++;
+					}
+					while (isdigit(ch));
+
+					precision = num;
+				}
+			}
+
+			int32_t intWidth = 1; // 0 = short int, 1 = no modifier (int), 2 = long int, 3 = long long
+			if (ch == 'I')
+			{
+				if (format[0] == '6' && format[1] == '4')
+				{
+					++format;
+					++format;
+					ch = *format++;
+					intWidth = 3;
+				}
+			}
+			else if (ch == 'h')
+			{
+				ch = *format++;
+				intWidth = 0;
+			}
+			else if (ch == 'l')
+			{
+				ch = *format++;
+				intWidth = 2;
+
+				if (ch == 'l')
+				{
+					ch = *format++;
+					intWidth = 3;
+				}
+			}
+
+			char fmt[6];
+
+			char* fieldBegin = scratch.begin();
+			char* fieldEnd = fieldBegin;
+
+			bool intConversion = false;
+			bool isNumeric = false;
+			bool isNegative = false;
+
+			switch (ch)
+			{
+			case 'd':
+			case 'i':
+				isNumeric = true;
+
+			case 'o':
+			case 'u':
+			case 'x':
+			case 'X':
+				intConversion = true;
+				fmt[0] = '%';
+
+				switch (intWidth)
+				{
+				case 0:
+					{
+						int16_t value = va_arg(ap, int16_t);
+						if (value < 0 && isNumeric)
+						{
+							isNegative = true;
+							value = -value;
+							ch = 'u';
+						}
+
+						fmt[1] = 'h';
+						fmt[2] = ch;
+						fmt[3] = '\0';
+						fieldEnd = fieldBegin + sprintf(scratch.begin(), fmt, value);
+					}
+
+					break;
+
+				case 1:
+					{
+						int32_t value = va_arg(ap, int32_t);
+						if (value < 0 && isNumeric)
+						{
+							isNegative = true;
+							value = -value;
+							ch = 'u';
+						}
+
+						fmt[1] = ch;
+						fmt[2] = '\0';
+						fieldEnd = fieldBegin + sprintf(scratch.begin(), fmt, value);
+					}
+
+					break;
+
+				case 2:
+					{
+						long value = va_arg(ap, long);
+						if (value < 0 && isNumeric)
+						{
+							isNegative = true;
+							value = -value;
+							ch = 'u';
+						}
+
+						fmt[1] = 'l';
+						fmt[2] = ch;
+						fmt[3] = '\0';
+						fieldEnd = fieldBegin + sprintf(scratch.begin(), fmt, value);
+					}
+
+					break;
+
+				case 3:
+					{
+						int64_t value = va_arg(ap, int64_t);
+						if (value < 0 && isNumeric)
+						{
+							isNegative = true;
+							value = -value;
+							ch = 'u';
+						}
+
+						fmt[1] = 'I';
+						fmt[2] = '6';
+						fmt[3] = '4';
+						fmt[4] = ch;
+						fmt[5] = '\0';
+						fieldEnd = fieldBegin + sprintf(scratch.begin(), fmt, value);
+					}
+
+					break;
+				}
+
+				break;
+
+			case 'c':
+				*fieldBegin = (char)va_arg(ap, int32_t);
+				fieldEnd = fieldBegin + 1;
+				break;
+
+			case 'e':
+			case 'f':
+			case 'g':
+			case 'E':
+			case 'G':
+				{
+					char* f = fmt;
+					*f++ = '%';
+
+					if (hashFlag)
+					{
+						*f++ = '#';
+					}
+
+					if (precision >= 0)
+					{
+						*f++ = '.';
+						f += sprintf(f, "%d", precision);
+					}
+
+					double value = va_arg(ap, double);
+
+					*f++ = ch;
+					*f = '\0';
+					isNumeric = true;
+
+					if (value < 0.0)
+					{
+						isNegative = true;
+						value = -value;
+					}
+
+					for (;;)
+					{
+						int32_t written = _snprintf(scratch.begin(), (uint32_t)(scratch.end() - scratch.begin()), fmt, value);
+						if (written >= 0)
+						{
+							fieldBegin = scratch.begin();
+							fieldEnd = fieldBegin + written;
+							break;
+						}
+
+						scratch.resize(2u * (uint32_t)(scratch.cap(), scratch.begin()));
+					}
+				}
+
+				break;
+
+			case 'p':
+				fieldEnd = fieldBegin + sprintf(scratch.begin(), "%p", va_arg(ap, void*));
+				break;
+
+			case 'n':
+				*va_arg(ap, int32_t*) = (int32_t)length();
+				goto next;
+
+			case 's':
+				{
+					char* str = va_arg(ap, char*);
+					fieldBegin = str;
+
+					int32_t length = (int32_t)strlen(str);
+					if (precision >= 0)
+					{
+						int32_t used = 0;
+						int32_t glyphs = 0;
+
+						while (used < length)
+						{
+							if (glyphs >= precision)
+							{
+								break;
+							}
+
+							int32_t charLen = GetCharLength(fieldBegin + used, (uint32_t)(length - used), kGZCodePageNative);
+							used += charLen;
+							++glyphs;
+						}
+
+						length = used;
+					}
+
+					fieldEnd = fieldBegin + length;
+				}
+
+				break;
+
+			case 'C':
+			case 'S':
+				// Wide-character conversions are not supported.
+
+			default:
+				--format;
+				break;
+			}
+
+			// TODO
+			int32_t const byteLength = (int32_t)(fieldEnd - fieldBegin);
+			uint32_t glyphCount = GetGlyphCountFromString(fieldBegin, (uint32_t)byteLength, kGZCodePageNative);
+
+			int32_t zeroPadding = 0;
+			int32_t leftPadding = 0;
+
+			char sign = '\0';
+			char const* prefix = NULL;
+			uint32_t prefixLength;
+
+			if (intConversion)
+			{
+				if (precision > (int32_t)glyphCount)
+				{
+					zeroPadding = precision - (int32_t)glyphCount;
+				}
+
+				if (hashFlag)
+				{
+					if (ch == 'X')
+					{
+						prefix = "0X";
+						prefixLength = 2;
+						glyphCount += 2;
+					}
+					else if (ch == 'o')
+					{
+						prefix = "0";
+						prefixLength = 1;
+						glyphCount += 1;
+					}
+					else if (ch == 'x')
+					{
+						prefix = "0x";
+						prefixLength = 2;
+						glyphCount += 2;
+					}
+				}
+			}
+
+			if (isNumeric)
+			{
+				if (isNegative)
+				{
+					sign = '-';
+				}
+				else
+				{
+					if (spaceFlag)
+					{
+						sign = ' ';
+					}
+
+					if (plusFlag)
+					{
+						sign = '+';
+					}
+				}
+
+				if (sign != '\0')
+				{
+					++glyphCount;
+					if (zeroFlag)
+					{
+						buffer.push_back(sign);
+					}
+				}
+			}
+
+			if (width > 0)
+			{
+				leftPadding = width - zeroPadding - (int32_t)glyphCount;
+				if (leftPadding > 0 && !minusFlag)
+				{
+					buffer.append((uint32_t)leftPadding, zeroFlag ? '0' : ' ');
+				}
+			}
+
+			if (sign != '\0' && !zeroFlag)
+			{
+				buffer.push_back(sign);
+			}
+
+			if (prefix != NULL)
+			{
+				buffer.append(prefix, prefixLength);
+			}
+
+			if (zeroPadding > 0)
+			{
+				buffer.append((uint32_t)zeroPadding, '0');
+			}
+
+			buffer.append(fieldBegin, (uint32_t)byteLength);
+
+			if (leftPadding > 0 && minusFlag)
+			{
+				buffer.append((uint32_t)leftPadding, ' ');
+			}
+		}
+		else
+		{
+			char const* start = format - 1;
+			while (*format != 0)
+			{
+				if (*format == '%')
+				{
+					break;
+				}
+
+				++format;
+			}
+
+			buffer.append(start, (uint32_t)(format - start));
+		}
+
+next:
+		ch = *format++;
+	}
+
+	assign(buffer.begin(), buffer.end());
+	return *this;
 }
 
 bool cRZString::BeginsWith(char const* needle, uint32_t needleLen) const
 {
-	size_t thisLen = length();
-	if (needleLen > thisLen)
+	if (needleLen <= length())
 	{
-		return false;
-	}
-
-	for (uint32_t i = 0; i < needleLen; i++)
-	{
-		if ((*this)[i] != needle[i])
+		for (uint32_t i = 0; i < needleLen; i++)
 		{
-			return false;
+			if ((*this)[i] != needle[i])
+			{
+				return false;
+			}
 		}
 	}
 
-	return true;
+	return false;
 }
 
 bool cRZString::EndsWith(char const* needle, uint32_t needleLen) const
 {
-	size_t thisLen = length();
-	if (needleLen > thisLen)
+	uint32_t thisLen = length();
+	if (needleLen <= thisLen)
 	{
-		return false;
-	}
-	else if (needleLen == 0)
-	{
+		for (uint32_t i = 1; i <= needleLen; i++)
+		{
+			if (c_str()[thisLen - i] != needle[needleLen - i])
+			{
+				return false;
+			}
+		}
+
 		return true;
 	}
 
-	char const* haystack = c_str() + thisLen - 1;
-	needle = needle + needleLen - 1;
-
-	for (uint32_t i = 0; i < needleLen; i++)
-	{
-		if (*(haystack--) != *(needle--))
-		{
-			return false;
-		}
-	}
-
-	return true;
+	return false;
 }
 
 cRZString cRZString::Left(uint32_t count) const
@@ -465,7 +915,7 @@ void cRZString::MakeLower()
 	for (iterator it = begin(); it != itEnd; ++it)
 	{
 		char c = *it;
-		if (c >= 0x7f)
+		if ((unsigned char)c >= 0x7f)
 		{
 			size_t length = size();
 
@@ -479,13 +929,13 @@ void cRZString::MakeLower()
 				wideStr = &heapBuffer[0];
 			}
 
-			ConvertStringEncoding(*this, wideStr, length, GZ_CODEPAGE_UTF16);
+			ConvertStringEncoding(*this, wideStr, length, kGZCodePageUTF16);
 			for (size_t i = 0; i < length; i++)
 			{
 				wideStr[i] = towlower(wideStr[i]);
 			}
 
-			ConvertStringEncoding(wideStr, length, GZ_CODEPAGE_UTF16, *this);
+			ConvertStringEncoding(wideStr, length, kGZCodePageUTF16, *this);
 			break;
 		}
 		
@@ -504,7 +954,7 @@ void cRZString::MakeUpper()
 	for (iterator it = begin(); it != itEnd; ++it)
 	{
 		char c = *it;
-		if (c >= 0x7f)
+		if ((unsigned char)c >= 0x7f)
 		{
 			size_t length = size();
 
@@ -518,13 +968,13 @@ void cRZString::MakeUpper()
 				wideStr = &heapBuffer[0];
 			}
 
-			ConvertStringEncoding(*this, wideStr, length, GZ_CODEPAGE_UTF16);
+			ConvertStringEncoding(*this, wideStr, length, kGZCodePageUTF16);
 			for (size_t i = 0; i < length; i++)
 			{
 				wideStr[i] = towupper(wideStr[i]);
 			}
 
-			ConvertStringEncoding(wideStr, length, GZ_CODEPAGE_UTF16, *this);
+			ConvertStringEncoding(wideStr, length, kGZCodePageUTF16, *this);
 			break;
 		}
 		
@@ -539,13 +989,18 @@ void cRZString::MakeUpper()
 
 cRZString cRZString::SplitToken(char const* delimiter)
 {
-	size_t delimiterLen = strlen(delimiter);
-	if (delimiter == NULL || delimiterLen == 0)
+	if (delimiter == NULL)
 	{
-		return cRZString(*this);
+		return *this;
 	}
 
-	uint32_t pos = find(delimiter);
+	size_t delimiterLen = strlen(delimiter);
+	if (delimiterLen == 0)
+	{
+		return *this;
+	}
+
+	uint32_t pos = find(delimiter, 0, delimiterLen);
 	if (pos == std::string::npos)
 	{
 		return cRZString();
@@ -617,20 +1072,18 @@ bool cRZString::SplitTokenSeparated(char delimiter, cRZString& token)
 	}
 }
 
-void cRZString::Strcat(char const* str)
+cRZString& cRZString::Strcat(char const* str)
 {
 	append(str);
+	return *this;
 }
 
-void cRZString::Strncpy(char const* str, uint32_t count)
+cRZString& cRZString::Strncpy(char const* str, uint32_t count)
 {
 	uint32_t len = strlen(str);
-	if (len < count)
-	{
-		count = len;
-	}
-
-	assign(str, count);
+	char const* end = (count > len) ? (str + len) : (str + count);
+	assign(str, end);
+	return *this;
 }
 
 bool cRZString::operator< (const cIGZString& other) const

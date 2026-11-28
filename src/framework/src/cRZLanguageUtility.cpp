@@ -16,7 +16,6 @@
  *  License along with this library; if not, see <https://www.gnu.org/licenses/>.
  */
 
-#define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
 #include "cRZLanguageUtility.h"
 #include "RZStringUtil.h"
@@ -66,6 +65,29 @@ uint32_t cRZLanguageUtility::Release()
 
 	delete this;
 	return 0;
+}
+
+static void ConvertUTF8StringToDestinationFormat(cIGZString& str)
+{
+	GZCodePage const codePage = GetCurrentFrameworkCodePage();
+	if (codePage == kGZCodePageANSI)
+	{
+		uint32_t bufferLength = 256;
+		char buffer[256];
+
+		uint32_t const srcLength = str.Strlen();
+		ConvertStringEncoding(str.Data(), srcLength, kGZCodePageUTF8, buffer, bufferLength, kGZCodePageANSI);
+		str.FromChar(buffer, bufferLength);
+	}
+	else if (codePage != kGZCodePageUTF8 && codePage != kGZCodePageUTF16)
+	{
+		uint32_t bufferLength = 256;
+		char buffer[256];
+
+		uint32_t const srcLength = str.Strlen();
+		ConvertStringEncoding(str.Data(), srcLength, kGZCodePageUTF8, buffer, bufferLength, codePage);
+		str.FromChar(buffer, bufferLength);
+	}
 }
 
 bool cRZLanguageUtility::Init()
@@ -2166,19 +2188,19 @@ bool cRZLanguageUtility::MakeFormattedNumberString(double value, cIGZString& out
 void cRZLanguageUtility::ConvertToLowerCase(cIGZString const& src, cIGZString& dest) const
 {
 	cRZString convertedSrc;
-	ConvertStringEncoding(src, convertedSrc, GZ_CODEPAGE_SYSTEM);
+	ConvertStringEncoding(src, convertedSrc, kGZCodePageSystem);
 
 	CharLowerBuff(const_cast<char*>(convertedSrc.Data()), dest.Strlen());
-	ConvertStringEncoding(convertedSrc, GZ_CODEPAGE_SYSTEM, dest);
+	ConvertStringEncoding(convertedSrc, kGZCodePageSystem, dest);
 }
 
 void cRZLanguageUtility::ConvertToUpperCase(cIGZString const& src, cIGZString& dest) const
 {
 	cRZString convertedSrc;
-	ConvertStringEncoding(src, convertedSrc, GZ_CODEPAGE_SYSTEM);
+	ConvertStringEncoding(src, convertedSrc, kGZCodePageSystem);
 
 	CharUpperBuff(const_cast<char*>(convertedSrc.Data()), dest.Strlen());
-	ConvertStringEncoding(convertedSrc, GZ_CODEPAGE_SYSTEM, dest);
+	ConvertStringEncoding(convertedSrc, kGZCodePageSystem, dest);
 }
 
 int32_t cRZLanguageUtility::CompareStrings(cIGZString const& first, cIGZString const& second, bool caseSensitive) const
@@ -2186,8 +2208,8 @@ int32_t cRZLanguageUtility::CompareStrings(cIGZString const& first, cIGZString c
 	cRZString firstConverted;
 	cRZString secondConverted;
 
-	ConvertStringEncoding(first, firstConverted, GZ_CODEPAGE_SYSTEM);
-	ConvertStringEncoding(second, secondConverted, GZ_CODEPAGE_SYSTEM);
+	ConvertStringEncoding(first, firstConverted, kGZCodePageSystem);
+	ConvertStringEncoding(second, secondConverted, kGZCodePageSystem);
 
 	int32_t result = CompareString(
 		LOCALE_USER_DEFAULT,
@@ -2406,10 +2428,10 @@ bool cRZLanguageUtility::DoesLanguageUseMultiByteCharacters() const
 	case 0: // TODO: is there a good constant name we can give this for GZ_CODEPAGE?
 		return false;
 
-	case GZ_CODEPAGE_UTF8:
+	case kGZCodePageUTF8:
 		return mLanguage != kGZLanguage_English && mLanguage != kGZLanguage_English_UK;
 
-	case GZ_CODEPAGE_UTF16:
+	case kGZCodePageUTF16:
 		return false;
 
 	default:

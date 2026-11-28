@@ -59,5 +59,5 @@ public:
 	virtual uint32_t RFind(char const* needle, uint32_t position = 0, bool caseSensitive = true) const = 0;
 	virtual uint32_t RFind(cIGZString const& needle, uint32_t position = 0, bool caseSensitive = true) const = 0;
 
-	virtual void Sprintf(char const* format, ...) = 0;
+	virtual cIGZString& __cdecl Sprintf(char const* format, ...) = 0;
 };

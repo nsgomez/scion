@@ -118,7 +118,7 @@ public:
 	virtual uint32_t RFind(cIGZString const& needle, uint32_t position = 0, bool caseSensitive = true) const;
 	uint32_t RFind(cRZString const& needle, uint32_t position = 0);
 
-	virtual void Sprintf(char const* format, ...);
+	virtual cIGZString& __cdecl Sprintf(char const* format, ...);
 
 public:
 	bool BeginsWith(char const* needle, uint32_t needleLen) const;
@@ -140,8 +140,8 @@ public:
 	bool SplitTokenDelimited(char delimiter, cRZString& token);
 	bool SplitTokenSeparated(char delimiter, cRZString& token);
 
-	void Strcat(char const* str);
-	void Strncpy(char const* str, uint32_t count);
+	cRZString& Strcat(char const* str);
+	cRZString& Strncpy(char const* str, uint32_t count);
 
 public:
 	bool operator<  (const cIGZString& other) const;

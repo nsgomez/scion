@@ -23,19 +23,32 @@
 class cIGZString;
 class cRZString;
 
-#define GZ_CODEPAGE_SYSTEM  -1
-#define GZ_CODEPAGE_NATIVE  -2
-#define GZ_CODEPAGE_UTF8    8
-#define GZ_CODEPAGE_UTF16   16
+enum GZCodePage
+{
+	kGZCodePageInvalid     = -3,
+	kGZCodePageNative      = -2,
+	kGZCodePageSystem      = -1,
+	kGZCodePageANSI        = 0,
+	kGZCodePageUTF8        = 8,
+	kGZCodePageUTF16       = 16,
+#ifdef WIN32
+	kGZCodePageOEMJapanese           = 932,
+	kGZCodePageOEMSimplifiedChinese  = 936,
+	kGZCodePageOEMKorean             = 949,
+	kGZCodePageOEMTraditionalChinese = 950,
+#endif
+};
 
-extern void ConvertStringEncoding(cIGZString const& src, void* dest, uint32_t& destLength, int32_t codePage);
-extern void ConvertStringEncoding(cIGZString const& src, cIGZString& dest, int32_t codePage);
-extern void ConvertStringEncoding(cIGZString const& src, int32_t codePage, cIGZString& dest);
-extern void ConvertStringEncoding(void const* src, uint32_t srcLength, int32_t codePage, cIGZString& dest);
-extern void ConvertUTF8StringToDestinationFormat(cIGZString& str);
-extern int32_t GetCharLength(void const* src, uint32_t srcLength, int32_t codePage);
-extern uint32_t GetCurrentFrameworkCodePage();
+uint32_t ConvertStringEncoding(void const* src, uint32_t srcLength, GZCodePage srcCodePage, void* dest, uint32_t& destLength, GZCodePage destCodePage);
+extern uint32_t ConvertStringEncoding(void const* src, uint32_t srcLength, GZCodePage codePage, cIGZString& dest);
+extern uint32_t ConvertStringEncoding(cIGZString const& src, void* dest, uint32_t& destLength, GZCodePage codePage);
+extern bool ConvertStringEncoding(cIGZString const& src, GZCodePage srcCodePage, cIGZString& dest);
+extern bool ConvertStringEncoding(cIGZString const& src, cIGZString& dest, GZCodePage destCodePage);
+extern int32_t GetCharLength(void const* src, uint32_t srcLength, GZCodePage codePage);
+extern GZCodePage GetCurrentFrameworkCodePage();
+extern GZCodePage GetCurrentSystemCodePage();
+extern uint32_t GetGlyphCountFromString(void const* src, uint32_t srcLength, GZCodePage codePage);
+extern bool IsLeadByte(char ch, GZCodePage codePage);
 extern void LimitStringLength(cRZString& str, uint32_t maxBytes);
-extern void Sprintf(cRZString& output, const char* format, ...);
 extern uint32_t RZAtoUint32HexA(char const*, ...);
 extern std::vector<wchar_t> RZStringToUTF16(cIGZString const& src);

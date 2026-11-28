@@ -16,7 +16,6 @@
  *  License along with this library; if not, see <https://www.gnu.org/licenses/>.
  */
 
-#define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
 #include "cIGZString.h"
 #include "RZPlatform.h"
@@ -62,7 +61,7 @@ uint32_t RZGetCurrentAppPath(cIGZString& out)
 
 		if (pathLen != 0)
 		{
-			ConvertStringEncoding(widePath, pathLen, GZ_CODEPAGE_UTF16, out);
+			ConvertStringEncoding(widePath, pathLen, kGZCodePageUTF16, out);
 		}
 	}
 
@@ -73,7 +72,7 @@ uint32_t RZGetCurrentAppPath(cIGZString& out)
 
 		if (pathLen != 0)
 		{
-			ConvertStringEncoding(path, pathLen, GZ_CODEPAGE_SYSTEM, out);
+			ConvertStringEncoding(path, pathLen, kGZCodePageSystem, out);
 		}
 	}
 

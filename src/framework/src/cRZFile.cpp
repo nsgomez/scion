@@ -17,7 +17,6 @@
  */
 
 // FUTURE: make platform agnostic
-#define WIN32_LEAN_AND_MEAN
 #include <time.h>
 #include <Windows.h>
 
@@ -215,7 +214,7 @@ bool cRZFile::Open(uint32_t accessFlags, uint32_t createMode, uint32_t shareFlag
 	else
 	{
 		cRZString path;
-		ConvertStringEncoding(mPath, path, GZ_CODEPAGE_SYSTEM);
+		ConvertStringEncoding(mPath, path, kGZCodePageSystem);
 
 		char resolvedPath[MAX_PATH];
 		DWORD resolvedPathLen = ResolveShellLinkA(path.c_str(), resolvedPath, MAX_PATH);
@@ -635,7 +634,7 @@ bool cRZFile::Remove(void)
 	else
 	{
 		cRZString str;
-		ConvertStringEncoding(mPath, str, GZ_CODEPAGE_SYSTEM);
+		ConvertStringEncoding(mPath, str, kGZCodePageSystem);
 
 		BOOL result = DeleteFile(str.c_str());
 		if (result == FALSE)
@@ -965,7 +964,7 @@ bool cRZFile::GetTempDirectory(cIGZString& out)
 			length = gW32FileHelpers.GetLongPathNameW(widePath, widePath, MAX_PATH);
 		}
 
-		ConvertStringEncoding(widePath, length, GZ_CODEPAGE_UTF16, out);
+		ConvertStringEncoding(widePath, length, kGZCodePageUTF16, out);
 		return true;
 	}
 
@@ -980,7 +979,7 @@ bool cRZFile::GetTempDirectory(cIGZString& out)
 		}
 
 		cRZString str(ansiPath, tmpPathLen);
-		ConvertStringEncoding(str, GZ_CODEPAGE_SYSTEM, out);
+		ConvertStringEncoding(str, kGZCodePageSystem, out);
 
 		return true;
 	}
@@ -1053,7 +1052,7 @@ bool cRZFile::FileCreate(cIGZString const& path, bool truncate)
 	else
 	{
 		cRZString str;
-		ConvertStringEncoding(path, str, GZ_CODEPAGE_SYSTEM);
+		ConvertStringEncoding(path, str, kGZCodePageSystem);
 
 		hFile = CreateFile(
 			str.Data(),
@@ -1140,7 +1139,7 @@ bool cRZFile::FileExists(cIGZString const& path)
 	else
 	{
 		cRZString str;
-		ConvertStringEncoding(path, str, GZ_CODEPAGE_SYSTEM);
+		ConvertStringEncoding(path, str, kGZCodePageSystem);
 
 		bool result = GetFileAttributes(str.Data()) != -1;
 		return result;
@@ -1157,7 +1156,7 @@ bool cRZFile::GetAttribute(cIGZString const& path, uint32_t attributesToCheck)
 	else
 	{
 		cRZString str;
-		ConvertStringEncoding(path, str, GZ_CODEPAGE_SYSTEM);
+		ConvertStringEncoding(path, str, kGZCodePageSystem);
 
 		attributes = GetFileAttributes(str.c_str());
 	}
@@ -1185,7 +1184,7 @@ bool cRZFile::SetAttribute(cIGZString const& path, uint32_t attributesToSet, boo
 
 	if (gW32FileHelpers.GetFileAttributesW == NULL || gW32FileHelpers.SetFileAttributesW == NULL)
 	{
-		ConvertStringEncoding(path, str, GZ_CODEPAGE_SYSTEM);
+		ConvertStringEncoding(path, str, kGZCodePageSystem);
 		attributes = GetFileAttributes(str.c_str());
 	}
 	else
@@ -1251,7 +1250,7 @@ bool cRZFile::Remove(cIGZString const& path)
 	else
 	{
 		cRZString str;
-		ConvertStringEncoding(path, str, GZ_CODEPAGE_SYSTEM);
+		ConvertStringEncoding(path, str, kGZCodePageSystem);
 
 		bool result = DeleteFile(str.Data()) != 0;
 		return result;
@@ -1274,8 +1273,8 @@ bool cRZFile::Rename(cIGZString const& srcPath, cIGZString const& destPath)
 		cRZString srcStr;
 		cRZString destStr;
 
-		ConvertStringEncoding(srcPath, srcStr, GZ_CODEPAGE_SYSTEM);
-		ConvertStringEncoding(destPath, destStr, GZ_CODEPAGE_SYSTEM);
+		ConvertStringEncoding(srcPath, srcStr, kGZCodePageSystem);
+		ConvertStringEncoding(destPath, destStr, kGZCodePageSystem);
 
 		bool result = MoveFile(srcStr.Data(), destStr.Data()) != 0;
 		return result;
@@ -1298,8 +1297,8 @@ bool cRZFile::Copy(cIGZString const& srcPath, cIGZString const& destPath, bool o
 		cRZString srcStr;
 		cRZString destStr;
 
-		ConvertStringEncoding(srcPath, srcStr, GZ_CODEPAGE_SYSTEM);
-		ConvertStringEncoding(destPath, destStr, GZ_CODEPAGE_SYSTEM);
+		ConvertStringEncoding(srcPath, srcStr, kGZCodePageSystem);
+		ConvertStringEncoding(destPath, destStr, kGZCodePageSystem);
 
 		bool result = CopyFile(srcStr.Data(), destStr.Data(), !overwrite) != 0;
 		return result;
@@ -1325,7 +1324,7 @@ int32_t cRZFile::GetLength(cIGZString const& path)
 	else
 	{
 		cRZString str;
-		ConvertStringEncoding(path, str, GZ_CODEPAGE_SYSTEM);
+		ConvertStringEncoding(path, str, kGZCodePageSystem);
 
 		WIN32_FIND_DATAA findData;
 		HANDLE hFindHandle = FindFirstFile(str.Data(), &findData);
@@ -1410,7 +1409,7 @@ bool cRZFile::GetVolumeName(cIGZString const& path, cIGZString& volume)
 	}
 
 	cRZString tmp(volumeName);
-	ConvertStringEncoding(volume, GZ_CODEPAGE_SYSTEM, tmp);
+	ConvertStringEncoding(volume, kGZCodePageSystem, tmp);
 	return true;
 }
 

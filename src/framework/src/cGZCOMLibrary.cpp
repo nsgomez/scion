@@ -16,7 +16,6 @@
  *  License along with this library; if not, see <https://www.gnu.org/licenses/>.
  */
 
-#define WIN32_LEAN_AND_MEAN
 #include <vector>
 #include <Windows.h>
 #include "cGZCOMLibrary.h"
@@ -130,7 +129,7 @@ bool cGZCOMLibrary::Load()
 	if (!mLoaded)
 	{
 		cRZString nativePath;
-		ConvertStringEncoding(mLibraryPath, nativePath, GZ_CODEPAGE_SYSTEM);
+		ConvertStringEncoding(mLibraryPath, nativePath, kGZCodePageSystem);
 
 		if (GetVersion() & 0x80000000)
 		{
@@ -140,7 +139,7 @@ bool cGZCOMLibrary::Load()
 		{
 			uint32_t length = mLibraryPath.Strlen();
 			std::vector<wchar_t> buffer(length + 1);
-			ConvertStringEncoding(mLibraryPath, &buffer[0], length, GZ_CODEPAGE_UTF16);
+			ConvertStringEncoding(mLibraryPath, &buffer[0], length, kGZCodePageUTF16);
 			buffer[length] = 0;
 
 			GZCOMLibraryW(mHandle, &buffer[0]);
@@ -162,7 +161,7 @@ bool cGZCOMLibrary::Load()
 
 			if (systemMessage != NULL)
 			{
-				Sprintf(message, "Failed to load the requested dll \"%s\"\nWindows error message - \"%s\"", nativePath.ToChar(), systemMessage);
+				message.Sprintf("Failed to load the requested dll \"%s\"\nWindows error message - \"%s\"", nativePath.ToChar(), systemMessage);
 				LocalFree(systemMessage);
 			}
 
@@ -186,7 +185,7 @@ bool cGZCOMLibrary::Load()
 			if (newDirector == NULL)
 			{
 				cRZString message;
-				Sprintf(message, "cGZCOMLibrary::Load: Failed to acquire GZCOM director from library: \"%s\"\n", mLibraryPath.ToChar());
+				message.Sprintf("cGZCOMLibrary::Load: Failed to acquire GZCOM director from library: \"%s\"\n", mLibraryPath.ToChar());
 				Free();
 				return false;
 			}
@@ -195,7 +194,7 @@ bool cGZCOMLibrary::Load()
 			if (!newDirector->InitializeCOM(GZCOM(), mLibraryPath))
 			{
 				cRZString message;
-				Sprintf(message, "cGZCOMLibrary::Load: GZCOM Director failed initialization in library: \"%s\"\n", mLibraryPath.ToChar());
+				message.Sprintf("cGZCOMLibrary::Load: GZCOM Director failed initialization in library: \"%s\"\n", mLibraryPath.ToChar());
 				Free();
 				return false;
 			}

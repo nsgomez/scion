@@ -75,7 +75,7 @@
 				OptimizeForProcessor="2"
 				OptimizeForWindowsApplication="TRUE"
 				AdditionalIncludeDirectories="..\include;..\stlport\stlport;.\include"
-				PreprocessorDefinitions="WIN32;NDEBUG"
+				PreprocessorDefinitions="WIN32;NDEBUG;WIN32_LEAN_AND_MEAN"
 				StringPooling="TRUE"
 				MinimalRebuild="FALSE"
 				ExceptionHandling="FALSE"
@@ -848,6 +848,9 @@
 			</File>
 			<File
 				RelativePath=".\include\cRZVariant.h">
+			</File>
+			<File
+				RelativePath=".\include\cStackString.h">
 			</File>
 			<File
 				RelativePath=".\include\GZResourceD.h">
