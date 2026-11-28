@@ -47,7 +47,7 @@ public:
 	virtual uint32_t Write(void const* data, uint32_t byteCount);
 
 	virtual bool Tell(uint32_t& position);
-	virtual bool Seek(uint32_t offset, GZFileSeekMode method);
+	virtual bool Seek(uint32_t offset, int32_t method);
 
 	virtual void Flush();
 
@@ -59,6 +59,8 @@ public:
 
 	virtual bool CloseInternal();
 	virtual bool AbortInternal();
+
+	friend class cGZDBSegmentDirectoryFiles;
 
 protected:
 	bool mOpen;

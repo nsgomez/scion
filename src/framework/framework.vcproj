@@ -595,6 +595,9 @@
 				RelativePath=".\include\cIGZFile.h">
 			</File>
 			<File
+				RelativePath=".\include\cIGZFileSystem.h">
+			</File>
+			<File
 				RelativePath=".\include\cIGZFramework.h">
 			</File>
 			<File
@@ -608,6 +611,9 @@
 			</File>
 			<File
 				RelativePath=".\include\cIGZKeyMessage.h">
+			</File>
+			<File
+				RelativePath=".\include\cIGZLanguageManager.h">
 			</File>
 			<File
 				RelativePath=".\include\cIGZLanguageUtility.h">
@@ -701,6 +707,9 @@
 			</File>
 			<File
 				RelativePath=".\include\cIGZPersistWriter.h">
+			</File>
+			<File
+				RelativePath=".\include\cIGZRegistry.h">
 			</File>
 			<File
 				RelativePath=".\include\cIGZSerializable.h">

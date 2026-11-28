@@ -21,6 +21,7 @@
 cGZPersistBinaryResource::cGZPersistBinaryResource() :
 	cGZPersistResource(),
 	mData(NULL),
+	mAllocatedLength(0),
 	mLength(0)
 {
 }
@@ -81,7 +82,7 @@ bool cGZPersistBinaryResource::SetData(void* newData, uint32_t newLength)
 		}
 
 		mLength = newLength;
-		memcpy(mData, newData, newLength);
+		memmove(mData, newData, newLength);
 	}
 
 	return true;

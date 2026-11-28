@@ -18,8 +18,6 @@
 
 #include "cRZCallbackTimer.h"
 
-// TODO: everything in cRZCallbackTimer is currently just non-functional stubs to satisfy the linker
-
 cRZCallbackTimer::cRZCallbackTimer()
 {
 }
@@ -28,57 +26,57 @@ cRZCallbackTimer::~cRZCallbackTimer()
 {
 }
 
-bool cRZCallbackTimer::QueryInterface(GZIID iid, void** outPtr)
+bool cRZCallbackTimer::SetResolution(uint32_t resolutionInMs)
 {
 	return false;
 }
 
-uint32_t cRZCallbackTimer::AddRef()
-{
-	return 0;
-}
-
-uint32_t cRZCallbackTimer::Release()
-{
-	return 0;
-}
-
-bool cRZCallbackTimer::Init()
+bool cRZCallbackTimer::GetResolution(uint32_t& resolutionInMs)
 {
 	return false;
 }
 
-bool cRZCallbackTimer::Shutdown()
+bool cRZCallbackTimer::SetPeriod(uint32_t periodInMs)
 {
 	return false;
 }
 
-bool cRZCallbackTimer::Start(uint32_t intervalMs, void* context)
+bool cRZCallbackTimer::GetPeriod(uint32_t& resolutionInMs)
 {
 	return false;
 }
 
-bool cRZCallbackTimer::Cancel()
+bool cRZCallbackTimer::StartPeriodic(uint32_t periodInMs, void* context)
 {
 	return false;
 }
 
-bool cRZCallbackTimer::IsActive()
+bool cRZCallbackTimer::StartOneShot(uint32_t delayInMs, void* context)
 {
 	return false;
 }
 
-bool cRZCallbackTimer::SetCallback(void (*callback)(void*), void* context)
+bool cRZCallbackTimer::Stop()
 {
 	return false;
 }
 
-bool cRZCallbackTimer::Reset()
+bool cRZCallbackTimer::IsRunning()
+{
+	return mIsRunning;
+}
+
+bool cRZCallbackTimer::SetCallbackFunction(void (*callback)(uint32_t context), uint32_t context)
 {
 	return false;
 }
 
-uint32_t cRZCallbackTimer::Interval()
+bool cRZCallbackTimer::SetCallbackFunction(void (*callback)(void* context), void* context)
 {
-	return -1;
+	return false;
+}
+
+bool cRZCallbackTimer::EnableSharedTimerUse(bool isEnabled)
+{
+	return false;
 }

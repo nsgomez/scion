@@ -17,32 +17,40 @@
  */
 
 #pragma once
-#include "cIGZUnknown.h"
+#include "GZTypes.h"
 
-class cRZCallbackTimer : public cIGZUnknown
+class cRZCallbackTimer
 {
 public:
 	cRZCallbackTimer();
 	virtual ~cRZCallbackTimer();
 
 public:
-	virtual bool QueryInterface(GZIID iid, void** outPtr);
-	virtual uint32_t AddRef();
-	virtual uint32_t Release();
+	virtual bool SetResolution(uint32_t resolutionInMs);
+	virtual bool GetResolution(uint32_t& resolutionInMs);
 
-public:
-	virtual bool Init();
-	virtual bool Shutdown();
+	virtual bool SetPeriod(uint32_t periodInMs);
+	virtual bool GetPeriod(uint32_t& resolutionInMs);
 
-	virtual bool Start(uint32_t intervalMs, void* context);
-	virtual bool Cancel();
-	virtual bool IsActive();
+	virtual bool StartPeriodic(uint32_t periodInMs, void* context);
+	virtual bool StartOneShot(uint32_t delayInMs, void* context);
+	virtual bool Stop();
+	virtual bool IsRunning();
 
-	virtual bool SetCallback(void (*callback)(void*), void* context);
-	virtual bool Reset();
+	virtual bool SetCallbackFunction(void (*callback)(uint32_t context), uint32_t context);
+	virtual bool SetCallbackFunction(void (*callback)(void* context), void* context);
 
-	virtual uint32_t Interval();
+	virtual bool EnableSharedTimerUse(bool isEnabled);
 
 protected:
-	// TODO
+	bool mRegistered;
+	uint32_t mUnknown8;
+	uint32_t mUnknownC;
+	uint32_t mResolutionInMs;
+	uint32_t mPeriodInMs;
+	bool mIsRunning;
+	bool mUnknown19;
+	uint32_t mTimerHandle;
+	void* mTimerService;
+	void* mContext;
 };

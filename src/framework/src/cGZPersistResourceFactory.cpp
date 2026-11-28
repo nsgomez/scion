@@ -34,14 +34,14 @@ cGZPersistResourceFactory::~cGZPersistResourceFactory()
 
 bool cGZPersistResourceFactory::QueryInterface(GZIID iid, void** outPtr)
 {
-	switch (iid)
+	if (iid == GZIID_cIGZPersistResourceFactory)
 	{
-	case GZIID_cIGZPersistResourceFactory:
 		*outPtr = static_cast<cIGZPersistResourceFactory*>(this);
 		AddRef();
 		return true;
-
-	case GZIID_cIGZUnknown:
+	}
+	else if (iid == GZIID_cIGZUnknown)
+	{
 		*outPtr = static_cast<cIGZUnknown*>(this);
 		AddRef();
 		return true;

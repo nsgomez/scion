@@ -36,3 +36,4 @@ extern void ConvertUTF8StringToDestinationFormat(cIGZString& str);
 extern uint32_t GetCurrentFrameworkCodePage();
 extern void Sprintf(cRZString& output, const char* format, ...);
 extern std::vector<wchar_t> RZStringToUTF16(cIGZString const& src);
+extern uint32_t RZAtoUint32HexA(char const*, ...);

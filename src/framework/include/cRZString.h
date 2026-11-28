@@ -76,7 +76,7 @@ public:
 	virtual void FromChar(char const* otherStr);
 	virtual void FromChar(char const* otherStr, uint32_t length);
 
-	virtual char const* ToChar() const { return c_str(); }
+	virtual char const* ToChar() const;
 	virtual char const* Data() const;
 	virtual uint32_t Strlen() const;
 

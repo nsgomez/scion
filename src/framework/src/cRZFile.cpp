@@ -1057,47 +1057,47 @@ bool cRZFile::MakeTempPathName(cIGZString& name, cIGZString const* suffix)
 	return false;
 }
 
-bool cRZFile::FileExists(cIGZString const& name)
+bool cRZFile::FileExists(cIGZString const& path)
 {
 	if (gW32FileHelpers.GetFileAttributesW != NULL)
 	{
-		bool result = gW32FileHelpers.GetFileAttributesW(reinterpret_cast<wchar_t const*>(&RZStringToUTF16(name)[0])) != -1;
+		bool result = gW32FileHelpers.GetFileAttributesW(reinterpret_cast<wchar_t const*>(&RZStringToUTF16(path)[0])) != -1;
 		return result;
 	}
 	else
 	{
 		cRZString str;
-		ConvertStringEncoding(name, str, GZ_CODEPAGE_SYSTEM);
+		ConvertStringEncoding(path, str, GZ_CODEPAGE_SYSTEM);
 
 		bool result = GetFileAttributes(str.Data()) != -1;
 		return result;
 	}
 }
 
-bool cRZFile::Remove(cIGZString const& name)
+bool cRZFile::Remove(cIGZString const& path)
 {
 	if (gW32FileHelpers.DeleteFileW != NULL)
 	{
-		bool result = gW32FileHelpers.DeleteFileW(reinterpret_cast<wchar_t const*>(&RZStringToUTF16(name)[0])) != FALSE;
+		bool result = gW32FileHelpers.DeleteFileW(reinterpret_cast<wchar_t const*>(&RZStringToUTF16(path)[0])) != FALSE;
 		return result;
 	}
 	else
 	{
 		cRZString str;
-		ConvertStringEncoding(name, str, GZ_CODEPAGE_SYSTEM);
+		ConvertStringEncoding(path, str, GZ_CODEPAGE_SYSTEM);
 
 		bool result = DeleteFile(str.Data()) != 0;
 		return result;
 	}
 }
 
-bool cRZFile::Rename(cIGZString const& srcName, cIGZString const& destName)
+bool cRZFile::Rename(cIGZString const& srcPath, cIGZString const& destPath)
 {
 	if (gW32FileHelpers.MoveFileExW != NULL)
 	{
 		bool result = gW32FileHelpers.MoveFileExW(
-			reinterpret_cast<wchar_t const*>(&RZStringToUTF16(srcName)[0]),
-			reinterpret_cast<wchar_t const*>(&RZStringToUTF16(destName)[0]),
+			reinterpret_cast<wchar_t const*>(&RZStringToUTF16(srcPath)[0]),
+			reinterpret_cast<wchar_t const*>(&RZStringToUTF16(destPath)[0]),
 			MOVEFILE_COPY_ALLOWED) != 0;
 
 		return result;
@@ -1107,21 +1107,21 @@ bool cRZFile::Rename(cIGZString const& srcName, cIGZString const& destName)
 		cRZString srcStr;
 		cRZString destStr;
 
-		ConvertStringEncoding(srcName, srcStr, GZ_CODEPAGE_SYSTEM);
-		ConvertStringEncoding(destName, destStr, GZ_CODEPAGE_SYSTEM);
+		ConvertStringEncoding(srcPath, srcStr, GZ_CODEPAGE_SYSTEM);
+		ConvertStringEncoding(destPath, destStr, GZ_CODEPAGE_SYSTEM);
 
 		bool result = MoveFile(srcStr.Data(), destStr.Data()) != 0;
 		return result;
 	}
 }
 
-bool cRZFile::Copy(cIGZString const& srcName, cIGZString const& destName, bool overwrite)
+bool cRZFile::Copy(cIGZString const& srcPath, cIGZString const& destPath, bool overwrite)
 {
 	if (gW32FileHelpers.CopyFileW != NULL)
 	{
 		bool result = gW32FileHelpers.CopyFileW(
-			reinterpret_cast<wchar_t const*>(&RZStringToUTF16(srcName)[0]),
-			reinterpret_cast<wchar_t const*>(&RZStringToUTF16(destName)[0]),
+			reinterpret_cast<wchar_t const*>(&RZStringToUTF16(srcPath)[0]),
+			reinterpret_cast<wchar_t const*>(&RZStringToUTF16(destPath)[0]),
 			!overwrite) != 0;
 
 		return result;
@@ -1131,57 +1131,95 @@ bool cRZFile::Copy(cIGZString const& srcName, cIGZString const& destName, bool o
 		cRZString srcStr;
 		cRZString destStr;
 
-		ConvertStringEncoding(srcName, srcStr, GZ_CODEPAGE_SYSTEM);
-		ConvertStringEncoding(destName, destStr, GZ_CODEPAGE_SYSTEM);
+		ConvertStringEncoding(srcPath, srcStr, GZ_CODEPAGE_SYSTEM);
+		ConvertStringEncoding(destPath, destStr, GZ_CODEPAGE_SYSTEM);
 
 		bool result = CopyFile(srcStr.Data(), destStr.Data(), !overwrite) != 0;
 		return result;
 	}
 }
 
-bool cRZFile::GetPathDirectory(cIGZString const& name, cIGZString& out)
+int32_t cRZFile::GetLength(cIGZString const& path)
+{
+	int32_t length = -1;
+	if (gW32FileHelpers.FindFirstFileW != NULL)
+	{
+		WIN32_FIND_DATAW findData;
+		HANDLE hFindHandle = gW32FileHelpers.FindFirstFileW(
+			reinterpret_cast<wchar_t const*>(&RZStringToUTF16(path)[0]),
+			&findData);
+
+		if (hFindHandle != INVALID_HANDLE_VALUE)
+		{
+			FindClose(hFindHandle);
+			length = (int32_t)findData.nFileSizeLow;
+		}
+	}
+	else
+	{
+		cRZString str;
+		ConvertStringEncoding(path, str, GZ_CODEPAGE_SYSTEM);
+
+		WIN32_FIND_DATAA findData;
+		HANDLE hFindHandle = FindFirstFile(str.Data(), &findData);
+
+		if (hFindHandle != NULL)
+		{
+			FindClose(hFindHandle);
+			length = (int32_t)findData.nFileSizeLow;
+		}
+	}
+
+	return length;
+}
+
+bool cRZFile::GetPathExtension(cIGZString const& path, cIGZString& extension)
+{
+	// TODO
+	return false;
+}
+
+bool cRZFile::GetPathDirectory(cIGZString const& path, cIGZString& directory)
 {
 	char drive[_MAX_DRIVE + 1] = "";
 	char dir[_MAX_DIR] = "";
 	char fname[_MAX_FNAME] = "";
 	char ext[_MAX_EXT] = "";
 
-	_splitpath(name.ToChar(), drive, dir, fname, ext);
-	size_t driveLength = strlen(drive);
+	cRZString tmp;
+	_splitpath(path.ToChar(), drive, dir, fname, ext);
 
-	if (driveLength != 0)
-	{
-		drive[2] = '\\';
-		drive[3] = '\0';
-	}
+	tmp = cRZString(drive);
+	tmp += dir;
 
-	return driveLength != 0;
+	directory.FromChar(tmp.c_str(), tmp.size());
+	return tmp.size() != 0;
 }
 
-bool cRZFile::GetPathName(cIGZString const& name, cIGZString& out, bool includeSeparator)
+bool cRZFile::GetPathName(cIGZString const& path, cIGZString& name, bool includeSeparator)
 {
 	char drive[_MAX_DRIVE] = "";
 	char dir[_MAX_DIR] = "";
 	char fname[_MAX_FNAME] = "";
 	char ext[_MAX_EXT] = "";
 
-	cRZString path;
-	_splitpath(name.ToChar(), drive, dir, fname, ext);
+	cRZString tmp;
+	_splitpath(path.ToChar(), drive, dir, fname, ext);
 
-	path = cRZString(fname);
+	tmp = cRZString(fname);
 	if (includeSeparator)
 	{
-		path += ext;
+		tmp += ext;
 	}
 
-	out.FromChar(path.c_str(), path.size());
-	return path.size() != 0;
+	name.FromChar(tmp.c_str(), tmp.size());
+	return tmp.size() != 0;
 }
 
-bool cRZFile::GetVolumeName(cIGZString const& name, cIGZString& out)
+bool cRZFile::GetVolumeName(cIGZString const& path, cIGZString& volume)
 {
 	cRZString dir;
-	if (!GetPathDirectory(name, dir))
+	if (!GetPathDirectory(path, dir))
 	{
 		return false;
 	}
@@ -1192,8 +1230,8 @@ bool cRZFile::GetVolumeName(cIGZString const& name, cIGZString& out)
 
 	if (GetVolumeInformation(dir.ToChar(), volumeName, MAX_PATH, &serialNumber, &maxComponentLength, &flags, fileSystemName, MAX_PATH) != 0)
 	{
-		cRZString volume(volumeName);
-		ConvertStringEncoding(volume, GZ_CODEPAGE_SYSTEM, out);
+		cRZString tmp(volumeName);
+		ConvertStringEncoding(volume, GZ_CODEPAGE_SYSTEM, tmp);
 		return true;
 	}
 

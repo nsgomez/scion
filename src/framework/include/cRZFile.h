@@ -65,8 +65,8 @@ public:
 	virtual void GetPath(cIGZString& path) const;
 	virtual cIGZString const& GetPath(void) const;
 	virtual const char* GetPathCStr(void) const;
-	virtual void SetPath(char const* path);
 	virtual void SetPath(cIGZString const& path);
+	virtual void SetPath(char const* path);
 
 	virtual bool GetOpenModes(uint32_t& accessFlags, uint32_t& createMode, uint32_t& shareFlags);
 	virtual void GetBuffering(uint32_t& readBufferSize, uint32_t& writeBufferSize);
@@ -76,13 +76,15 @@ public:
 	static bool GetTempDirectory(cIGZString& out);
 	static bool MakeTempFileName(cIGZString const& prefix, cIGZString& name, cIGZString const* suffix);
 	static bool MakeTempPathName(cIGZString& name, cIGZString const* suffix);
-	static bool FileExists(cIGZString const& name);
-	static bool Remove(cIGZString const& name);
-	static bool Rename(cIGZString const& srcName, cIGZString const& destName);
-	static bool Copy(cIGZString const& srcName, cIGZString const& destName, bool overwrite);
+	static bool FileExists(cIGZString const& path);
+	static bool Remove(cIGZString const& path);
+	static bool Rename(cIGZString const& srcPath, cIGZString const& destPath);
+	static bool Copy(cIGZString const& srcPath, cIGZString const& destPath, bool overwrite);
+	static bool GetPathExtension(cIGZString const& path, cIGZString& extension);
 	static bool GetPathDirectory(cIGZString const& path, cIGZString& directory);
 	static bool GetPathName(cIGZString const& path, cIGZString& name, bool includeSeparator);
-	static bool GetVolumeName(cIGZString const& name, cIGZString& volume);
+	static bool GetVolumeName(cIGZString const& path, cIGZString& volume);
+	static int32_t GetLength(cIGZString const& path);
 
 protected:
 	void UpdateErrorCode(void);

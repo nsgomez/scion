@@ -95,8 +95,8 @@ enum GZCountry
 
 enum GZLanguage
 {
-	kGZLanguage_Invariant   = -1, // TODO: is this a good name?
-	kGZLanguage_Unspecified = 0,  // TODO: is this a good name?
+	kGZLanguage_Invariant  = -1, // TODO: is this a good name?
+	kGZLanguage_Current    = 0,
 	kGZLanguage_English    = 1,
 	kGZLanguage_English_UK = 2,
 	kGZLanguage_French     = 3,

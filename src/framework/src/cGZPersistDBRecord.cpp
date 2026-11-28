@@ -34,6 +34,10 @@ cGZPersistDBRecord::cGZPersistDBRecord(cGZPersistResourceKey const& key, cIGZPer
 {
 }
 
+cGZPersistDBRecord::~cGZPersistDBRecord()
+{
+}
+
 bool cGZPersistDBRecord::QueryInterface(GZIID iid, void** outPtr)
 {
 	switch (iid)

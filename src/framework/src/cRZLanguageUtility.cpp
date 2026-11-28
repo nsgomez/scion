@@ -1605,7 +1605,7 @@ bool cRZLanguageUtility::MakeDateString(int32_t day, int32_t month, uint32_t yea
 		break;
 
 	case kGZLanguage_Invariant:
-	case kGZLanguage_Unspecified:
+	case kGZLanguage_Current:
 	case kGZLanguage_English:
 		switch (format)
 		{

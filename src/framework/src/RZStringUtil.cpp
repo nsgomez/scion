@@ -74,3 +74,9 @@ std::vector<wchar_t> RZStringToUTF16(cIGZString const& src)
 
 	return result;
 }
+
+uint32_t RZAtoUint32HexA(char const*, ...)
+{
+	// TODO
+	return 0;
+}

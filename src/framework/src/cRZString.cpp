@@ -82,6 +82,11 @@ void cRZString::FromChar(char const* otherStr, uint32_t length)
 	}
 }
 
+char const* cRZString::ToChar() const
+{
+	return c_str();
+}
+
 char const* cRZString::Data() const
 {
 	return data();

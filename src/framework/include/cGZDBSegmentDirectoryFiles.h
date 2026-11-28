@@ -19,10 +19,12 @@
 #pragma once
 #include <list>
 #include <map>
+#include "cGZDBSDFRecord.h"
 #include "cGZPersistDBSegment.h"
 #include "cGZPersistResourceKey.h"
 #include "cIGZPersistDBSegmentDirectoryFiles.h"
 #include "cGZRESIDtoExtensionMap.h"
+#include "cRZAutoRefCount.h"
 #include "cRZCallbackTimer.h"
 #include "cRZDirectory.h"
 #include "cRZRandom.h"
@@ -58,7 +60,7 @@ public:
 	virtual bool GetRESIDtoExtensionMap(cIGZPersistRESIDtoExtensionMap** out);
 	virtual bool AddExtensionAssociation(uint32_t resId, cIGZString const& extension);
 
-	virtual void SetAllowedIDPositions(bool allowGroupFirst, bool allowInstanceFirst);
+	virtual void SetAllowedIDPositions(bool allowIdAtStart, bool allowIdAtEnd);
 	virtual void SetAllowTextAsKey(bool allowTextAsKey);
 
 	virtual bool GetFileNameFromKey(cGZPersistResourceKey const& key, cIGZString& fileName) const;
@@ -70,7 +72,7 @@ public:
 	virtual uint32_t EnumerateRecordFiles(cIGZString** names, uint32_t maxCount);
 
 	virtual bool GetFileChangeDetection() const;
-	virtual bool SetFileChangeDetection(bool enabled, uint32_t intervalInMs);
+	virtual bool SetFileChangeDetection(bool enabled, uint32_t intervalInSeconds);
 	virtual bool DoFileChangeCheck();
 
 public:
@@ -85,7 +87,6 @@ public:
 
 	virtual uint32_t GetRecordCount(cIGZPersistResourceKeyFilter* filter);
 	virtual uint32_t GetResourceKeyList(cIGZPersistResourceKeyList* list, cIGZPersistResourceKeyFilter* filter);
-	virtual uint32_t GetResourceKeyList(cIGZPersistResourceKeyList& list);
 
 	virtual bool Init(uint32_t segmentID, cIGZString const* path, bool allowOpen);
 
@@ -97,7 +98,7 @@ public:
 	virtual bool DoOpenRecord(cGZPersistResourceKey const& key, cIGZPersistDBRecord** outPtr, uint32_t flags);
 	virtual bool DoCreateNewRecord(cGZPersistResourceKey const& key, cIGZPersistDBRecord** outPtr);
 	virtual bool DoCloseRecord(cIGZPersistDBRecord* record);
-	virtual bool DoAbortRecord(cIGZPersistDBRecord* recordPtr);
+	virtual bool DoAbortRecord(cIGZPersistDBRecord* record);
 	virtual bool DoDeleteRecord(cGZPersistResourceKey const& key);
 	virtual uint32_t DoReadRecord(cGZPersistResourceKey const& key, void* data, uint32_t& length);
 	virtual bool DoWriteRecord(cGZPersistResourceKey const& key, void* data, uint32_t length);
@@ -111,14 +112,24 @@ protected:
 	virtual bool createFileNameFromKey(cGZPersistResourceKey const& key, cRZString& outName, cRZString& outExtension);
 
 protected:
+	static void CreateDBSegmentDirectoryFilesCallback(cIGZString const& name, cIGZString const& value, void* context);
+
 	void CloseOpenRecords();
 	void StartFileChangeCheck();
 
 protected:
 	struct RecordData
 	{
+		RecordData() : fileName(), openRecords() { }
+		RecordData(cRZString const& filename) : fileName(filename), openRecords() { }
+
+		typedef std::list<cRZAutoRefCount<cGZDBSDFRecord> > tOpenList;
+
 		cRZString fileName;
-		std::list<cIGZPersistDBRecord*> openRecords;
+		tOpenList openRecords;
+
+		cGZDBSDFRecord* FindRecord(cIGZPersistDBRecord* needle);
+		void EraseRecord(cIGZPersistDBRecord* needle);
 	};
 
 	typedef std::map<cGZPersistResourceKey, RecordData> RecordMap;
@@ -137,15 +148,16 @@ protected:
 	uint32_t mDefaultGroupId;
 	uint32_t mSegmentId;
 
-	bool mAllowGroupIdFirst;
-	bool mAllowInstanceIdFirst;
+	bool mAllowIdAtStart;
+	bool mAllowIdAtEnd;
 	bool mAllowTextAsKey;
 
 	cGZRESIDtoExtensionMap mExtensionMap;
 	RecordMap mRecordMap;
 
 	bool mFileChangeDetectionEnabled;
-	uint32_t mChangeCheckIntervalMs;
+	uint32_t mChangeCheckIntervalSeconds;
 	cRZCallbackTimer mChangeTimer;
+	uint32_t mUnknown2; // TODO
 	cRZRandom mRandom;
 };

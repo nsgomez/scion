@@ -18,6 +18,12 @@
 
 #include "cGZDBSDFRecord.h"
 
+static const uint32_t sSeekModes[] = {
+	GZSeekFromBegin,
+	GZSeekFromCurrent,
+	GZSeekFromEnd
+};
+
 cGZDBSDFRecord::cGZDBSDFRecord(cIGZPersistDBSegment* segment) :
 	cGZPersistDBSerialRecord(segment, true),
 	mOpen(false),
@@ -82,7 +88,7 @@ bool cGZDBSDFRecord::GetFieldVoid(void* data, size_t length)
 	}
 	else
 	{
-		return mFile.Read(data, length);
+		return !!mFile.Read(data, length);
 	}
 }
 
@@ -92,44 +98,38 @@ bool cGZDBSDFRecord::SetFieldVoid(void const* data, size_t length)
 	{
 		return false;
 	}
-	else if (mMode == GZFileAccessWrite || mMode == GZFileAccessReadWrite)
+	else if (mMode != GZFileAccessWrite && mMode != GZFileAccessReadWrite)
 	{
-		return mFile.Write(data, length);
+		return false;
 	}
 	else
 	{
-		return false;
+		return !!mFile.Write(data, length);
 	}
 }
 
 uint32_t cGZDBSDFRecord::GetPosition()
 {
-	if (!mOpen)
+	if (mOpen)
 	{
-		return -1;
+		return mFile.Position();
 	}
 
-	return mFile.Position();
+	return -1;
 }
 
 bool cGZDBSDFRecord::SeekAbsolute(uint32_t position)
 {
-	if (!mOpen || mMode != GZFileAccessRead)
-	{
-		return false;
-	}
-
-	return mFile.SeekToPosition(position) != -1;
+	return mOpen
+		&& mMode == GZFileAccessRead
+		&& mFile.SeekToPosition(position) != -1;
 }
 
 bool cGZDBSDFRecord::SeekRelative(int32_t offset)
 {
-	if (!mOpen || mMode != GZFileAccessRead)
-	{
-		return false;
-	}
-
-	return mFile.SeekToRelativePosition(offset) != -1;
+	return mOpen
+		&& mMode == GZFileAccessRead
+		&& mFile.SeekToRelativePosition(offset) != -1;
 }
 
 uint32_t cGZDBSDFRecord::Read(void* data, uint32_t byteCount)
@@ -180,7 +180,7 @@ bool cGZDBSDFRecord::Tell(uint32_t& position)
 	return true;
 }
 
-bool cGZDBSDFRecord::Seek(uint32_t offset, GZFileSeekMode method)
+bool cGZDBSDFRecord::Seek(uint32_t offset, int32_t method)
 {
 	if (!mOpen)
 	{
@@ -192,7 +192,8 @@ bool cGZDBSDFRecord::Seek(uint32_t offset, GZFileSeekMode method)
 	}
 	else
 	{
-		return mFile.Seek(offset, method) != -1;
+		int32_t seekMode = sSeekModes[method];
+		return mFile.Seek(offset, method) != -1 ? true : false;
 	}
 }
 
@@ -249,7 +250,7 @@ bool cGZDBSDFRecord::GetExtension(cIGZString** outExtension)
 
 	cRZString path;
 	mFile.GetPath(path);
-	// cRZFile::GetPathExtension(path, *extension); // TODO: GetPathExtension not implemented
+	cRZFile::GetPathExtension(path, *extension);
 
 	*outExtension = extension;
 	return true;
@@ -320,6 +321,7 @@ bool cGZDBSDFRecord::Init(cGZPersistResourceKey const& key, cIGZString const& pa
 
 bool cGZDBSDFRecord::CloseInternal()
 {
+	bool result = false;
 	if (mOpen)
 	{
 		mOpen = false;
@@ -335,10 +337,10 @@ bool cGZDBSDFRecord::CloseInternal()
 			mMode = 0;
 		}
 
-		return true;
+		result = true;
 	}
 
-	return false;
+	return result;
 }
 
 bool cGZDBSDFRecord::AbortInternal()

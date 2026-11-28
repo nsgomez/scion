@@ -35,7 +35,7 @@ public:
 	virtual uint32_t Write(void const* data, uint32_t byteCount) = 0;
 
 	virtual bool Tell(uint32_t& position) = 0;
-	virtual bool Seek(uint32_t offset, GZFileSeekMode method) = 0;
+	virtual bool Seek(uint32_t offset, int32_t method) = 0;
 
 	virtual void Flush() = 0;
 

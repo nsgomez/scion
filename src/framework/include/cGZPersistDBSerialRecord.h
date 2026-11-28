@@ -145,4 +145,7 @@ public:
 	virtual bool GetGZStr(cIGZString& out);
 
 	virtual cIGZIStream& operator>> (cIGZString& str);
+
+protected:
+	bool mUseLittleEndian;
 };
